@@ -282,6 +282,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
+const APP_VERSION = '2.0.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -303,6 +304,9 @@ function freshState(){
       accent:'American English', explainLang:'English', dailyMinutes:15
     },
     theme:'light',
+    speakRate:0.95,
+    speakingProgress:{}, // { topicId: [practiced sentence indices] }
+    chatHistory:{},      // { teacherId: [{from,text}, ...] }
     progress:{
       streak:0, lastActiveDate:null, activeDays:[], points:0,
       lessonsCompleted:[], confidenceScore:40,
@@ -341,17 +345,17 @@ function esc(str){
    DATA: TEACHERS  (configurable — add more objects to extend the roster)
 ==================================================================== */
 const TEACHERS = [
-  { id:'maya',  name:'Teacher Anjali',    flag:'🇮🇳', language:'Hindi',    accentDesc:'Explains in Hindi · teaches neutral Indian English', voiceLang:'hi-IN', color:'#3B5BFE' },
-  { id:'sofia', name:'Teacher Sofia',     flag:'🇪🇸', language:'Spanish',  accentDesc:'Explains in Spanish · teaches conversational English', voiceLang:'es-ES', color:'#F5A623' },
-  { id:'priya', name:'Teacher Sowmya',    flag:'🇮🇳', language:'Telugu',   accentDesc:'Explains in Telugu · teaches everyday English', voiceLang:'te-IN', color:'#1FAE6B' },
-  { id:'anaya', name:'Teacher Meenakshi', flag:'🇮🇳', language:'Tamil',    accentDesc:'Explains in Tamil · teaches everyday English', voiceLang:'ta-IN', color:'#8B5CF6' },
-  { id:'rahul', name:'Teacher Sourav',    flag:'🇮🇳', language:'Bengali',  accentDesc:'Explains in Bengali · teaches everyday English', voiceLang:'bn-IN', color:'#EF4444' },
-  { id:'sneha', name:'Teacher Swati',     flag:'🇮🇳', language:'Marathi',  accentDesc:'Explains in Marathi · teaches everyday English', voiceLang:'mr-IN', color:'#F5A623' },
-  { id:'sarah', name:'Teacher Sarah', flag:'🇺🇸', language:'American English', accentDesc:'American accent · office & interview focus', voiceLang:'en-US', color:'#3B5BFE' },
-  { id:'david', name:'Teacher David', flag:'🇬🇧', language:'British English',  accentDesc:'British accent · formal, precise style', voiceLang:'en-GB', color:'#2440D6' },
-  { id:'chloe', name:'Teacher Chloe', flag:'🇫🇷', language:'French',   accentDesc:'Explains in French · teaches conversational English', voiceLang:'fr-FR', color:'#8B5CF6' },
-  { id:'tariq', name:'Teacher Tariq', flag:'🇸🇦', language:'Arabic',   accentDesc:'Explains in Arabic · teaches everyday English', voiceLang:'ar-SA', color:'#1FAE6B' },
-  { id:'elena', name:'Teacher Elena', flag:'🇩🇪', language:'German',   accentDesc:'Explains in German · teaches precise English', voiceLang:'de-DE', color:'#EF4444' },
+  { id:'maya',  name:'Teacher Anjali',    flag:'🇮🇳', language:'Hindi',    accentDesc:'Explains in Hindi · teaches neutral Indian English', voiceLang:'hi-IN', gender:'female', color:'#3B5BFE' },
+  { id:'sofia', name:'Teacher Sofia',     flag:'🇪🇸', language:'Spanish',  accentDesc:'Explains in Spanish · teaches conversational English', voiceLang:'es-ES', gender:'female', color:'#F5A623' },
+  { id:'priya', name:'Teacher Sowmya',    flag:'🇮🇳', language:'Telugu',   accentDesc:'Explains in Telugu · teaches everyday English', voiceLang:'te-IN', gender:'female', color:'#1FAE6B' },
+  { id:'anaya', name:'Teacher Meenakshi', flag:'🇮🇳', language:'Tamil',    accentDesc:'Explains in Tamil · teaches everyday English', voiceLang:'ta-IN', gender:'female', color:'#8B5CF6' },
+  { id:'rahul', name:'Teacher Sourav',    flag:'🇮🇳', language:'Bengali',  accentDesc:'Explains in Bengali · teaches everyday English', voiceLang:'bn-IN', gender:'male', color:'#EF4444' },
+  { id:'sneha', name:'Teacher Swati',     flag:'🇮🇳', language:'Marathi',  accentDesc:'Explains in Marathi · teaches everyday English', voiceLang:'mr-IN', gender:'female', color:'#F5A623' },
+  { id:'sarah', name:'Teacher Sarah', flag:'🇺🇸', language:'American English', accentDesc:'American accent · office & interview focus', voiceLang:'en-US', gender:'female', color:'#3B5BFE' },
+  { id:'david', name:'Teacher David', flag:'🇬🇧', language:'British English',  accentDesc:'British accent · formal, precise style', voiceLang:'en-GB', gender:'male', color:'#2440D6' },
+  { id:'chloe', name:'Teacher Chloe', flag:'🇫🇷', language:'French',   accentDesc:'Explains in French · teaches conversational English', voiceLang:'fr-FR', gender:'female', color:'#8B5CF6' },
+  { id:'tariq', name:'Teacher Tariq', flag:'🇸🇦', language:'Arabic',   accentDesc:'Explains in Arabic · teaches everyday English', voiceLang:'ar-SA', gender:'male', color:'#1FAE6B' },
+  { id:'elena', name:'Teacher Elena', flag:'🇩🇪', language:'German',   accentDesc:'Explains in German · teaches precise English', voiceLang:'de-DE', gender:'female', color:'#EF4444' },
 ];
 const TEACHER_GREETING = {
   maya:'Namaste! Main Teacher Anjali hoon. Aaj hum saath mein English बोलेंगे. Ready?',
@@ -686,15 +690,36 @@ if('speechSynthesis' in window){
   loadVoices();
   speechSynthesis.onvoiceschanged = loadVoices;
 }
-function pickVoice(langCode){
+/* Common TTS voice names are not reliably tagged with gender by the Web Speech API,
+   so we match on well-known voice names shipped by major browsers/OSes as a heuristic. */
+const FEMALE_VOICE_HINTS = ['female','woman','zira','samantha','karen','susan','victoria','moira','tessa','fiona','veena','lekha','heera','kalpana','amelie','anna','helena','katja','paulina','ava','allison','ioana'];
+const MALE_VOICE_HINTS = ['male','man','david','daniel','mark','alex','fred','aaron','ravi','hemant','rishi','thomas','yannick','stefan','diego','jorge','xander'];
+function voiceGenderScore(voiceName, wantGender){
+  const n = (voiceName||'').toLowerCase();
+  const hints = wantGender==='female' ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = wantGender==='female' ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  if(hints.some(h=>n.includes(h))) return 2;
+  if(oppositeHints.some(h=>n.includes(h))) return -2;
+  return 0;
+}
+function pickVoice(langCode, gender){
   if(!voicesCache || !voicesCache.length) loadVoices();
   if(!voicesCache.length) return null;
-  let v = voicesCache.find(v=>v.lang && v.lang.toLowerCase()===langCode.toLowerCase());
-  if(!v) v = voicesCache.find(v=>v.lang && v.lang.toLowerCase().startsWith(langCode.split('-')[0].toLowerCase()));
-  if(!v) v = voicesCache.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
-  return v || voicesCache[0] || null;
+  const lang = (langCode||'en-US').toLowerCase();
+  const base = lang.split('-')[0];
+  // Build a candidate pool: exact lang match first, then same base language, then English, then anything.
+  let pool = voicesCache.filter(v=>v.lang && v.lang.toLowerCase()===lang);
+  if(!pool.length) pool = voicesCache.filter(v=>v.lang && v.lang.toLowerCase().startsWith(base));
+  if(!pool.length) pool = voicesCache.filter(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+  if(!pool.length) pool = voicesCache;
+  if(gender && pool.length > 1){
+    const scored = pool.map(v=>({v, score:voiceGenderScore(v.name, gender)}));
+    scored.sort((a,b)=>b.score-a.score);
+    if(scored[0].score > scored[scored.length-1].score) return scored[0].v;
+  }
+  return pool[0] || voicesCache[0] || null;
 }
-function speak(text, langCode, onend){
+function speak(text, langCode, onend, gender){
   if(!('speechSynthesis' in window)){
     toast('Speech playback is not supported in this browser.','error');
     if(onend) onend();
@@ -702,7 +727,7 @@ function speak(text, langCode, onend){
   }
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(langCode||'en-US');
+  const v = pickVoice(langCode||'en-US', gender);
   if(v) u.voice = v;
   u.lang = langCode || 'en-US';
   u.rate = state.speakRate || 0.95;
@@ -939,22 +964,30 @@ function previewVoice(teacherId, btnEl){
     <p class="pill pill-purple" style="margin:6px 0 12px 0;">${esc(t.language)} voice preview</p>
     <div class="card" style="background:var(--surface-2);"><p style="color:var(--text);font-style:italic;">"${esc(greeting)}"</p></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn btn-primary btn-sm" onclick="speak(${JSON.stringify(greeting)}, '${t.voiceLang}')">▶ Replay</button>
+      <button class="btn btn-primary btn-sm" onclick="speak(${JSON.stringify(greeting)}, '${t.voiceLang}', null, '${t.gender}')">▶ Replay</button>
       <button class="btn btn-soft btn-sm" onclick="stopSpeak()">⏹ Stop</button>
     </div>
   `);
-  const ok = speak(greeting, t.voiceLang, ()=>{ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; });
+  const ok = speak(greeting, t.voiceLang, ()=>{ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; }, t.gender);
   if(!ok){ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; }
 }
 
 /* ---- AI Teacher conversation ---- */
+const QUICK_REPLIES = {
+  Beginner: ['My name is ...', 'I am from ...', 'I am fine, thank you.', 'Can you say that again?'],
+  Elementary: ['I like ...', 'Yesterday I ...', 'Could you explain that word?', 'What should I say next?'],
+  Intermediate: ['In my opinion, ...', 'I have experience in ...', 'Could you give me an example?', 'I disagree because ...'],
+  Advanced: ['I would argue that ...', 'To elaborate further, ...', 'Let\'s discuss this in more depth.', 'What is your perspective on ...?']
+};
 let activeChat = null; // {teacherId, messages:[{from,text}]}
 function openTeacherChat(teacherId){
   const t = TEACHERS.find(x=>x.id===teacherId);
-  activeChat = { teacherId, messages:[{from:'teacher', text: TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`}] };
+  const saved = state.chatHistory[teacherId];
+  activeChat = { teacherId, messages: (saved && saved.length) ? saved : [{from:'teacher', text: TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`}] };
+  if(!saved || !saved.length){ state.chatHistory[teacherId] = activeChat.messages; saveState(); }
   renderChatModal();
   document.getElementById('chatModal').classList.remove('hidden');
-  speak(activeChat.messages[0].text, t.voiceLang);
+  if(!saved || !saved.length) speak(activeChat.messages[0].text, t.voiceLang, null, t.gender);
 }
 function closeTeacherChat(){
   document.getElementById('chatModal').classList.add('hidden');
@@ -963,6 +996,7 @@ function closeTeacherChat(){
 }
 function renderChatModal(){
   const t = TEACHERS.find(x=>x.id===activeChat.teacherId);
+  const quick = QUICK_REPLIES[state.profile.level] || QUICK_REPLIES.Beginner;
   const body = document.getElementById('chatModalBody');
   body.innerHTML = `
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;">
@@ -974,7 +1008,10 @@ function renderChatModal(){
     </div>
     <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
     <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;">
-      <p style="font-size:10.5px;margin-bottom:8px;">⚠️ No AI service is connected in this preview — replies use predefined sample dialogue, not live AI feedback.</p>
+      <p style="font-size:10.5px;margin-bottom:8px;">⚠️ No AI service is connected in this preview — replies use predefined sample dialogue, not live AI feedback. Your conversation is saved on this device so you can continue later.</p>
+      <div class="chip-select" id="quickReplyRow" style="margin-bottom:8px;">
+        ${quick.map(q=>`<button type="button" class="chip-opt" data-quick="${esc(q)}" style="font-size:11.5px;padding:6px 10px;">${esc(q)}</button>`).join('')}
+      </div>
       <div style="display:flex;gap:7px;align-items:center;">
         <button class="icon-btn" id="chatMicBtn" title="Speak your answer">🎤</button>
         <input type="text" id="chatInput" placeholder="Type your reply in English..." style="flex:1;">
@@ -982,13 +1019,19 @@ function renderChatModal(){
       </div>
       <div style="display:flex;gap:6px;margin-top:8px;">
         <button class="btn btn-soft btn-sm" id="chatListenBtn">🔊 Listen again</button>
-        <button class="btn btn-soft btn-sm" id="chatClearBtn">🗑 Clear</button>
+        <button class="btn btn-soft btn-sm" id="chatClearBtn">🗑 Start new conversation</button>
       </div>
     </div>
   `;
   renderChatMessages();
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
   document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChatMessage(); });
+  document.getElementById('quickReplyRow').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-quick]'); if(!btn) return;
+    const input = document.getElementById('chatInput');
+    input.value = btn.getAttribute('data-quick');
+    input.focus();
+  });
   document.getElementById('chatMicBtn').addEventListener('click', ()=>{
     const btn = document.getElementById('chatMicBtn');
     btn.textContent = '⏺'; btn.style.color = 'var(--danger)';
@@ -996,11 +1039,14 @@ function renderChatModal(){
   });
   document.getElementById('chatListenBtn').addEventListener('click', ()=>{
     const last = [...activeChat.messages].reverse().find(m=>m.from==='teacher');
-    if(last) speak(last.text, t.voiceLang);
+    if(last) speak(last.text, t.voiceLang, null, t.gender);
   });
   document.getElementById('chatClearBtn').addEventListener('click', ()=>{
     activeChat.messages = [{from:'teacher', text: TEACHER_GREETING[activeChat.teacherId]}];
+    state.chatHistory[activeChat.teacherId] = activeChat.messages;
+    saveState();
     renderChatMessages();
+    speak(activeChat.messages[0].text, t.voiceLang, null, t.gender);
   });
 }
 function renderChatMessages(){
@@ -1020,12 +1066,16 @@ function sendChatMessage(){
   input.value='';
   renderChatMessages();
   addPoints(2);
+  state.chatHistory[activeChat.teacherId] = activeChat.messages;
+  saveState();
   setTimeout(()=>{
     const t = TEACHERS.find(x=>x.id===activeChat.teacherId);
     const reply = fallbackTeacherReply(activeChat.teacherId, state.profile.level, text);
     activeChat.messages.push({from:'teacher', text:reply});
     renderChatMessages();
-    speak(reply, t.voiceLang.startsWith('en')?t.voiceLang:'en-US');
+    state.chatHistory[activeChat.teacherId] = activeChat.messages;
+    saveState();
+    speak(reply, t.voiceLang.startsWith('en')?t.voiceLang:'en-US', null, t.gender);
   }, 450);
 }
 document.getElementById('chatModal').addEventListener('click', e=>{ if(e.target.id==='chatModal') closeTeacherChat(); });
@@ -1034,9 +1084,47 @@ document.getElementById('chatModal').addEventListener('click', e=>{ if(e.target.
    SPEAKING PRACTICE
 ==================================================================== */
 let speakState = { topicId: SPEAKING_TOPICS[0].id, teacherId: 'sarah', sentenceIdx:0 };
+const SPEED_OPTIONS = [{key:'slow', label:'🐢 Slow', rate:0.7}, {key:'normal', label:'▶ Normal', rate:0.95}, {key:'fast', label:'🐇 Fast', rate:1.25}];
+function currentSpeedKey(){
+  const match = SPEED_OPTIONS.find(s=>Math.abs(s.rate-(state.speakRate||0.95))<0.01);
+  return match ? match.key : 'normal';
+}
+function markSentencePracticed(topicId, idx){
+  if(!state.speakingProgress[topicId]) state.speakingProgress[topicId] = [];
+  if(!state.speakingProgress[topicId].includes(idx)){
+    state.speakingProgress[topicId].push(idx);
+    addPoints(3);
+  }
+  saveState();
+}
+/* ---- Audio recording (hear-yourself-back), separate from the SpeechRecognition transcript ---- */
+let activeMediaStream = null, activeMediaRecorder = null, recordedChunks = [];
+function startAudioRecording(onReady){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder==='undefined'){
+    onReady(null); return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    activeMediaStream = stream; recordedChunks = [];
+    try{ activeMediaRecorder = new MediaRecorder(stream); }catch(e){ onReady(null); stream.getTracks().forEach(t=>t.stop()); return; }
+    activeMediaRecorder.ondataavailable = e=>{ if(e.data && e.data.size>0) recordedChunks.push(e.data); };
+    activeMediaRecorder.onstop = ()=>{
+      const blob = new Blob(recordedChunks, {type: activeMediaRecorder.mimeType || 'audio/webm'});
+      const url = recordedChunks.length ? URL.createObjectURL(blob) : null;
+      stream.getTracks().forEach(t=>t.stop());
+      onReady(url);
+    };
+    activeMediaRecorder.start();
+  }).catch(()=>{ onReady(null); });
+}
+function stopAudioRecording(){
+  if(activeMediaRecorder && activeMediaRecorder.state !== 'inactive'){ activeMediaRecorder.stop(); }
+}
+
 function renderSpeak(){
   const topic = SPEAKING_TOPICS.find(t=>t.id===speakState.topicId);
   const teacher = TEACHERS.find(t=>t.id===speakState.teacherId);
+  const practiced = state.speakingProgress[topic.id] || [];
+  const pct = Math.round((practiced.length / topic.sentences.length) * 100);
   document.getElementById('view-speak').innerHTML = `
     <div class="page-head"><h2>Speaking Practice</h2><p>Pick a topic and teacher, listen to a model sentence, then try saying it yourself.</p></div>
     <div class="grid grid-2" style="margin-bottom:16px;">
@@ -1050,10 +1138,30 @@ function renderSpeak(){
       </div>
     </div>
 
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+        <h4 style="margin:0;font-size:13.5px;">Topic progress</h4><span style="font-size:12.5px;font-weight:700;color:var(--blue);">${practiced.length}/${topic.sentences.length} practised</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+    </div>
+
     <div class="card" style="text-align:center;">
       <div class="pill pill-blue" style="margin-bottom:10px;">Sentence ${speakState.sentenceIdx+1} of ${topic.sentences.length}</div>
       <h3 style="font-size:19px;">"${esc(topic.sentences[speakState.sentenceIdx])}"</h3>
+
+      <div style="display:flex;justify-content:center;gap:6px;flex-wrap:wrap;margin-top:12px;">
+        ${topic.sentences.map((s,i)=>`<button class="chip-opt ${i===speakState.sentenceIdx?'selected':''}" data-jump="${i}" style="padding:6px 10px;min-width:34px;">${practiced.includes(i)?'✓':(i+1)}</button>`).join('')}
+      </div>
+
+      <div style="margin-top:14px;">
+        <p style="font-size:11.5px;margin-bottom:6px;">Playback speed</p>
+        <div class="chip-select" style="justify-content:center;">
+          ${SPEED_OPTIONS.map(s=>`<button type="button" class="chip-opt ${currentSpeedKey()===s.key?'selected':''}" data-speed="${s.key}">${s.label}</button>`).join('')}
+        </div>
+      </div>
+
       <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn btn-soft" id="speakPrevBtn" ${speakState.sentenceIdx===0?'disabled':''}>◀ Previous</button>
         <button class="btn btn-outline" id="speakListenBtn">🔊 Listen to model</button>
         <button class="btn btn-primary" id="speakRecordBtn">🎤 Practise this</button>
         <button class="btn btn-soft" id="speakRepeatBtn">🔁 Repeat</button>
@@ -1064,8 +1172,16 @@ function renderSpeak(){
   `;
   document.getElementById('speakTopicSelect').addEventListener('change', e=>{ speakState.topicId=e.target.value; speakState.sentenceIdx=0; renderSpeak(); });
   document.getElementById('speakTeacherSelect').addEventListener('change', e=>{ speakState.teacherId=e.target.value; renderSpeak(); });
-  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
-  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
+  document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click', ()=>{ speakState.sentenceIdx = parseInt(b.getAttribute('data-jump')); renderSpeak(); }));
+  document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click', ()=>{
+    const opt = SPEED_OPTIONS.find(s=>s.key===b.getAttribute('data-speed'));
+    state.speakRate = opt.rate; saveState(); renderSpeak();
+  }));
+  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher), null, teacher.gender) );
+  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher), null, teacher.gender) );
+  document.getElementById('speakPrevBtn').addEventListener('click', ()=>{
+    if(speakState.sentenceIdx>0){ speakState.sentenceIdx--; renderSpeak(); }
+  });
   document.getElementById('speakNextBtn').addEventListener('click', ()=>{
     speakState.sentenceIdx = (speakState.sentenceIdx+1) % topic.sentences.length;
     renderSpeak();
@@ -1073,23 +1189,35 @@ function renderSpeak(){
   document.getElementById('speakRecordBtn').addEventListener('click', ()=>{
     const fb = document.getElementById('speakFeedback');
     const btn = document.getElementById('speakRecordBtn');
-    btn.textContent = '⏺ Listening...';
+    btn.textContent = '⏺ Listening...'; btn.disabled = true;
     fb.innerHTML = '';
+    let lastHeard = null, lastMatch = null, audioUrl = null;
+    function paint(){
+      fb.innerHTML = `
+        ${lastHeard!==null ? `<div class="card" style="background:var(--surface-2);text-align:left;">
+          <p style="font-size:12px;">You said:</p><p style="color:var(--text);font-weight:600;">"${esc(lastHeard)}"</p>
+          <p style="font-size:11px;margin-top:8px;">Approximate word match with the model sentence — not a certified pronunciation score.</p>
+          <div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${lastMatch}%;"></div></div>
+        </div>` : ''}
+        ${audioUrl ? `<div style="margin-top:10px;"><p style="font-size:11.5px;margin-bottom:4px;">Hear yourself back:</p><audio controls src="${audioUrl}" style="width:100%;"></audio></div>` : ''}
+      `;
+    }
+    startAudioRecording((url)=>{ audioUrl = url; paint(); });
     startRecognition('en-US', (heard)=>{
       const target = topic.sentences[speakState.sentenceIdx].toLowerCase().replace(/[.?!,]/g,'').replace(/___/g,'').trim();
       const said = heard.toLowerCase().replace(/[.?!,]/g,'').trim();
       const targetWords = target.split(/\s+/).filter(Boolean);
       const saidWords = said.split(/\s+/);
       const matched = targetWords.filter(w=>saidWords.includes(w)).length;
-      const approxMatch = targetWords.length ? Math.round((matched/targetWords.length)*100) : 0;
+      lastHeard = heard;
+      lastMatch = targetWords.length ? Math.round((matched/targetWords.length)*100) : 0;
       addPoints(3);
-      fb.innerHTML = `
-        <div class="card" style="background:var(--surface-2);text-align:left;">
-          <p style="font-size:12px;">You said:</p><p style="color:var(--text);font-weight:600;">"${esc(heard)}"</p>
-          <p style="font-size:11px;margin-top:8px;">Approximate word match with the model sentence — not a certified pronunciation score.</p>
-          <div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${approxMatch}%;"></div></div>
-        </div>`;
-    }, ()=>{ btn.textContent='🎤 Practise this'; });
+      markSentencePracticed(speakState.topicId, speakState.sentenceIdx);
+      paint();
+    }, ()=>{
+      btn.textContent='🎤 Practise this'; btn.disabled=false;
+      stopAudioRecording();
+    });
   });
 }
 
@@ -1197,9 +1325,14 @@ function renderInlineMCQ(containerId, item, onAnswered){
 ==================================================================== */
 let vocabCatFilter = 'All';
 let vocabShowFavOnly = false;
+let vocabSearchTerm = '';
 function renderVocabulary(){
   document.getElementById('view-vocabulary').innerHTML = `
     <div class="page-head"><h2>Vocabulary</h2><p>Build your word bank by category. Save favourites and revise them anytime.</p></div>
+    <div class="grid grid-2" style="margin-bottom:12px;align-items:end;">
+      <div><input type="text" id="vocabSearchInput" placeholder="Search words or meanings..." value="${esc(vocabSearchTerm)}"></div>
+      <div><button class="btn btn-outline" style="width:100%;" id="vocabQuizBtn">🃏 Flashcard Quiz (Favourites)</button></div>
+    </div>
     <div class="chip-select" id="vocabCatRow" style="margin-bottom:10px;">
       <button type="button" class="chip-opt ${vocabCatFilter==='All'?'selected':''}" data-cat="All">All</button>
       ${VOCAB_CATEGORIES.map(c=>`<button type="button" class="chip-opt ${c===vocabCatFilter?'selected':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
@@ -1211,8 +1344,17 @@ function renderVocabulary(){
   `;
   document.querySelectorAll('#vocabCatRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ vocabCatFilter=b.getAttribute('data-cat'); renderVocabulary(); }));
   document.getElementById('vocabFavToggle').addEventListener('change', e=>{ vocabShowFavOnly=e.target.checked; renderVocabulary(); });
+  const searchInput = document.getElementById('vocabSearchInput');
+  searchInput.addEventListener('input', e=>{ vocabSearchTerm = e.target.value; renderVocabGrid(); });
+  searchInput.focus(); searchInput.selectionStart = searchInput.selectionEnd = searchInput.value.length;
+  document.getElementById('vocabQuizBtn').addEventListener('click', startVocabFlashcardQuiz);
+  renderVocabGrid();
+}
+function renderVocabGrid(){
   let list = vocabCatFilter==='All' ? VOCABULARY : VOCABULARY.filter(v=>v.category===vocabCatFilter);
   if(vocabShowFavOnly) list = list.filter(v=>state.progress.vocabFavorites.includes(v.id));
+  const term = vocabSearchTerm.trim().toLowerCase();
+  if(term) list = list.filter(v=> v.word.toLowerCase().includes(term) || v.meaning.toLowerCase().includes(term));
   document.getElementById('vocabGrid').innerHTML = list.map(v=>{
     const fav = state.progress.vocabFavorites.includes(v.id);
     return `<div class="card">
@@ -1226,13 +1368,13 @@ function renderVocabulary(){
       <p style="font-size:12.5px;font-style:italic;margin-top:6px;">"${esc(v.example)}"</p>
       <button class="btn btn-soft btn-sm" style="width:100%;margin-top:10px;" data-play="${v.id}">🔊 Listen</button>
     </div>`;
-  }).join('') || `<div class="empty-state"><span class="ic">🧠</span>No words to show yet — try another filter.</div>`;
+  }).join('') || `<div class="empty-state"><span class="ic">🧠</span>No words match — try another search or filter.</div>`;
   document.querySelectorAll('[data-fav]').forEach(b=>b.addEventListener('click', ()=>{
     const id = b.getAttribute('data-fav');
     const arr = state.progress.vocabFavorites;
     const idx = arr.indexOf(id);
     if(idx>-1) arr.splice(idx,1); else { arr.push(id); if(!state.progress.vocabLearned.includes(id)){ state.progress.vocabLearned.push(id); addPoints(1);} }
-    saveState(); renderVocabulary();
+    saveState(); renderVocabGrid();
   }));
   document.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click', ()=>{
     const v = VOCABULARY.find(x=>x.id===b.getAttribute('data-play'));
@@ -1240,16 +1382,72 @@ function renderVocabulary(){
     if(!state.progress.vocabLearned.includes(v.id)){ state.progress.vocabLearned.push(v.id); saveState(); }
   }));
 }
+function startVocabFlashcardQuiz(){
+  const pool = VOCABULARY.filter(v=>state.progress.vocabFavorites.includes(v.id));
+  if(!pool.length){
+    toast('Star some words as favourites first to build a flashcard deck.','error');
+    return;
+  }
+  const deck = shuffle([...pool]);
+  let idx = 0, revealed = false, correctCount = 0;
+  function renderCard(){
+    if(idx >= deck.length){
+      showGenericModal(`
+        <div class="modal-head"><h3>🃏 Flashcard Quiz</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🎉</div>
+          <h2 style="margin-top:10px;">${correctCount} / ${deck.length}</h2>
+          <p>Nice revision! Points added to your progress.</p>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal()">Done</button>
+        </div>
+      `);
+      return;
+    }
+    const v = deck[idx];
+    revealed = false;
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Card ${idx+1}/${deck.length}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+      <div class="card" style="background:var(--surface-2);text-align:center;margin-top:10px;min-height:120px;display:flex;flex-direction:column;align-items:center;justify-content:center;">
+        <h2 style="margin:0;">${esc(v.word)}</h2>
+        <p style="font-size:12.5px;margin-top:6px;">${esc(v.pronunciation)}</p>
+        <div id="fcReveal" style="margin-top:12px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;" id="fcActions">
+        <button class="btn btn-outline btn-sm" id="fcPlayBtn">🔊 Hear it</button>
+        <button class="btn btn-primary btn-sm" id="fcRevealBtn">Reveal meaning</button>
+      </div>
+    `);
+    document.getElementById('fcPlayBtn').addEventListener('click', ()=> speak(v.word, 'en-US'));
+    document.getElementById('fcRevealBtn').addEventListener('click', ()=>{
+      revealed = true;
+      document.getElementById('fcReveal').innerHTML = `<p style="color:var(--text);font-weight:600;">${esc(v.meaning)}</p><p style="font-size:12.5px;font-style:italic;margin-top:4px;">"${esc(v.example)}"</p>`;
+      document.getElementById('fcActions').innerHTML = `
+        <button class="btn btn-danger-soft btn-sm" id="fcNoBtn">✕ Didn't know it</button>
+        <button class="btn btn-primary btn-sm" id="fcYesBtn">✓ Knew it</button>
+      `;
+      document.getElementById('fcNoBtn').addEventListener('click', ()=>{ idx++; renderCard(); });
+      document.getElementById('fcYesBtn').addEventListener('click', ()=>{ correctCount++; addPoints(2); idx++; renderCard(); });
+    });
+  }
+  renderCard();
+}
 
 /* ====================================================================
    GRAMMAR
 ==================================================================== */
+let grammarFilter = 'All';
 function renderGrammar(){
+  const cats = ['All', ...new Set(GRAMMAR_TOPICS.map(g=>g.level))];
   document.getElementById('view-grammar').innerHTML = `
     <div class="page-head"><h2>Grammar</h2><p>Practical grammar topics with simple explanations, examples and instant feedback.</p></div>
+    <div class="chip-select" id="grammarFilterRow" style="margin-bottom:16px;">
+      ${cats.map(c=>`<button type="button" class="chip-opt ${c===grammarFilter?'selected':''}" data-lvl="${c}">${c}</button>`).join('')}
+    </div>
     <div class="grid grid-3" id="grammarGrid"></div>
   `;
-  document.getElementById('grammarGrid').innerHTML = GRAMMAR_TOPICS.map(g=>{
+  document.querySelectorAll('#grammarFilterRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ grammarFilter=b.getAttribute('data-lvl'); renderGrammar(); }));
+  const list = grammarFilter==='All' ? GRAMMAR_TOPICS : GRAMMAR_TOPICS.filter(g=>g.level===grammarFilter);
+  document.getElementById('grammarGrid').innerHTML = list.map(g=>{
     const done = state.progress.grammarDone.includes(g.id);
     return `<div class="card">
       <span class="pill pill-purple">${g.level}</span>
@@ -1258,7 +1456,7 @@ function renderGrammar(){
       <p style="font-size:12.5px;">${esc(g.explanation)}</p>
       <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openGrammarDetail('${g.id}')">Open Topic →</button>
     </div>`;
-  }).join('');
+  }).join('') || `<div class="empty-state"><span class="ic">✏️</span>No topics at this level yet.</div>`;
 }
 function openGrammarDetail(id){
   const g = GRAMMAR_TOPICS.find(x=>x.id===id);
@@ -1279,12 +1477,19 @@ function openGrammarDetail(id){
 /* ====================================================================
    STORIES
 ==================================================================== */
+let storyFilter = 'All';
 function renderStories(){
+  const groups = ['All', ...new Set(STORIES.map(s=>s.ageGroup))];
   document.getElementById('view-stories').innerHTML = `
     <div class="page-head"><h2>Stories</h2><p>Short stories for every age group — with narration, vocabulary and comprehension questions.</p></div>
+    <div class="chip-select" id="storyFilterRow" style="margin-bottom:16px;">
+      ${groups.map(g=>`<button type="button" class="chip-opt ${g===storyFilter?'selected':''}" data-grp="${esc(g)}">${esc(g)}</button>`).join('')}
+    </div>
     <div class="grid grid-3" id="storyGrid"></div>
   `;
-  document.getElementById('storyGrid').innerHTML = STORIES.map(s=>{
+  document.querySelectorAll('#storyFilterRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ storyFilter=b.getAttribute('data-grp'); renderStories(); }));
+  const list = storyFilter==='All' ? STORIES : STORIES.filter(s=>s.ageGroup===storyFilter);
+  document.getElementById('storyGrid').innerHTML = list.map(s=>{
     const done = state.progress.storiesRead.includes(s.id);
     return `<div class="card">
       <span class="pill pill-blue">${esc(s.ageGroup)}</span>
@@ -1293,7 +1498,7 @@ function renderStories(){
       <p style="font-size:12.5px;">${s.level}</p>
       <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openStoryDetail('${s.id}')">Read Story →</button>
     </div>`;
-  }).join('');
+  }).join('') || `<div class="empty-state"><span class="ic">📖</span>No stories for this age group yet.</div>`;
 }
 function openStoryDetail(id){
   const s = STORIES.find(x=>x.id===id);
@@ -1515,6 +1720,8 @@ function renderSettings(){
       <p style="font-size:12.5px;margin-bottom:10px;">Your progress is stored only on this device, in your browser.</p>
       <button class="btn btn-danger-soft btn-sm" id="resetProgressBtn">Reset all progress</button>
     </div>
+
+    <p style="text-align:center;font-size:11.5px;margin-top:18px;">SpokenEnglish · Version ${APP_VERSION}</p>
   `;
   document.querySelectorAll('#view-settings .chip-select').forEach(group=>{
     group.addEventListener('click', e=>{
@@ -1555,6 +1762,8 @@ function init(){
   applyTheme();
   buildNav();
   updateProfileChip();
+  const brandSmall = document.querySelector('.brand-row .brand small');
+  if(brandSmall) brandSmall.textContent = `Speak with confidence · v${APP_VERSION}`;
   document.getElementById('topThemeBtn').addEventListener('click', toggleTheme);
   document.getElementById('sideThemeBtn').addEventListener('click', toggleTheme);
   document.getElementById('onboardModal').addEventListener('click', e=>{ /* prevent close-on-outside for mandatory first-run form */ });
