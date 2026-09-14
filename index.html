@@ -221,6 +221,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       <div class="topbar-mobile-brand">
         <div class="brand-mark">🗣️</div>
         <div class="brand">SpokenEnglish</div>
+        <span class="pill" id="mobileVersionPill" style="font-size:9.5px;padding:2px 7px;"></span>
       </div>
       <div class="topbar-actions">
         <button class="icon-btn" id="topThemeBtn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
@@ -282,7 +283,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '2.0.0';
+const APP_VERSION = '3.0.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -356,6 +357,12 @@ const TEACHERS = [
   { id:'chloe', name:'Teacher Chloe', flag:'🇫🇷', language:'French',   accentDesc:'Explains in French · teaches conversational English', voiceLang:'fr-FR', gender:'female', color:'#8B5CF6' },
   { id:'tariq', name:'Teacher Tariq', flag:'🇸🇦', language:'Arabic',   accentDesc:'Explains in Arabic · teaches everyday English', voiceLang:'ar-SA', gender:'male', color:'#1FAE6B' },
   { id:'elena', name:'Teacher Elena', flag:'🇩🇪', language:'German',   accentDesc:'Explains in German · teaches precise English', voiceLang:'de-DE', gender:'female', color:'#EF4444' },
+  { id:'shruthi', name:'Teacher Shruthi', flag:'🇮🇳', language:'Kannada',   accentDesc:'Explains in Kannada · teaches everyday English', voiceLang:'kn-IN', gender:'female', color:'#1FAE6B' },
+  { id:'devika',  name:'Teacher Devika',  flag:'🇮🇳', language:'Malayalam', accentDesc:'Explains in Malayalam · teaches everyday English', voiceLang:'ml-IN', gender:'female', color:'#8B5CF6' },
+  { id:'harpreet',name:'Teacher Harpreet',flag:'🇮🇳', language:'Punjabi',   accentDesc:'Explains in Punjabi · teaches everyday English', voiceLang:'pa-IN', gender:'male',   color:'#F5A623' },
+  { id:'dhruvi',  name:'Teacher Dhruvi',  flag:'🇮🇳', language:'Gujarati',  accentDesc:'Explains in Gujarati · teaches everyday English', voiceLang:'gu-IN', gender:'female', color:'#3B5BFE' },
+  { id:'mateus',  name:'Teacher Mateus',  flag:'🇵🇹', language:'Portuguese',accentDesc:'Explains in Portuguese · teaches conversational English', voiceLang:'pt-PT', gender:'male', color:'#EF4444' },
+  { id:'yuki',    name:'Teacher Yuki',    flag:'🇯🇵', language:'Japanese',  accentDesc:'Explains in Japanese · teaches precise English', voiceLang:'ja-JP', gender:'female', color:'#2440D6' },
 ];
 const TEACHER_GREETING = {
   maya:'Namaste! Main Teacher Anjali hoon. Aaj hum saath mein English बोलेंगे. Ready?',
@@ -368,7 +375,13 @@ const TEACHER_GREETING = {
   david:'Hello! I\'m Teacher David. Let\'s work on clear, well-structured English together. Shall we begin?',
   chloe:'Bonjour! Je suis Professeure Chloé. Aujourd\'hui, nous allons pratiquer l\'anglais ensemble. Prêt?',
   tariq:'مرحبا! أنا المعلم طارق. سنتدرب على الإنجليزية معًا اليوم. هل أنت مستعد؟',
-  elena:'Hallo! Ich bin Lehrerin Elena. Heute üben wir gemeinsam Englisch. Bist du bereit?'
+  elena:'Hallo! Ich bin Lehrerin Elena. Heute üben wir gemeinsam Englisch. Bist du bereit?',
+  shruthi:'ನಮಸ್ಕಾರ! ನಾನು ಟೀಚರ್ ಶ್ರುತಿ. ಇಂದು ನಾವು ಇಂಗ್ಲಿಷ್ ಮಾತನಾಡೋಣ. ಸಿದ್ಧರಿದ್ದೀರಾ?',
+  devika:'നമസ്കാരം! ഞാൻ ടീച്ചർ ദേവിക. ഇന്ന് നമുക്ക് ഇംഗ്ലീഷ് സംസാരിക്കാം. തയ്യാറാണോ?',
+  harpreet:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਟੀਚਰ ਹਰਪ੍ਰੀਤ ਹਾਂ। ਅੱਜ ਅਸੀਂ ਅੰਗਰੇਜ਼ੀ ਬੋਲਾਂਗੇ। ਤਿਆਰ ਹੋ?',
+  dhruvi:'નમસ્તે! હું ટીચર ધ્રુવી છું. આજે આપણે અંગ્રેજી બોલીશું. તૈયાર છો?',
+  mateus:'Olá! Eu sou o professor Mateus. Hoje vamos praticar inglês juntos. Pronto?',
+  yuki:'こんにちは!私はティーチャー・ユキです。今日は一緒に英語を練習しましょう。準備はいいですか?'
 };
 /* Predefined fallback conversation trees per teacher (clearly-labelled sample dialogue,
    not a live AI). Each entry: user-facing prompt -> teacher reply + gentle correction tip. */
@@ -455,13 +468,153 @@ const LESSONS = [
     conversation:[['A: I\'m calling regarding the budget report.','B: Sure, I have it in front of me. What would you like to discuss?']],
     grammar:'Formal register: prefer "kindly", "regarding", "could you" over casual phrases in office communication.',
     practice:[{q:'Most formal option:', options:['Give me the file.','Can you send the file?','Could you kindly share the file at your earliest convenience?'], answer:2}]
+  },
+  { id:'l7', title:'At the Airport', level:'Elementary', category:'Shopping and Travelling', minutes:12,
+    objective:'Use common phrases for check-in, security and boarding.',
+    vocabulary:['Boarding pass','Check-in','Security','Gate','Luggage'],
+    examples:['Where is the check-in counter?','Could I have a window seat?','Which gate does this flight leave from?'],
+    listening:'Listen: "Could I see your boarding pass and passport, please? Your gate is number 12."',
+    speaking:['Ask for a window or aisle seat.','Ask which gate your flight leaves from.','Ask where to collect your luggage.'],
+    conversation:[['A: Could I have a window seat, please?','B: Of course, here is your boarding pass — seat 14A.'],['A: Which gate is flight 202?','B: Gate 12, boarding begins at 5 PM.']],
+    grammar:'Use "Could I..." and "Which...is/are" for polite travel requests and questions.',
+    practice:[{q:'Choose the correct question:', options:['Which gate my flight?','Which gate is my flight?','My flight which gate?'], answer:1}]
+  },
+  { id:'l8', title:'At the Doctor\'s', level:'Elementary', category:'Everyday English', minutes:12,
+    objective:'Describe symptoms and understand basic medical advice.',
+    vocabulary:['Symptom','Fever','Prescription','Appointment','Rest'],
+    examples:['I have a fever and a headache.','I would like to book an appointment.','The doctor prescribed some medicine.'],
+    listening:'Listen: "What seems to be the problem? I have had a fever since yesterday."',
+    speaking:['Describe a symptom you have.','Ask to book a doctor\'s appointment.','Ask how many days you should rest.'],
+    conversation:[['A: What seems to be the problem?','B: I have a sore throat and a mild fever.'],['A: How long should I rest?','B: Please rest for at least two days and drink plenty of water.']],
+    grammar:'Use "have/has" to describe symptoms: "I have a fever." "She has a headache."',
+    practice:[{q:'Choose the correct sentence:', options:['I having a fever.','I have a fever.','I has a fever.'], answer:1}]
+  },
+  { id:'l9', title:'Making a Phone Call', level:'Elementary', category:'Communication', minutes:11,
+    objective:'Handle common phone-call phrases confidently.',
+    vocabulary:['Hold on','Line is busy','Call back','Speak up','Wrong number'],
+    examples:['Could you hold on for a moment?','I\'m sorry, you have the wrong number.','Could you speak up, please? I can\'t hear you.'],
+    listening:'Listen: "Hello, may I speak to Mr. Verma, please? Sure, please hold on."',
+    speaking:['Ask to speak to someone on the phone.','Politely ask someone to call back later.','Ask the caller to repeat their name.'],
+    conversation:[['A: Hello, may I speak to Ritu, please?','B: Sure, one moment. May I know who is calling?'],['A: This is Arjun. Could you ask her to call me back?','B: Of course, I\'ll pass on the message.']],
+    grammar:'Use "May I..." and "Could you..." for polite phone requests.',
+    practice:[{q:'Most polite way to ask on a call:', options:['Give me Ritu.','May I speak to Ritu, please?','Ritu, phone!'], answer:1}]
+  },
+  { id:'l10', title:'Asking for and Giving Directions', level:'Elementary', category:'Shopping and Travelling', minutes:11,
+    objective:'Ask for and understand directions confidently.',
+    vocabulary:['Turn left','Turn right','Straight ahead','Landmark','Roundabout'],
+    examples:['Go straight and turn left at the signal.','The bank is near the roundabout.','Excuse me, how do I get to the station?'],
+    listening:'Listen: "Go straight for two blocks, then turn right. The station is on your left."',
+    speaking:['Ask someone the way to the nearest bank.','Give directions to your house.','Ask how far a place is on foot.'],
+    conversation:[['A: Excuse me, how do I get to the museum?','B: Go straight, then turn left after the park. It\'s on your right.']],
+    grammar:'Use imperatives (Go, Turn, Walk) to give directions clearly.',
+    practice:[{q:'Which is a direction instruction?', options:['I am going to the bank.','Turn left at the signal.','The bank is closed.'], answer:1}]
+  },
+  { id:'l11', title:'Talking About Weather and Seasons', level:'Beginner', category:'Everyday English', minutes:9,
+    objective:'Describe weather and seasons naturally.',
+    vocabulary:['Humid','Chilly','Monsoon','Forecast','Breeze'],
+    examples:['It\'s quite humid today.','The forecast says it will rain tomorrow.','I love the cool breeze in the evening.'],
+    listening:'Listen: "It is very hot and humid today, but the forecast says it will cool down tomorrow."',
+    speaking:['Describe today\'s weather.','Say which season you like best and why.','Ask a friend about the weather in their city.'],
+    conversation:[['A: What is the weather like today?','B: It\'s quite chilly this morning, but sunny in the afternoon.']],
+    grammar:'Use "It is / It\'s" for weather: "It is raining." "It\'s sunny today."',
+    practice:[{q:'Correct sentence about weather:', options:['Today is raining.','It is raining today.','Rain is today.'], answer:1}]
+  },
+  { id:'l12', title:'Family and Relationships', level:'Beginner', category:'Everyday English', minutes:10,
+    objective:'Talk about family members and relationships.',
+    vocabulary:['Sibling','Spouse','Cousin','Elder','Youngest'],
+    examples:['I have two siblings, an elder brother and a younger sister.','My cousin lives in Mumbai.','My spouse works in a hospital.'],
+    listening:'Listen: "I have a big family — my parents, two siblings, and my grandparents live with us."',
+    speaking:['Describe your family members.','Say who is the eldest in your family.','Describe one family tradition.'],
+    conversation:[['A: Tell me about your family.','B: I live with my parents and my younger sister. My grandparents visit us often.']],
+    grammar:'Use possessive adjectives (my, his, her, their) to talk about family: "my mother", "her brother".',
+    practice:[{q:'Choose the correct possessive:', options:['Me mother is a doctor.','My mother is a doctor.','I mother is a doctor.'], answer:1}]
+  },
+  { id:'l13', title:'Hobbies and Free Time', level:'Beginner', category:'Everyday English', minutes:9,
+    objective:'Talk about hobbies and leisure activities.',
+    vocabulary:['Hobby','Leisure','Painting','Gardening','Hiking'],
+    examples:['My hobby is painting.','I enjoy gardening on weekends.','We often go hiking in the hills.'],
+    listening:'Listen: "In my free time, I enjoy reading novels and going for long walks."',
+    speaking:['Describe your favourite hobby.','Say how often you do this hobby.','Ask a friend about their hobbies.'],
+    conversation:[['A: What do you do in your free time?','B: I love painting and listening to music. What about you?']],
+    grammar:'Use "enjoy / love / like" + verb-ing: "I enjoy painting." "I love reading."',
+    practice:[{q:'Choose the correct sentence:', options:['I enjoy to paint.','I enjoy painting.','I enjoy paint.'], answer:1}]
+  },
+  { id:'l14', title:'At the Bank', level:'Intermediate', category:'Business and Office', minutes:12,
+    objective:'Handle common banking conversations.',
+    vocabulary:['Deposit','Withdraw','Account balance','Passbook','Transaction'],
+    examples:['I would like to deposit some money.','Could you check my account balance?','I need to update my passbook.'],
+    listening:'Listen: "Good morning, I would like to withdraw five thousand rupees from my savings account."',
+    speaking:['Ask to open a new bank account.','Ask about your account balance.','Report a lost debit card.'],
+    conversation:[['A: I\'d like to open a savings account.','B: Sure, could I see your ID proof and address proof, please?']],
+    grammar:'Use "would like to" for polite formal requests at counters and offices.',
+    practice:[{q:'Most appropriate at a bank counter:', options:['Give me money.','I would like to withdraw some cash, please.','Money now please.'], answer:1}]
+  },
+  { id:'l15', title:'Renting an Apartment', level:'Intermediate', category:'Everyday English', minutes:12,
+    objective:'Discuss renting a house or apartment.',
+    vocabulary:['Landlord','Tenant','Deposit','Lease','Utilities'],
+    examples:['The landlord asked for a security deposit.','Utilities are not included in the rent.','We signed a one-year lease.'],
+    listening:'Listen: "The rent is fifteen thousand a month, and the security deposit is two months\' rent."',
+    speaking:['Ask about the monthly rent.','Ask what is included in the rent.','Negotiate the security deposit politely.'],
+    conversation:[['A: Is the rent negotiable?','B: We could discuss a small reduction if you sign a longer lease.']],
+    grammar:'Use passive voice for policies: "Utilities are not included." "The deposit is required."',
+    practice:[{q:'Which sentence is passive voice?', options:['We include utilities.','Utilities are included.','I am including utilities.'], answer:1}]
+  },
+  { id:'l16', title:'Writing and Talking About Job Applications', level:'Intermediate', category:'Business and Office', minutes:13,
+    objective:'Discuss job applications and resumes confidently.',
+    vocabulary:['Resume','Cover letter','Qualification','Reference','Vacancy'],
+    examples:['I am applying for the marketing vacancy.','My resume highlights my key qualifications.','Could you be my professional reference?'],
+    listening:'Listen: "I saw your job posting and would like to apply for the position of sales executive."',
+    speaking:['Describe your top qualification for a job.','Ask about an open vacancy.','Explain why you are a good fit for a role.'],
+    conversation:[['A: Why are you interested in this role?','B: I have three years of relevant experience and I am passionate about this field.']],
+    grammar:'Use Present Perfect for accomplishments on a resume: "I have led a team." "I have managed projects."',
+    practice:[{q:'Best resume phrasing:', options:['I lead a team of five.','I have led a team of five.','I leading a team of five.'], answer:1}]
+  },
+  { id:'l17', title:'Giving a Short Presentation', level:'Advanced', category:'Business and Office', minutes:14,
+    objective:'Structure and deliver a short, confident presentation.',
+    vocabulary:['Overview','Agenda','Highlight','Summarise','Q&A'],
+    examples:['Let me give you a quick overview.','I\'d like to highlight three key points.','We\'ll open the floor for Q&A at the end.'],
+    listening:'Listen: "Good morning everyone. Today, I\'ll walk you through our quarterly results and key highlights."',
+    speaking:['Open a presentation with a greeting and topic.','Highlight one key point clearly.','Close a presentation and invite questions.'],
+    conversation:[['A: Thank you all for joining. Today I\'ll cover three areas: sales, growth, and next steps.','B: Sounds great, please go ahead.']],
+    grammar:'Use signposting phrases ("Firstly...", "Moving on...", "To conclude...") to structure spoken presentations.',
+    practice:[{q:'Best way to close a presentation:', options:['That\'s it, bye.','To conclude, thank you for your time — any questions?','I am done now.'], answer:1}]
+  },
+  { id:'l18', title:'Negotiating Politely', level:'Advanced', category:'Business and Office', minutes:13,
+    objective:'Use polite, persuasive language to negotiate.',
+    vocabulary:['Compromise','Proposal','Counter-offer','Flexible','Terms'],
+    examples:['Could we find a compromise on the price?','I\'d like to propose a slightly different timeline.','We are flexible on the delivery date.'],
+    listening:'Listen: "We understand your position. Would you be open to a counter-offer of ten percent less?"',
+    speaking:['Propose a compromise politely.','Say you need time to consider an offer.','Politely decline a proposal and suggest an alternative.'],
+    conversation:[['A: Could we discuss a better rate for a longer contract?','B: That\'s a fair point — let me check what flexibility we have.']],
+    grammar:'Use conditional and hedging language ("Would you be open to...", "We could consider...") to sound diplomatic.',
+    practice:[{q:'Most diplomatic phrasing:', options:['No, that is too low.','We could consider that if the terms are adjusted slightly.','That is a bad offer.'], answer:1}]
+  },
+  { id:'l19', title:'Handling Complaints Professionally', level:'Advanced', category:'Business and Office', minutes:12,
+    objective:'Respond to complaints calmly and professionally.',
+    vocabulary:['Apologise','Inconvenience','Resolve','Escalate','Refund'],
+    examples:['I apologise for the inconvenience caused.','We will resolve this within 24 hours.','I understand your frustration.'],
+    listening:'Listen: "I\'m really sorry for the delay. Let me look into this and resolve it right away."',
+    speaking:['Apologise for a delayed delivery.','Offer a solution to an unhappy customer.','Reassure a customer their issue is being handled.'],
+    conversation:[['A: This is the second time my order has been late!','B: I completely understand your frustration, and I apologise. Let me resolve this immediately.']],
+    grammar:'Use "I understand..." + "I apologise..." + solution to structure a professional response to complaints.',
+    practice:[{q:'Best professional response to a complaint:', options:['That\'s not our problem.','I understand your frustration, and I apologise — let me fix this.','Please calm down.'], answer:1}]
+  },
+  { id:'l20', title:'Festivals and Culture', level:'Elementary', category:'Everyday English', minutes:10,
+    objective:'Talk about festivals and cultural traditions.',
+    vocabulary:['Festival','Celebrate','Tradition','Custom','Gathering'],
+    examples:['We celebrate Diwali with lights and sweets.','It is a family tradition to gather every year.','Every region has its own customs.'],
+    listening:'Listen: "During Diwali, we decorate our homes with lights and share sweets with our neighbours."',
+    speaking:['Describe your favourite festival.','Explain one tradition from your culture.','Ask a friend how they celebrate a festival.'],
+    conversation:[['A: How do you celebrate your favourite festival?','B: We decorate the house, cook special food, and visit family.']],
+    grammar:'Use Simple Present for regular traditions: "We celebrate...", "Every year, families gather..."',
+    practice:[{q:'Choose the correct sentence:', options:['We celebrating Diwali every year.','We celebrate Diwali every year.','We celebrated Diwali every year always.'], answer:1}]
   }
 ];
 
 /* ====================================================================
    DATA: VOCABULARY
 ==================================================================== */
-const VOCAB_CATEGORIES = ['Everyday English','School and Education','College and Campus','Business and Office','Shopping and Travelling','Communication','Professional English'];
+const VOCAB_CATEGORIES = ['Everyday English','School and Education','College and Campus','Business and Office','Shopping and Travelling','Communication','Professional English','Technology','Health and Wellness'];
 const VOCABULARY = [
   {id:'v1', word:'Breakfast', meaning:'The first meal of the day', translation:'नाश्ता (Hindi)', pronunciation:'/ˈbrek.fəst/', example:'I eat breakfast at 8 AM.', category:'Everyday English'},
   {id:'v2', word:'Commute', meaning:'To travel regularly between home and work', translation:'आना-जाना (Hindi)', pronunciation:'/kəˈmjuːt/', example:'My commute takes 40 minutes.', category:'Everyday English'},
@@ -483,7 +636,70 @@ const VOCABULARY = [
   {id:'v18', word:'Elaborate', meaning:'To explain in more detail', translation:'विस्तार से बताना (Hindi)', pronunciation:'/ɪˈlæb.ər.eɪt/', example:'Could you elaborate on that point?', category:'Communication'},
   {id:'v19', word:'Proficient', meaning:'Skilled and competent', translation:'निपुण (Hindi)', pronunciation:'/prəˈfɪʃ.ənt/', example:'She is proficient in English.', category:'Professional English'},
   {id:'v20', word:'Negotiate', meaning:'To discuss terms to reach agreement', translation:'बातचीत करना (Hindi)', pronunciation:'/nɪˈɡoʊ.ʃi.eɪt/', example:'We negotiated a better price.', category:'Professional English'},
-  {id:'v21', word:'Delegate', meaning:'To give a task to someone else', translation:'सौंपना (Hindi)', pronunciation:'/ˈdel.ɪ.ɡeɪt/', example:'He delegated the task to his team.', category:'Professional English'}
+  {id:'v21', word:'Delegate', meaning:'To give a task to someone else', translation:'सौंपना (Hindi)', pronunciation:'/ˈdel.ɪ.ɡeɪt/', example:'He delegated the task to his team.', category:'Professional English'},
+  {id:'v22', word:'Grocery', meaning:'Food and household items bought regularly', translation:'किराना (Hindi)', pronunciation:'/ˈɡroʊ.sər.i/', example:'I buy groceries every Sunday.', category:'Everyday English'},
+  {id:'v23', word:'Chore', meaning:'A small routine household task', translation:'घरेलू काम (Hindi)', pronunciation:'/tʃɔːr/', example:'Washing dishes is my daily chore.', category:'Everyday English'},
+  {id:'v24', word:'Extracurricular', meaning:'Activities outside the regular curriculum', translation:'पाठ्येतर (Hindi)', pronunciation:'/ˌek.strə.kəˈrɪk.jə.lər/', example:'She enjoys extracurricular activities like debate.', category:'School and Education'},
+  {id:'v25', word:'Invigilator', meaning:'A person who supervises an exam', translation:'निरीक्षक (Hindi)', pronunciation:'/ɪnˈvɪdʒ.ɪ.leɪ.tər/', example:'The invigilator checked our admit cards.', category:'School and Education'},
+  {id:'v26', word:'Internship', meaning:'Temporary work experience related to your field', translation:'इंटर्नशिप (Hindi)', pronunciation:'/ˈɪn.tɜːrn.ʃɪp/', example:'I completed a summer internship.', category:'College and Campus'},
+  {id:'v27', word:'Hostel', meaning:'Student residential accommodation', translation:'छात्रावास (Hindi)', pronunciation:'/ˈhɒs.təl/', example:'I live in the college hostel.', category:'College and Campus'},
+  {id:'v28', word:'Appraisal', meaning:'A formal review of someone\'s work performance', translation:'मूल्यांकन (Hindi)', pronunciation:'/əˈpreɪ.zəl/', example:'My appraisal is scheduled next week.', category:'Business and Office'},
+  {id:'v29', word:'Onboarding', meaning:'The process of introducing a new employee', translation:'नियुक्ति प्रक्रिया (Hindi)', pronunciation:'/ˈɒn.bɔːd.ɪŋ/', example:'The onboarding took two days.', category:'Business and Office'},
+  {id:'v30', word:'Boarding pass', meaning:'A document allowing you to board a flight', translation:'बोर्डिंग पास (Hindi)', pronunciation:'/ˈbɔːd.ɪŋ pɑːs/', example:'Please keep your boarding pass ready.', category:'Shopping and Travelling'},
+  {id:'v31', word:'Layover', meaning:'A short stop between flights', translation:'ठहराव (Hindi)', pronunciation:'/ˈleɪ.oʊ.vər/', example:'We have a two-hour layover in Dubai.', category:'Shopping and Travelling'},
+  {id:'v32', word:'Concise', meaning:'Giving information clearly in few words', translation:'संक्षिप्त (Hindi)', pronunciation:'/kənˈsaɪs/', example:'Please keep your answer concise.', category:'Communication'},
+  {id:'v33', word:'Paraphrase', meaning:'To express something using different words', translation:'दूसरे शब्दों में कहना (Hindi)', pronunciation:'/ˈpær.ə.freɪz/', example:'Could you paraphrase that sentence?', category:'Communication'},
+  {id:'v34', word:'Stakeholder', meaning:'A person with an interest in a project or business', translation:'हितधारक (Hindi)', pronunciation:'/ˈsteɪk.hoʊl.dər/', example:'We updated all stakeholders on the progress.', category:'Professional English'},
+  {id:'v35', word:'Benchmark', meaning:'A standard used for comparison', translation:'मानक (Hindi)', pronunciation:'/ˈbentʃ.mɑːrk/', example:'Our sales beat last year\'s benchmark.', category:'Professional English'},
+  {id:'v36', word:'Errand', meaning:'A short trip to do a small task', translation:'काम (Hindi)', pronunciation:'/ˈer.ənd/', example:'I need to run a few errands today.', category:'Everyday English'},
+  {id:'v37', word:'Routine', meaning:'A fixed sequence of regular actions', translation:'दिनचर्या (Hindi)', pronunciation:'/ruːˈtiːn/', example:'My morning routine takes an hour.', category:'Everyday English'},
+  {id:'v38', word:'Convenient', meaning:'Suitable or easy for a particular purpose', translation:'सुविधाजनक (Hindi)', pronunciation:'/kənˈviː.ni.ənt/', example:'Is 5 PM convenient for you?', category:'Everyday English'},
+  {id:'v39', word:'Reminder', meaning:'Something that helps you remember', translation:'याद दिलाने वाला (Hindi)', pronunciation:'/rɪˈmaɪn.dər/', example:'Set a reminder for the meeting.', category:'Everyday English'},
+  {id:'v40', word:'Housework', meaning:'Cleaning and other home-related tasks', translation:'घर का काम (Hindi)', pronunciation:'/ˈhaʊs.wɜːrk/', example:'We share the housework equally.', category:'Everyday English'},
+  {id:'v41', word:'Curriculum', meaning:'The subjects taught in a school or course', translation:'पाठ्यक्रम (Hindi)', pronunciation:'/kəˈrɪk.jə.ləm/', example:'The curriculum includes science and arts.', category:'School and Education'},
+  {id:'v42', word:'Attendance', meaning:'Being present at school or a class', translation:'उपस्थिति (Hindi)', pronunciation:'/əˈten.dəns/', example:'Attendance is compulsory for exams.', category:'School and Education'},
+  {id:'v43', word:'Principal', meaning:'The head of a school', translation:'प्रधानाचार्य (Hindi)', pronunciation:'/ˈprɪn.sə.pəl/', example:'The principal addressed the assembly.', category:'School and Education'},
+  {id:'v44', word:'Report card', meaning:'A document showing a student\'s grades', translation:'रिपोर्ट कार्ड (Hindi)', pronunciation:'/rɪˈpɔːrt kɑːrd/', example:'My report card came today.', category:'School and Education'},
+  {id:'v45', word:'Revision', meaning:'Reviewing material before an exam', translation:'पुनरावृत्ति (Hindi)', pronunciation:'/rɪˈvɪʒ.ən/', example:'I am doing revision for my exams.', category:'School and Education'},
+  {id:'v46', word:'Faculty', meaning:'The teaching staff of a college', translation:'संकाय (Hindi)', pronunciation:'/ˈfæk.əl.ti/', example:'Our faculty is very supportive.', category:'College and Campus'},
+  {id:'v47', word:'Elective', meaning:'An optional subject you can choose', translation:'ऐच्छिक विषय (Hindi)', pronunciation:'/ɪˈlek.tɪv/', example:'I chose psychology as my elective.', category:'College and Campus'},
+  {id:'v48', word:'Dissertation', meaning:'A long piece of academic writing on a topic', translation:'शोध प्रबंध (Hindi)', pronunciation:'/ˌdɪs.ərˈteɪ.ʃən/', example:'She is writing her final dissertation.', category:'College and Campus'},
+  {id:'v49', word:'Fresher', meaning:'A first-year student', translation:'नया छात्र (Hindi)', pronunciation:'/ˈfreʃ.ər/', example:'The freshers attended orientation day.', category:'College and Campus'},
+  {id:'v50', word:'Alumni', meaning:'Former students of a school or college', translation:'पूर्व छात्र (Hindi)', pronunciation:'/əˈlʌm.naɪ/', example:'Many alumni returned for the reunion.', category:'College and Campus'},
+  {id:'v51', word:'Invoice', meaning:'A bill for goods or services', translation:'चालान (Hindi)', pronunciation:'/ˈɪn.vɔɪs/', example:'Please send the invoice by email.', category:'Business and Office'},
+  {id:'v52', word:'Overtime', meaning:'Extra time worked beyond normal hours', translation:'अतिरिक्त समय (Hindi)', pronunciation:'/ˈoʊ.vər.taɪm/', example:'He worked overtime to finish the project.', category:'Business and Office'},
+  {id:'v53', word:'Promotion', meaning:'Being moved to a higher position at work', translation:'पदोन्नति (Hindi)', pronunciation:'/prəˈmoʊ.ʃən/', example:'She received a promotion last month.', category:'Business and Office'},
+  {id:'v54', word:'Client', meaning:'A customer of a business or professional', translation:'ग्राहक (Hindi)', pronunciation:'/ˈklaɪ.ənt/', example:'We have a meeting with a new client.', category:'Business and Office'},
+  {id:'v55', word:'Quarterly', meaning:'Happening every three months', translation:'त्रैमासिक (Hindi)', pronunciation:'/ˈkwɔːr.tər.li/', example:'We review targets quarterly.', category:'Business and Office'},
+  {id:'v56', word:'Discount', meaning:'A reduction in the usual price', translation:'छूट (Hindi)', pronunciation:'/ˈdɪs.kaʊnt/', example:'There is a 20% discount on shoes.', category:'Shopping and Travelling'},
+  {id:'v57', word:'Warranty', meaning:'A guarantee to repair or replace a product', translation:'वारंटी (Hindi)', pronunciation:'/ˈwɒr.ən.ti/', example:'This phone has a one-year warranty.', category:'Shopping and Travelling'},
+  {id:'v58', word:'Checkout', meaning:'The place or process of paying for items', translation:'चेकआउट (Hindi)', pronunciation:'/ˈtʃek.aʊt/', example:'The queue at checkout was long.', category:'Shopping and Travelling'},
+  {id:'v59', word:'Reservation', meaning:'An arrangement to secure a seat, table or room', translation:'आरक्षण (Hindi)', pronunciation:'/ˌrez.ərˈveɪ.ʃən/', example:'I made a reservation for two.', category:'Shopping and Travelling'},
+  {id:'v60', word:'Customs', meaning:'The airport checkpoint for goods entering a country', translation:'सीमा शुल्क (Hindi)', pronunciation:'/ˈkʌs.təmz/', example:'We cleared customs quickly.', category:'Shopping and Travelling'},
+  {id:'v61', word:'Feedback', meaning:'Comments given about performance or work', translation:'प्रतिक्रिया (Hindi)', pronunciation:'/ˈfiːd.bæk/', example:'Thank you for your honest feedback.', category:'Communication'},
+  {id:'v62', word:'Tone', meaning:'The way something is said, showing attitude', translation:'लहजा (Hindi)', pronunciation:'/toʊn/', example:'Please keep a polite tone in emails.', category:'Communication'},
+  {id:'v63', word:'Assertive', meaning:'Confident and direct without being rude', translation:'दृढ़ (Hindi)', pronunciation:'/əˈsɜːr.tɪv/', example:'She gave an assertive response.', category:'Communication'},
+  {id:'v64', word:'Empathy', meaning:'Understanding and sharing another person\'s feelings', translation:'सहानुभूति (Hindi)', pronunciation:'/ˈem.pə.θi/', example:'Good listeners show empathy.', category:'Communication'},
+  {id:'v65', word:'Rephrase', meaning:'To say something again in different words', translation:'फिर से कहना (Hindi)', pronunciation:'/ˌriːˈfreɪz/', example:'Let me rephrase that question.', category:'Communication'},
+  {id:'v66', word:'Competent', meaning:'Having the skill to do something well', translation:'सक्षम (Hindi)', pronunciation:'/ˈkɒm.pɪ.tənt/', example:'She is a competent manager.', category:'Professional English'},
+  {id:'v67', word:'Initiative', meaning:'The ability to act without being told', translation:'पहल (Hindi)', pronunciation:'/ɪˈnɪʃ.ə.tɪv/', example:'He took the initiative to solve the issue.', category:'Professional English'},
+  {id:'v68', word:'Accountability', meaning:'Being responsible for your actions and decisions', translation:'जवाबदेही (Hindi)', pronunciation:'/əˌkaʊn.təˈbɪl.ə.ti/', example:'Accountability is important in this role.', category:'Professional English'},
+  {id:'v69', word:'Networking', meaning:'Building professional relationships and contacts', translation:'नेटवर्किंग (Hindi)', pronunciation:'/ˈnet.wɜːrk.ɪŋ/', example:'Networking helped her find a new job.', category:'Professional English'},
+  {id:'v70', word:'Milestone', meaning:'An important stage or event in progress', translation:'मील का पत्थर (Hindi)', pronunciation:'/ˈmaɪl.stoʊn/', example:'Launching the app was a big milestone.', category:'Professional English'},
+  {id:'v71', word:'Password', meaning:'A secret word or code used to access an account', translation:'पासवर्ड (Hindi)', pronunciation:'/ˈpæs.wɜːrd/', example:'I forgot my email password.', category:'Technology'},
+  {id:'v72', word:'Download', meaning:'To copy data from the internet to a device', translation:'डाउनलोड करना (Hindi)', pronunciation:'/ˈdaʊn.loʊd/', example:'Please download the app to continue.', category:'Technology'},
+  {id:'v73', word:'Upload', meaning:'To send data from a device to the internet', translation:'अपलोड करना (Hindi)', pronunciation:'/ˈʌp.loʊd/', example:'I need to upload my resume.', category:'Technology'},
+  {id:'v74', word:'Software', meaning:'Computer programs and applications', translation:'सॉफ्टवेयर (Hindi)', pronunciation:'/ˈsɒft.wer/', example:'We use new software for accounting.', category:'Technology'},
+  {id:'v75', word:'Hardware', meaning:'The physical parts of a computer', translation:'हार्डवेयर (Hindi)', pronunciation:'/ˈhɑːrd.wer/', example:'The laptop\'s hardware needs an upgrade.', category:'Technology'},
+  {id:'v76', word:'Wi-Fi', meaning:'A wireless internet connection', translation:'वाई-फाई (Hindi)', pronunciation:'/ˈwaɪ.faɪ/', example:'What is the Wi-Fi password here?', category:'Technology'},
+  {id:'v77', word:'Update', meaning:'A new, improved version of software', translation:'अद्यतन (Hindi)', pronunciation:'/ʌpˈdeɪt/', example:'Please install the latest update.', category:'Technology'},
+  {id:'v78', word:'Exercise', meaning:'Physical activity done to stay fit', translation:'व्यायाम (Hindi)', pronunciation:'/ˈek.sər.saɪz/', example:'I exercise for thirty minutes every morning.', category:'Health and Wellness'},
+  {id:'v79', word:'Nutrition', meaning:'The process of eating healthy food', translation:'पोषण (Hindi)', pronunciation:'/nuːˈtrɪʃ.ən/', example:'Good nutrition keeps you energetic.', category:'Health and Wellness'},
+  {id:'v80', word:'Hydration', meaning:'Having enough water in your body', translation:'जलयोजन (Hindi)', pronunciation:'/haɪˈdreɪ.ʃən/', example:'Hydration is important during summer.', category:'Health and Wellness'},
+  {id:'v81', word:'Wellbeing', meaning:'The state of being healthy and content', translation:'कल्याण (Hindi)', pronunciation:'/ˌwelˈbiː.ɪŋ/', example:'A short walk improves your wellbeing.', category:'Health and Wellness'},
+  {id:'v82', word:'Checkup', meaning:'A routine examination to confirm good health', translation:'जांच (Hindi)', pronunciation:'/ˈtʃek.ʌp/', example:'I have a yearly health checkup.', category:'Health and Wellness'},
+  {id:'v83', word:'Immunity', meaning:'The body\'s ability to resist illness', translation:'प्रतिरक्षा (Hindi)', pronunciation:'/ɪˈmjuː.nə.ti/', example:'Eating fruit boosts your immunity.', category:'Health and Wellness'},
+  {id:'v84', word:'Balanced diet', meaning:'Eating a healthy variety of foods', translation:'संतुलित आहार (Hindi)', pronunciation:'/ˈbæl.ənst ˈdaɪ.ət/', example:'A balanced diet includes fruits and vegetables.', category:'Health and Wellness'}
 ];
 
 /* ====================================================================
@@ -513,7 +729,43 @@ const GRAMMAR_TOPICS = [
     quiz:[{q:'Correct sentence:', options:['She go to school.','She goes to school.','She going school.'], answer:1}] },
   { id:'g8', title:'Common Spoken English Mistakes', level:'Intermediate', explanation:'Common slips: "He don\'t know" → "He doesn\'t know"; "I am agree" → "I agree"; "Discuss about" → "Discuss".',
     examples:['Incorrect: He don\'t know. Correct: He doesn\'t know.','Incorrect: I am agree. Correct: I agree.'],
-    quiz:[{q:'Correct the sentence: "She don\'t like coffee."', options:['She doesn\'t like coffee.','She don\'t likes coffee.','She not like coffee.'], answer:0}] }
+    quiz:[{q:'Correct the sentence: "She don\'t like coffee."', options:['She doesn\'t like coffee.','She don\'t likes coffee.','She not like coffee.'], answer:0}] },
+  { id:'g9', title:'Modal Verbs (can, could, should, must)', level:'Intermediate', explanation:'Modal verbs add meaning like ability, possibility, advice or obligation. "Can" shows ability, "could" is polite/past ability, "should" gives advice, "must" shows strong obligation.',
+    examples:['I can swim.','Could you help me, please?','You should drink more water.','You must submit the form today.'],
+    quiz:[{q:'Which modal verb best fits: "You ___ see a doctor if the fever continues."', options:['can','should','must not'], answer:1}] },
+  { id:'g10', title:'Conjunctions (and, but, because, although)', level:'Elementary', explanation:'Conjunctions join ideas. "And" adds, "but" contrasts, "because" gives a reason, "although" shows an unexpected contrast.',
+    examples:['I like tea and coffee.','She is tired but happy.','I stayed home because it was raining.','Although it was late, we finished the work.'],
+    quiz:[{q:'Choose the correct conjunction: "I was hungry, ___ I had no food at home."', options:['and','but','because'], answer:1} ] },
+  { id:'g11', title:'Comparatives and Superlatives', level:'Elementary', explanation:'Use comparatives to compare two things (bigger, more interesting) and superlatives for the extreme in a group (biggest, most interesting).',
+    examples:['This bag is bigger than that one.','She is the tallest in her class.','This book is more interesting than the last one.'],
+    quiz:[{q:'Choose the correct form: "Delhi is ___ than Gurugram."', options:['big','bigger','biggest'], answer:1}] },
+  { id:'g12', title:'Passive Voice', level:'Advanced', explanation:'Passive voice focuses on the action rather than who did it: Subject + is/was + past participle. Common in formal and office English.',
+    examples:['The report was submitted yesterday.','English is spoken in many countries.','The decision will be announced tomorrow.'],
+    quiz:[{q:'Which sentence is in the passive voice?', options:['She wrote the report.','The report was written by her.','She is writing the report.'], answer:1}] },
+  { id:'g13', title:'Reported (Indirect) Speech', level:'Advanced', explanation:'Reported speech tells what someone said without quoting them exactly. Tenses usually shift back one step: "I am tired" becomes "She said she was tired."',
+    examples:['He said, "I am busy." → He said he was busy.','She said, "I will call you." → She said she would call me.'],
+    quiz:[{q:'Report this correctly: He said, "I am hungry."', options:['He said he is hungry.','He said he was hungry.','He says he was hungry.'], answer:1}] },
+  { id:'g14', title:'Relative Clauses (who, which, that)', level:'Intermediate', explanation:'Relative clauses add extra information about a noun. Use "who" for people, "which" for things, and "that" for either in informal speech.',
+    examples:['The man who called is my uncle.','The book which I bought is interesting.','This is the phone that I lost.'],
+    quiz:[{q:'Choose the correct relative pronoun: "The teacher ___ helped me is very kind."', options:['which','who','that (for objects only)'], answer:1}] },
+  { id:'g15', title:'Conditionals (If Clauses)', level:'Advanced', explanation:'First conditional talks about real future possibilities: "If it rains, I will stay home." Second conditional talks about unreal or hypothetical situations: "If I had money, I would travel."',
+    examples:['If it rains, I will take an umbrella.','If I won the lottery, I would buy a house.','If you study hard, you will pass.'],
+    quiz:[{q:'Choose the correct form: "If I ___ more time, I would learn painting."', options:['have','had','will have'], answer:1}] },
+  { id:'g16', title:'Gerunds and Infinitives', level:'Intermediate', explanation:'A gerund is a verb+ing used as a noun ("Swimming is fun"). An infinitive is "to" + verb ("I want to swim"). Some verbs prefer one form over the other.',
+    examples:['I enjoy reading books.','She wants to travel abroad.','He avoids eating junk food.'],
+    quiz:[{q:'Choose the correct form: "I want ___ English fluently."', options:['speaking','to speak','speak'], answer:1}] },
+  { id:'g17', title:'Common Phrasal Verbs', level:'Intermediate', explanation:'Phrasal verbs combine a verb with a preposition/adverb to create new meanings: "give up" (quit), "look after" (take care of), "find out" (discover).',
+    examples:['Please look after my bag.','I need to find out the train timings.','She gave up smoking last year.'],
+    quiz:[{q:'What does "give up" mean?', options:['To start something','To quit or stop something','To raise something'], answer:1}] },
+  { id:'g18', title:'Countable and Uncountable Nouns', level:'Elementary', explanation:'Countable nouns can be counted (one apple, two apples). Uncountable nouns cannot (water, information, advice) and use "much" instead of "many".',
+    examples:['I have two apples.','I need some information.','How much water do you drink daily?'],
+    quiz:[{q:'Choose the correct sentence:', options:['I have many information.','I have much information.','I have many informations.'], answer:1}] },
+  { id:'g19', title:'Word Order in Sentences', level:'Beginner', explanation:'Standard English word order is Subject + Verb + Object + Time/Place: "I eat rice every day." Getting this order right makes spoken sentences sound natural.',
+    examples:['I watch movies every weekend.','She reads the newspaper every morning.','We play cricket in the park on Sundays.'],
+    quiz:[{q:'Choose the correctly ordered sentence:', options:['Every day I school go to.','I go to school every day.','Go I every day to school.'], answer:1}] },
+  { id:'g20', title:'Commonly Confused Words', level:'Intermediate', explanation:'Some words are frequently confused: its (possessive) vs it\'s (it is); their (possessive) vs there (place) vs they\'re (they are); your (possessive) vs you\'re (you are).',
+    examples:['The dog wagged its tail.','It\'s raining outside.','Their house is near the park. / The keys are there. / They\'re coming soon.'],
+    quiz:[{q:'Choose the correct word: "___ going to be late for the meeting."', options:['Your','You\'re','Youre'], answer:1}] }
 ];
 
 /* ====================================================================
@@ -539,6 +791,61 @@ const STORIES = [
     text:'On his first day in a new city, Sameer got lost on his way to the market. He politely stopped a stranger and asked, "Excuse me, could you tell me the way to the market?" The stranger smiled and gave him clear directions. Sameer thanked her and reached the market just in time.',
     vocab:[{w:'Stranger', m:'A person you do not know'},{w:'Directions', m:'Instructions on how to get somewhere'}],
     questions:[{q:'What was Sameer looking for?', options:['The market','The station','The school'], answer:0},{q:'How did the stranger react?', options:['She ignored him','She smiled and helped','She got angry'], answer:1}]
+  },
+  { id:'s5', title:'The Farmer and the Well', ageGroup:'Class 1-5', level:'Beginner',
+    text:'A farmer sold his well to his neighbour, but kept the water inside as his own. When the neighbour came to draw water, the farmer would not let him. The confused neighbour went to a wise judge, who ruled that if the water belonged to the farmer, he must remove it from the well before the neighbour could use it. Realising his mistake, the farmer apologised and let his neighbour use the water freely.',
+    vocab:[{w:'Neighbour', m:'A person who lives near you'},{w:'Judge', m:'A person who decides what is fair in a dispute'}],
+    questions:[{q:'What did the farmer try to keep for himself?', options:['The well','The water','The land'], answer:1},{q:'What did the judge decide?', options:['The farmer was right','The farmer must remove his water first','The neighbour must pay more'], answer:1}]
+  },
+  { id:'s6', title:'Preparing for Placements', ageGroup:'College', level:'Advanced',
+    text:'With campus placements approaching, Neha spent her evenings practising mock interviews with her friends, polishing her resume, and researching the companies visiting her college. On the day of her interview, she answered confidently, backed every claim with an example, and thanked the panel for their time. A week later, she received an offer letter from her first-choice company.',
+    vocab:[{w:'Placement', m:'The process of getting a job through campus recruitment'},{w:'Resume', m:'A short document listing your skills and experience'}],
+    questions:[{q:'How did Neha prepare?', options:['She did nothing special','Mock interviews and research','Only read her textbooks'], answer:1},{q:'What happened a week later?', options:['She got a rejection','She got an offer letter','She reapplied'], answer:1}]
+  },
+  { id:'s7', title:'The Thirsty Crow', ageGroup:'Class 1-5', level:'Beginner',
+    text:'A thirsty crow flew for a long time looking for water. At last, she found a pot with a little water at the bottom, but her beak could not reach it. Thinking carefully, the clever crow picked up small pebbles one by one and dropped them into the pot. Slowly, the water rose to the top, and the crow happily drank the water.',
+    vocab:[{w:'Thirsty', m:'Needing to drink water'},{w:'Pebble', m:'A small round stone'}],
+    questions:[{q:'What did the crow drop into the pot?', options:['Leaves','Pebbles','Sticks'], answer:1},{q:'Why did the water rise?', options:['It rained','The pebbles filled the space','The crow poured more water'], answer:1}]
+  },
+  { id:'s8', title:'My First Day at School', ageGroup:'Class 1-5', level:'Beginner',
+    text:'Riya felt nervous on her first day at a new school. She did not know anyone in her class. During lunch break, a classmate named Ayesha smiled and invited her to sit together. They talked about their favourite cartoons and quickly became friends. By the end of the day, Riya was excited to come back to school the next morning.',
+    vocab:[{w:'Nervous', m:'Feeling worried or anxious'},{w:'Classmate', m:'A student in the same class as you'}],
+    questions:[{q:'How did Riya feel at first?', options:['Excited','Nervous','Angry'], answer:1},{q:'Who invited Riya to sit together?', options:['A teacher','Ayesha','Her mother'], answer:1}]
+  },
+  { id:'s9', title:'Group Project Trouble', ageGroup:'Class 6-10', level:'Elementary',
+    text:'Karan\'s group project was due in two days, but one teammate had not finished his part. Instead of getting angry, Karan called a short meeting, listened to his teammate\'s difficulty, and offered to help him finish it that evening. They worked together and submitted the project on time. Karan\'s teacher praised the whole team for working well together.',
+    vocab:[{w:'Teammate', m:'A person on the same team as you'},{w:'Praise', m:'To express approval or admiration'}],
+    questions:[{q:'What was the problem?', options:['The project was too easy','A teammate had not finished his part','The teacher cancelled the project'], answer:1},{q:'How did Karan react?', options:['He got angry','He offered to help','He ignored the problem'], answer:1}]
+  },
+  { id:'s10', title:'The Science Exhibition', ageGroup:'Class 6-10', level:'Elementary',
+    text:'For the school science exhibition, Meera built a working model of a water filter using simple materials. She explained her project clearly to every visitor, answered their questions, and even helped a younger student understand how filtration works. Her project won second prize, but she was most proud of how confidently she had explained her idea.',
+    vocab:[{w:'Exhibition', m:'A public display of work or projects'},{w:'Filtration', m:'The process of removing impurities from a liquid'}],
+    questions:[{q:'What did Meera build?', options:['A robot','A water filter model','A solar cooker'], answer:1},{q:'What was she most proud of?', options:['Winning first prize','Explaining her idea confidently','Finishing quickly'], answer:1}]
+  },
+  { id:'s11', title:'Choosing the Right Stream', ageGroup:'Class 11-12', level:'Elementary',
+    text:'After Class 10 results, Arjun was confused about which stream to choose — science, commerce, or arts. He spoke to his teachers, researched different career paths online, and talked to seniors who had already chosen each stream. Finally, he chose commerce because it matched his interest in business and numbers. He felt relieved once he had made an informed decision.',
+    vocab:[{w:'Stream', m:'A specific branch of study, such as science or commerce'},{w:'Informed decision', m:'A choice made after gathering enough information'}],
+    questions:[{q:'What was Arjun confused about?', options:['Which school to join','Which stream to choose','Which subject to fail'], answer:1},{q:'Why did he choose commerce?', options:['His friends chose it','It matched his interests','It was the easiest'], answer:1}]
+  },
+  { id:'s12', title:'The First Salary', ageGroup:'Adult', level:'Intermediate',
+    text:'When Farhan received his first salary, he felt an overwhelming sense of pride. He treated his parents to dinner, saved a portion for future goals, and bought a small gift for himself as a reminder of this milestone. Looking back at his years of hard work and study, he realised this was just the beginning of his career.',
+    vocab:[{w:'Salary', m:'Money paid regularly for work'},{w:'Milestone', m:'An important stage or event'}],
+    questions:[{q:'What did Farhan do with his first salary?', options:['Spent it all on gifts','Treated his parents, saved, and bought himself something small','Gave it all away'], answer:1},{q:'How did he feel?', options:['Disappointed','Proud','Indifferent'], answer:1}]
+  },
+  { id:'s13', title:'A Difficult Client Call', ageGroup:'Adult', level:'Advanced',
+    text:'During a client call, Priya faced tough questions about a delayed project. Instead of getting defensive, she calmly explained the reasons for the delay, apologised for the inconvenience, and presented a clear revised timeline. The client appreciated her honesty and professionalism, and the project relationship remained strong. Priya learned that clear communication matters more than avoiding difficult conversations.',
+    vocab:[{w:'Defensive', m:'Behaving as if you are being attacked or blamed'},{w:'Timeline', m:'A schedule showing when tasks will be completed'}],
+    questions:[{q:'How did Priya respond to tough questions?', options:['She got defensive','She stayed calm and explained clearly','She avoided the call'], answer:1},{q:'What did Priya learn?', options:['To avoid difficult conversations','That clear communication matters','That clients are always wrong'], answer:1}]
+  },
+  { id:'s14', title:'Moving to a New City', ageGroup:'Adult', level:'Intermediate',
+    text:'When Ananya moved to Bengaluru for a new job, everything felt unfamiliar — the language, the traffic, and the food. She joined a local language class on weekends, explored her neighbourhood on foot, and slowly made friends with her colleagues. Within a few months, the city that once felt foreign started to feel like home.',
+    vocab:[{w:'Unfamiliar', m:'Not known or recognised'},{w:'Neighbourhood', m:'The area around where you live'}],
+    questions:[{q:'What did Ananya do to settle in?', options:['She stayed indoors','She joined a language class and explored the area','She moved back home'], answer:1},{q:'How did she feel after a few months?', options:['Still a stranger','The city felt like home','She wanted to move again'], answer:1}]
+  },
+  { id:'s15', title:'The Annual Team Presentation', ageGroup:'Adult', level:'Advanced',
+    text:'Before the annual team presentation, Rohit was anxious about speaking in front of senior leadership. He practised his slides every evening for a week, timed his delivery, and prepared answers for likely questions. On the day, his presentation was clear and confident, and his manager complimented him afterward for the well-structured content and calm delivery.',
+    vocab:[{w:'Leadership', m:'The senior people who manage or guide an organisation'},{w:'Delivery', m:'The way something is spoken or presented'}],
+    questions:[{q:'How did Rohit prepare?', options:['He did not prepare at all','He practised his slides and timed his delivery','He asked someone else to present'], answer:1},{q:'What did his manager say?', options:['Nothing','He complimented Rohit\'s clear and confident presentation','He criticised the presentation'], answer:1}]
   }
 ];
 
@@ -568,6 +875,47 @@ const PRACTICE_SETS = [
   { id:'p5', title:'Conversation Completion', type:'mcq', level:'Intermediate', items:[
     {q:'A: "How was your weekend?"  B: ___', options:['I am fine, thank you.','It was great, thanks for asking!','Yes, I did.'], answer:1, explain:'This responds naturally to a question about the weekend.'},
     {q:'A: "Could you help me with this report?"  B: ___', options:['Sure, I would be happy to help.','No problem, weather is nice.','I am from Delhi.'], answer:0, explain:'This directly and politely responds to the request.'}
+  ]},
+  { id:'p6', title:'Modal Verbs & Conjunctions Review', type:'mcq', level:'Intermediate', items:[
+    {q:'Choose the correct modal: "You ___ wear a seatbelt — it is the law."', options:['can','must','could'], answer:1, explain:'"Must" expresses a strong obligation or rule.'},
+    {q:'Choose the correct conjunction: "She passed the exam ___ she studied hard."', options:['because','but','although'], answer:0, explain:'"Because" introduces the reason for passing.'},
+    {q:'Choose the correct modal: "___ you pass the salt, please?"', options:['Must','Could','Should not'], answer:1, explain:'"Could" is a polite way to make a request.'}
+  ]},
+  { id:'p7', title:'Fill in the Blanks — Office Life', type:'fill', level:'Intermediate', items:[
+    {q:'Please find the ___ (attach) document.', answer:'attached', explain:'"Attached" describes the document that is included.'},
+    {q:'We ___ (schedule) a meeting for tomorrow.', answer:'scheduled', explain:'Past simple: we scheduled it already.'},
+    {q:'She ___ (lead) the project since January.', answer:'has led', explain:'Present Perfect shows an action continuing from the past to now.'}
+  ]},
+  { id:'p8', title:'Sentence Arrangement — Travel', type:'arrange', level:'Elementary', items:[
+    {words:['is','the','where','station','nearest'], answer:'where is the nearest station'},
+    {words:['a','I','window','seat','would','like'], answer:'I would like a window seat'},
+    {words:['flight','delayed','was','the'], answer:'the flight was delayed'}
+  ]},
+  { id:'p9', title:'Listen and Choose — Office Phrases', type:'listen', level:'Intermediate', items:[
+    {audio:'Could you send me the report by tomorrow?', q:'What did you hear?', options:['Could you send me the report by tomorrow?','Could you print the report today?','Did you send the report yesterday?'], answer:0},
+    {audio:'I am calling regarding your recent order.', q:'What did you hear?', options:['I am calling about a job.','I am calling regarding your recent order.','I am calling to say hello.'], answer:1}
+  ]},
+  { id:'p10', title:'Grammar Quiz — Tenses Deep Dive', type:'mcq', level:'Intermediate', items:[
+    {q:'Choose the correct sentence:', options:['I am living here since 2019.','I have lived here since 2019.','I live here since 2019.'], answer:1, explain:'Present Perfect ("have lived") is used with "since" for an action continuing to now.'},
+    {q:'Choose the correct sentence:', options:['By next year, I will finish my degree.','By next year, I will have finished my degree.','By next year, I finish my degree.'], answer:1, explain:'Future Perfect describes an action that will be completed before a future point.'}
+  ]},
+  { id:'p11', title:'Fill in the Blanks — Family & Daily Life', type:'fill', level:'Beginner', items:[
+    {q:'My sister ___ (study) in college.', answer:'studies', explain:'Present simple, third person singular takes -s.'},
+    {q:'We ___ (visit) our grandparents last weekend.', answer:'visited', explain:'Past simple of visit is visited.'},
+    {q:'They ___ (play) cricket every Sunday.', answer:'play', explain:'Present simple for a regular habit.'}
+  ]},
+  { id:'p12', title:'Sentence Arrangement — Interviews', type:'arrange', level:'Intermediate', items:[
+    {words:['strength','my','is','problem-solving','biggest'], answer:'my biggest strength is problem-solving'},
+    {words:['years','have','of','I','experience','three'], answer:'I have three years of experience'},
+    {words:['about','tell','yourself','me'], answer:'tell me about yourself'}
+  ]},
+  { id:'p13', title:'Listen and Choose — Everyday Life', type:'listen', level:'Beginner', items:[
+    {audio:'What time does the shop open?', q:'What did you hear?', options:['What time does the shop open?','What time does the shop close?','Where is the shop located?'], answer:0},
+    {audio:'I would like a cup of coffee, please.', q:'What did you hear?', options:['I would like a cup of tea, please.','I would like a cup of coffee, please.','I do not want any coffee.'], answer:1}
+  ]},
+  { id:'p14', title:'Conversation Completion — Workplace', type:'mcq', level:'Advanced', items:[
+    {q:'A: "We are running behind schedule."  B: ___', options:['That is not my problem.','Let\'s discuss how we can catch up.','I don\'t care about the schedule.'], answer:1, explain:'This response is constructive and solution-focused.'},
+    {q:'A: "I disagree with this approach."  B: ___', options:['You are wrong.','I see your point — could you explain your concern?','Whatever you say.'], answer:1, explain:'This response acknowledges disagreement professionally and invites discussion.'}
   ]}
 ];
 
@@ -582,7 +930,19 @@ const SPEAKING_TOPICS = [
   { id:'sp5', title:'Travelling', sentences:['Where is the nearest station?','How do I get to the airport?','Can you recommend a good hotel?'] },
   { id:'sp6', title:'Interviews', sentences:['Tell me about yourself.','What are your strengths?','Why should we hire you?'] },
   { id:'sp7', title:'Meetings', sentences:['Let\'s begin with today\'s agenda.','Could you elaborate on that point?','I agree with your suggestion.'] },
-  { id:'sp8', title:'Everyday Communication', sentences:['How is the weather today?','What are your plans for the weekend?','Could you repeat that please?'] }
+  { id:'sp8', title:'Everyday Communication', sentences:['How is the weather today?','What are your plans for the weekend?','Could you repeat that please?'] },
+  { id:'sp9', title:'Health', sentences:['I have a headache today.','I would like to book a doctor\'s appointment.','Please take rest and drink water.'] },
+  { id:'sp10', title:'Technology & Internet', sentences:['Could you help me reset my password?','My internet connection is very slow.','Can you share the file over email?'] },
+  { id:'sp11', title:'Family & Relationships', sentences:['I have two siblings.','My parents live in Delhi.','We have dinner together every evening.'] },
+  { id:'sp12', title:'Hobbies & Free Time', sentences:['My hobby is painting.','I enjoy reading on weekends.','I love going for long walks.'] },
+  { id:'sp13', title:'Banking', sentences:['I would like to open a savings account.','Could you check my account balance?','I need to report a lost card.'] },
+  { id:'sp14', title:'Weather & Seasons', sentences:['It is very hot today.','I love the rainy season.','The forecast says it will snow tomorrow.'] },
+  { id:'sp15', title:'Directions', sentences:['How do I get to the station?','Turn left at the next signal.','Is it within walking distance?'] },
+  { id:'sp16', title:'Phone Calls', sentences:['May I speak to Mr. Sharma, please?','Could you hold on for a moment?','I\'ll call you back in five minutes.'] },
+  { id:'sp17', title:'Renting a House', sentences:['What is the monthly rent?','Is the security deposit refundable?','Are utilities included in the rent?'] },
+  { id:'sp18', title:'Festivals & Culture', sentences:['We celebrate this festival every year.','It is a family tradition.','How do you celebrate this occasion?'] },
+  { id:'sp19', title:'Negotiation', sentences:['Could we find a middle ground?','I\'d like to propose a different timeline.','We are flexible on the terms.'] },
+  { id:'sp20', title:'Handling Complaints', sentences:['I apologise for the inconvenience.','We will resolve this as soon as possible.','Thank you for your patience.'] }
 ];
 
 const NAV_ITEMS = [
@@ -731,6 +1091,10 @@ function speak(text, langCode, onend, gender){
   if(v) u.voice = v;
   u.lang = langCode || 'en-US';
   u.rate = state.speakRate || 0.95;
+  /* Many devices only ship ONE voice per non-English language (often female by default),
+     so gender-matching a voice isn't always possible. As a fallback, shift pitch so
+     male and female teachers still sound distinct even when sharing the same base voice. */
+  u.pitch = gender==='male' ? 0.78 : (gender==='female' ? 1.05 : 1.0);
   if(onend) u.onend = onend;
   u.onerror = ()=>{ toast('Voice for this language may not be installed on your device.','error'); if(onend) onend(); };
   speechSynthesis.speak(u);
@@ -773,7 +1137,7 @@ const AGE_GROUPS = ['Class 1-5','Class 6-10','Class 11-12','College','Working Pr
 const LEVELS = ['Beginner','Elementary','Intermediate','Advanced'];
 const OBJECTIVES = ['School Education','College','Interviews','Office Communication','Everyday Conversations','Professional Development'];
 const ACCENTS = ['American English','British English','Neutral Indian English'];
-const EXPLAIN_LANGS = ['English','Hindi','Spanish','Telugu','Tamil','Bengali','Marathi','French','Arabic','German'];
+const EXPLAIN_LANGS = ['English','Hindi','Spanish','Telugu','Tamil','Bengali','Marathi','French','Arabic','German','Kannada','Malayalam','Punjabi','Gujarati','Portuguese','Japanese'];
 const DURATIONS = [10,15,20,30];
 
 let onboardDraft = null;
@@ -1764,6 +2128,8 @@ function init(){
   updateProfileChip();
   const brandSmall = document.querySelector('.brand-row .brand small');
   if(brandSmall) brandSmall.textContent = `Speak with confidence · v${APP_VERSION}`;
+  const mobileVersionPill = document.getElementById('mobileVersionPill');
+  if(mobileVersionPill) mobileVersionPill.textContent = 'v'+APP_VERSION;
   document.getElementById('topThemeBtn').addEventListener('click', toggleTheme);
   document.getElementById('sideThemeBtn').addEventListener('click', toggleTheme);
   document.getElementById('onboardModal').addEventListener('click', e=>{ /* prevent close-on-outside for mandatory first-run form */ });
