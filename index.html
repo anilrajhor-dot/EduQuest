@@ -243,6 +243,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       <section class="section-view" id="view-rhymes"></section>
       <section class="section-view" id="view-practice"></section>
       <section class="section-view" id="view-teachers"></section>
+      <section class="section-view" id="view-languages"></section>
       <section class="section-view" id="view-progress"></section>
       <section class="section-view" id="view-settings"></section>
     </main>
@@ -284,7 +285,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '4.2.0';
+const APP_VERSION = '5.1.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -307,8 +308,10 @@ function freshState(){
     },
     theme:'light',
     speakRate:0.95,
+    voiceGender:'female', // 'male' | 'female' | 'baby' — user-controlled, applies to all spoken audio
     speakingProgress:{}, // { topicId: [practiced sentence indices] }
     chatHistory:{},      // { teacherId: [{from,text}, ...] }
+    langProgress:{ activeLang:null, learnedItems:{}, quizScores:{} }, // { learnedItems: {langId:[itemIds]}, quizScores:{langId:{score,total}} }
     progress:{
       streak:0, lastActiveDate:null, activeDays:[], points:0,
       lessonsCompleted:[], confidenceScore:40,
@@ -326,6 +329,7 @@ let state = loadState() || freshState();
   for(const k in f){ if(!(k in state)) state[k]=f[k]; }
   for(const k in f.profile){ if(!(k in state.profile)) state.profile[k]=f.profile[k]; }
   for(const k in f.progress){ if(!(k in state.progress)) state.progress[k]=f.progress[k]; }
+  for(const k in f.langProgress){ if(!(k in state.langProgress)) state.langProgress[k]=f.langProgress[k]; }
 })();
 
 /* ---------------- TOAST ---------------- */
@@ -367,23 +371,23 @@ const TEACHERS = [
   { id:'yuki',    name:'Teacher Yuki',    flag:'🇯🇵', language:'Japanese',  accentDesc:'Explains in Japanese · teaches precise English', voiceLang:'ja-JP', gender:'female', color:'#2440D6' },
 ];
 const TEACHER_GREETING = {
-  maya:'Namaste! Main Teacher Anjali hoon. Aaj hum saath mein English बोलेंगे. Ready?',
-  sofia:'¡Hola! Soy la profesora Sofía. Hoy vamos a practicar inglés juntos. ¿Listo?',
-  priya:'నమస్కారం! నేను టీచర్ సౌమ్య. ఈరోజు మనం ఇంగ్లీష్ మాట్లాడదాం. సిద్ధమేనా?',
-  anaya:'வணக்கம்! நான் ஆசிரியர் மீனாட்சி. இன்று ஆங்கிலம் பேசுவோம். தயாரா?',
-  rahul:'নমস্কার! আমি টিচার সৌরভ। আজ আমরা একসাথে ইংরেজি বলব। প্রস্তুত?',
-  sneha:'नमस्कार! मी टीचर स्वाती. आज आपण एकत्र इंग्रजी बोलूया. तयार आहात का?',
-  sarah:'Hi there! I\'m Teacher Sarah. Let\'s practise some confident, everyday American English today. Ready?',
-  david:'Hello! I\'m Teacher David. Let\'s work on clear, well-structured English together. Shall we begin?',
-  chloe:'Bonjour! Je suis Professeure Chloé. Aujourd\'hui, nous allons pratiquer l\'anglais ensemble. Prêt?',
-  tariq:'مرحبا! أنا المعلم طارق. سنتدرب على الإنجليزية معًا اليوم. هل أنت مستعد؟',
-  elena:'Hallo! Ich bin Lehrerin Elena. Heute üben wir gemeinsam Englisch. Bist du bereit?',
-  shruthi:'ನಮಸ್ಕಾರ! ನಾನು ಟೀಚರ್ ಶ್ರುತಿ. ಇಂದು ನಾವು ಇಂಗ್ಲಿಷ್ ಮಾತನಾಡೋಣ. ಸಿದ್ಧರಿದ್ದೀರಾ?',
-  devika:'നമസ്കാരം! ഞാൻ ടീച്ചർ ദേവിക. ഇന്ന് നമുക്ക് ഇംഗ്ലീഷ് സംസാരിക്കാം. തയ്യാറാണോ?',
-  harpreet:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਟੀਚਰ ਹਰਪ੍ਰੀਤ ਹਾਂ। ਅੱਜ ਅਸੀਂ ਅੰਗਰੇਜ਼ੀ ਬੋਲਾਂਗੇ। ਤਿਆਰ ਹੋ?',
-  dhruvi:'નમસ્તે! હું ટીચર ધ્રુવી છું. આજે આપણે અંગ્રેજી બોલીશું. તૈયાર છો?',
-  mateus:'Olá! Eu sou o professor Mateus. Hoje vamos praticar inglês juntos. Pronto?',
-  yuki:'こんにちは!私はティーチャー・ユキです。今日は一緒に英語を練習しましょう。準備はいいですか?'
+  maya:'Namaste! Main aapki Hindi teacher hoon. Aaj hum saath mein English बोलेंगे. Ready?',
+  sofia:'¡Hola! Soy tu profesora de español. Hoy vamos a practicar inglés juntos. ¿Listo?',
+  priya:'నమస్కారం! నేను మీ తెలుగు టీచర్‌ని. ఈరోజు మనం ఇంగ్లీష్ మాట్లాడదాం. సిద్ధమేనా?',
+  anaya:'வணக்கம்! நான் உங்கள் தமிழ் ஆசிரியர். இன்று ஆங்கிலம் பேசுவோம். தயாரா?',
+  rahul:'নমস্কার! আমি আপনার বাংলা শিক্ষক। আজ আমরা একসাথে ইংরেজি বলব। প্রস্তুত?',
+  sneha:'नमस्कार! मी तुमची मराठी टीचर आहे. आज आपण एकत्र इंग्रजी बोलूया. तयार आहात का?',
+  sarah:'Hi there! I\'m your American English teacher. Let\'s practise some confident, everyday English today. Ready?',
+  david:'Hello! I\'m your British English teacher. Let\'s work on clear, well-structured English together. Shall we begin?',
+  chloe:'Bonjour! Je suis ton professeur de français. Aujourd\'hui, nous allons pratiquer l\'anglais ensemble. Prêt?',
+  tariq:'مرحبا! أنا معلمك للغة العربية. سنتدرب على الإنجليزية معًا اليوم. هل أنت مستعد؟',
+  elena:'Hallo! Ich bin deine Deutschlehrerin. Heute üben wir gemeinsam Englisch. Bist du bereit?',
+  shruthi:'ನಮಸ್ಕಾರ! ನಾನು ನಿಮ್ಮ ಕನ್ನಡ ಟೀಚರ್. ಇಂದು ನಾವು ಇಂಗ್ಲಿಷ್ ಮಾತನಾಡೋಣ. ಸಿದ್ಧರಿದ್ದೀರಾ?',
+  devika:'നമസ്കാരം! ഞാൻ നിങ്ങളുടെ മലയാളം ടീച്ചർ ആണ്. ഇന്ന് നമുക്ക് ഇംഗ്ലീഷ് സംസാരിക്കാം. തയ്യാറാണോ?',
+  harpreet:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ਮੈਂ ਤੁਹਾਡਾ ਪੰਜਾਬੀ ਟੀਚਰ ਹਾਂ। ਅੱਜ ਅਸੀਂ ਅੰਗਰੇਜ਼ੀ ਬੋਲਾਂਗੇ। ਤਿਆਰ ਹੋ?',
+  dhruvi:'નમસ્તે! હું તમારી ગુજરાતી ટીચર છું. આજે આપણે અંગ્રેજી બોલીશું. તૈયાર છો?',
+  mateus:'Olá! Eu sou o seu professor de português. Hoje vamos praticar inglês juntos. Pronto?',
+  yuki:'こんにちは!私はあなたの日本語の先生です。今日は一緒に英語を練習しましょう。準備はいいですか?'
 };
 /* Predefined fallback conversation trees per teacher (clearly-labelled sample dialogue,
    not a live AI). Each entry: user-facing prompt -> teacher reply + gentle correction tip. */
@@ -1455,6 +1459,570 @@ const TODDLER_WORDS = [
   {id:'t68', word:'Door', emoji:'🚪', translation:'दरवाज़ा', category:'Everyday Objects'}
 ];
 
+/* ====================================================================
+   DATA: LEARN OTHER LANGUAGES (a separate mode from Spoken English —
+   here the target language itself, not English, is what's being learned)
+==================================================================== */
+const OTHER_LANGUAGES = [
+  {id:'hindi',   name:'Hindi',   flag:'🇮🇳', voiceLang:'hi-IN'},
+  {id:'tamil',   name:'Tamil',   flag:'🇮🇳', voiceLang:'ta-IN'},
+  {id:'telugu',  name:'Telugu',  flag:'🇮🇳', voiceLang:'te-IN'},
+  {id:'bengali', name:'Bengali', flag:'🇮🇳', voiceLang:'bn-IN'},
+  {id:'marathi', name:'Marathi', flag:'🇮🇳', voiceLang:'mr-IN'},
+  {id:'kannada', name:'Kannada', flag:'🇮🇳', voiceLang:'kn-IN'},
+  {id:'malayalam', name:'Malayalam', flag:'🇮🇳', voiceLang:'ml-IN'},
+  {id:'punjabi', name:'Punjabi', flag:'🇮🇳', voiceLang:'pa-IN'},
+  {id:'gujarati', name:'Gujarati', flag:'🇮🇳', voiceLang:'gu-IN'},
+  {id:'spanish', name:'Spanish', flag:'🇪🇸', voiceLang:'es-ES'},
+  {id:'french',  name:'French',  flag:'🇫🇷', voiceLang:'fr-FR'},
+  {id:'german',  name:'German',  flag:'🇩🇪', voiceLang:'de-DE'},
+  {id:'arabic',  name:'Arabic',  flag:'🇸🇦', voiceLang:'ar-SA'},
+  {id:'portuguese', name:'Portuguese', flag:'🇵🇹', voiceLang:'pt-PT'},
+  {id:'japanese', name:'Japanese', flag:'🇯🇵', voiceLang:'ja-JP'}
+];
+const LANG_CONTENT = {
+  hindi: {
+    phrases: [
+      {id:'hindi_p1', en:'Hello', target:'नमस्ते', translit:'Namaste'},
+      {id:'hindi_p2', en:'How are you?', target:'आप कैसे हैं?', translit:'Aap kaise hain?'},
+      {id:'hindi_p3', en:'I am fine', target:'मैं ठीक हूँ', translit:'Main theek hoon'},
+      {id:'hindi_p4', en:'Thank you', target:'धन्यवाद', translit:'Dhanyavaad'},
+      {id:'hindi_p5', en:'Please', target:'कृपया', translit:'Kripaya'},
+      {id:'hindi_p6', en:'Yes', target:'हाँ', translit:'Haan'},
+      {id:'hindi_p7', en:'No', target:'नहीं', translit:'Nahin'},
+      {id:'hindi_p8', en:'Good morning', target:'सुप्रभात', translit:'Suprabhat'},
+      {id:'hindi_p9', en:'What is your name?', target:'आपका नाम क्या है?', translit:'Aapka naam kya hai?'},
+      {id:'hindi_p10', en:'My name is...', target:'मेरा नाम ... है', translit:'Mera naam ... hai'}
+    ],
+    vocab: [
+      {id:'hindi_v1', en:'One', target:'एक', translit:'Ek', category:'Numbers'},
+      {id:'hindi_v2', en:'Two', target:'दो', translit:'Do', category:'Numbers'},
+      {id:'hindi_v3', en:'Three', target:'तीन', translit:'Teen', category:'Numbers'},
+      {id:'hindi_v4', en:'Four', target:'चार', translit:'Chaar', category:'Numbers'},
+      {id:'hindi_v5', en:'Five', target:'पांच', translit:'Paanch', category:'Numbers'},
+      {id:'hindi_v6', en:'Six', target:'छह', translit:'Chhah', category:'Numbers'},
+      {id:'hindi_v7', en:'Seven', target:'सात', translit:'Saat', category:'Numbers'},
+      {id:'hindi_v8', en:'Eight', target:'आठ', translit:'Aath', category:'Numbers'},
+      {id:'hindi_v9', en:'Nine', target:'नौ', translit:'Nau', category:'Numbers'},
+      {id:'hindi_v10', en:'Ten', target:'दस', translit:'Das', category:'Numbers'},
+      {id:'hindi_v11', en:'Red', target:'लाल', translit:'Laal', category:'Colors'},
+      {id:'hindi_v12', en:'Blue', target:'नीला', translit:'Neela', category:'Colors'},
+      {id:'hindi_v13', en:'Green', target:'हरा', translit:'Hara', category:'Colors'},
+      {id:'hindi_v14', en:'Yellow', target:'पीला', translit:'Peela', category:'Colors'},
+      {id:'hindi_v15', en:'Black', target:'काला', translit:'Kaala', category:'Colors'},
+      {id:'hindi_v16', en:'Mother', target:'माँ', translit:'Maa', category:'Family'},
+      {id:'hindi_v17', en:'Father', target:'पिता', translit:'Pita', category:'Family'},
+      {id:'hindi_v18', en:'Brother', target:'भाई', translit:'Bhai', category:'Family'},
+      {id:'hindi_v19', en:'Sister', target:'बहन', translit:'Bahan', category:'Family'},
+      {id:'hindi_v20', en:'Friend', target:'दोस्त', translit:'Dost', category:'Family'}
+    ]
+  },
+  tamil: {
+    phrases: [
+      {id:'tamil_p1', en:'Hello', target:'வணக்கம்', translit:'Vanakkam'},
+      {id:'tamil_p2', en:'How are you?', target:'எப்படி இருக்கிறீர்கள்?', translit:'Eppadi irukkirirgal?'},
+      {id:'tamil_p3', en:'I am fine', target:'நான் நலமாக இருக்கிறேன்', translit:'Naan nalamaaga irukkiren'},
+      {id:'tamil_p4', en:'Thank you', target:'நன்றி', translit:'Nandri'},
+      {id:'tamil_p5', en:'Please', target:'தயவுசெய்து', translit:'Thayavu seydhu'},
+      {id:'tamil_p6', en:'Yes', target:'ஆம்', translit:'Aam'},
+      {id:'tamil_p7', en:'No', target:'இல்லை', translit:'Illai'},
+      {id:'tamil_p8', en:'Good morning', target:'காலை வணக்கம்', translit:'Kaalai vanakkam'},
+      {id:'tamil_p9', en:'What is your name?', target:'உங்கள் பெயர் என்ன?', translit:'Ungal peyar enna?'},
+      {id:'tamil_p10', en:'My name is...', target:'என் பெயர் ...', translit:'En peyar ...'}
+    ],
+    vocab: [
+      {id:'tamil_v1', en:'One', target:'ஒன்று', translit:'Ondru', category:'Numbers'},
+      {id:'tamil_v2', en:'Two', target:'இரண்டு', translit:'Irandu', category:'Numbers'},
+      {id:'tamil_v3', en:'Three', target:'மூன்று', translit:'Moondru', category:'Numbers'},
+      {id:'tamil_v4', en:'Four', target:'நான்கு', translit:'Naangu', category:'Numbers'},
+      {id:'tamil_v5', en:'Five', target:'ஐந்து', translit:'Aindhu', category:'Numbers'},
+      {id:'tamil_v6', en:'Six', target:'ஆறு', translit:'Aaru', category:'Numbers'},
+      {id:'tamil_v7', en:'Seven', target:'ஏழு', translit:'Ezhu', category:'Numbers'},
+      {id:'tamil_v8', en:'Eight', target:'எட்டு', translit:'Ettu', category:'Numbers'},
+      {id:'tamil_v9', en:'Nine', target:'ஒன்பது', translit:'Onbadhu', category:'Numbers'},
+      {id:'tamil_v10', en:'Ten', target:'பத்து', translit:'Pathu', category:'Numbers'},
+      {id:'tamil_v11', en:'Red', target:'சிவப்பு', translit:'Sivappu', category:'Colors'},
+      {id:'tamil_v12', en:'Blue', target:'நீலம்', translit:'Neelam', category:'Colors'},
+      {id:'tamil_v13', en:'Green', target:'பச்சை', translit:'Pachai', category:'Colors'},
+      {id:'tamil_v14', en:'Yellow', target:'மஞ்சள்', translit:'Manjal', category:'Colors'},
+      {id:'tamil_v15', en:'Black', target:'கருப்பு', translit:'Karuppu', category:'Colors'},
+      {id:'tamil_v16', en:'Mother', target:'அம்மா', translit:'Amma', category:'Family'},
+      {id:'tamil_v17', en:'Father', target:'அப்பா', translit:'Appa', category:'Family'},
+      {id:'tamil_v18', en:'Brother', target:'அண்ணன்', translit:'Annan', category:'Family'},
+      {id:'tamil_v19', en:'Sister', target:'அக்கா', translit:'Akka', category:'Family'},
+      {id:'tamil_v20', en:'Friend', target:'நண்பன்', translit:'Nanban', category:'Family'}
+    ]
+  },
+  telugu: {
+    phrases: [
+      {id:'telugu_p1', en:'Hello', target:'నమస్కారం', translit:'Namaskaram'},
+      {id:'telugu_p2', en:'How are you?', target:'మీరు ఎలా ఉన్నారు?', translit:'Meeru ela unnaru?'},
+      {id:'telugu_p3', en:'I am fine', target:'నేను బాగున్నాను', translit:'Nenu baagunnanu'},
+      {id:'telugu_p4', en:'Thank you', target:'ధన్యవాదాలు', translit:'Dhanyavaadalu'},
+      {id:'telugu_p5', en:'Please', target:'దయచేసి', translit:'Dayachesi'},
+      {id:'telugu_p6', en:'Yes', target:'అవును', translit:'Avunu'},
+      {id:'telugu_p7', en:'No', target:'కాదు', translit:'Kaadu'},
+      {id:'telugu_p8', en:'Good morning', target:'శుభోదయం', translit:'Shubhodayam'},
+      {id:'telugu_p9', en:'What is your name?', target:'మీ పేరు ఏమిటి?', translit:'Mee peru emiti?'},
+      {id:'telugu_p10', en:'My name is...', target:'నా పేరు ...', translit:'Naa peru ...'}
+    ],
+    vocab: [
+      {id:'telugu_v1', en:'One', target:'ఒకటి', translit:'Okati', category:'Numbers'},
+      {id:'telugu_v2', en:'Two', target:'రెండు', translit:'Rendu', category:'Numbers'},
+      {id:'telugu_v3', en:'Three', target:'మూడు', translit:'Moodu', category:'Numbers'},
+      {id:'telugu_v4', en:'Four', target:'నాలుగు', translit:'Naalugu', category:'Numbers'},
+      {id:'telugu_v5', en:'Five', target:'ఐదు', translit:'Aidu', category:'Numbers'},
+      {id:'telugu_v6', en:'Six', target:'ఆరు', translit:'Aaru', category:'Numbers'},
+      {id:'telugu_v7', en:'Seven', target:'ఏడు', translit:'Edu', category:'Numbers'},
+      {id:'telugu_v8', en:'Eight', target:'ఎనిమిది', translit:'Enimidi', category:'Numbers'},
+      {id:'telugu_v9', en:'Nine', target:'తొమ్మిది', translit:'Tommidi', category:'Numbers'},
+      {id:'telugu_v10', en:'Ten', target:'పది', translit:'Padi', category:'Numbers'},
+      {id:'telugu_v11', en:'Red', target:'ఎరుపు', translit:'Erupu', category:'Colors'},
+      {id:'telugu_v12', en:'Blue', target:'నీలం', translit:'Neelam', category:'Colors'},
+      {id:'telugu_v13', en:'Green', target:'ఆకుపచ్చ', translit:'Aakupacha', category:'Colors'},
+      {id:'telugu_v14', en:'Yellow', target:'పసుపు', translit:'Pasupu', category:'Colors'},
+      {id:'telugu_v15', en:'Black', target:'నలుపు', translit:'Nalupu', category:'Colors'},
+      {id:'telugu_v16', en:'Mother', target:'అమ్మ', translit:'Amma', category:'Family'},
+      {id:'telugu_v17', en:'Father', target:'నాన్న', translit:'Nanna', category:'Family'},
+      {id:'telugu_v18', en:'Brother', target:'అన్న', translit:'Anna', category:'Family'},
+      {id:'telugu_v19', en:'Sister', target:'అక్క', translit:'Akka', category:'Family'},
+      {id:'telugu_v20', en:'Friend', target:'స్నేహితుడు', translit:'Snehitudu', category:'Family'}
+    ]
+  },
+  spanish: {
+    phrases: [
+      {id:'spanish_p1', en:'Hello', target:'Hola', translit:'Hola'},
+      {id:'spanish_p2', en:'How are you?', target:'¿Cómo estás?', translit:'Komo estas'},
+      {id:'spanish_p3', en:'I am fine', target:'Estoy bien', translit:'Estoy bien'},
+      {id:'spanish_p4', en:'Thank you', target:'Gracias', translit:'Grasias'},
+      {id:'spanish_p5', en:'Please', target:'Por favor', translit:'Por favor'},
+      {id:'spanish_p6', en:'Yes', target:'Sí', translit:'See'},
+      {id:'spanish_p7', en:'No', target:'No', translit:'No'},
+      {id:'spanish_p8', en:'Good morning', target:'Buenos días', translit:'Bwenos deeas'},
+      {id:'spanish_p9', en:'What is your name?', target:'¿Cómo te llamas?', translit:'Komo te yamas'},
+      {id:'spanish_p10', en:'My name is...', target:'Me llamo ...', translit:'Me yamo ...'}
+    ],
+    vocab: [
+      {id:'spanish_v1', en:'One', target:'Uno', translit:'Oo-no', category:'Numbers'},
+      {id:'spanish_v2', en:'Two', target:'Dos', translit:'Dos', category:'Numbers'},
+      {id:'spanish_v3', en:'Three', target:'Tres', translit:'Tres', category:'Numbers'},
+      {id:'spanish_v4', en:'Four', target:'Cuatro', translit:'Kwatro', category:'Numbers'},
+      {id:'spanish_v5', en:'Five', target:'Cinco', translit:'Sinko', category:'Numbers'},
+      {id:'spanish_v6', en:'Six', target:'Seis', translit:'Says', category:'Numbers'},
+      {id:'spanish_v7', en:'Seven', target:'Siete', translit:'Syeteh', category:'Numbers'},
+      {id:'spanish_v8', en:'Eight', target:'Ocho', translit:'Ocho', category:'Numbers'},
+      {id:'spanish_v9', en:'Nine', target:'Nueve', translit:'Nweveh', category:'Numbers'},
+      {id:'spanish_v10', en:'Ten', target:'Diez', translit:'Dyess', category:'Numbers'},
+      {id:'spanish_v11', en:'Red', target:'Rojo', translit:'Roho', category:'Colors'},
+      {id:'spanish_v12', en:'Blue', target:'Azul', translit:'Asool', category:'Colors'},
+      {id:'spanish_v13', en:'Green', target:'Verde', translit:'Verdeh', category:'Colors'},
+      {id:'spanish_v14', en:'Yellow', target:'Amarillo', translit:'Amareeyo', category:'Colors'},
+      {id:'spanish_v15', en:'Black', target:'Negro', translit:'Negro', category:'Colors'},
+      {id:'spanish_v16', en:'Mother', target:'Madre', translit:'Madreh', category:'Family'},
+      {id:'spanish_v17', en:'Father', target:'Padre', translit:'Padreh', category:'Family'},
+      {id:'spanish_v18', en:'Brother', target:'Hermano', translit:'Ermano', category:'Family'},
+      {id:'spanish_v19', en:'Sister', target:'Hermana', translit:'Ermana', category:'Family'},
+      {id:'spanish_v20', en:'Friend', target:'Amigo', translit:'Amigo', category:'Family'}
+    ]
+  },
+  french: {
+    phrases: [
+      {id:'french_p1', en:'Hello', target:'Bonjour', translit:'Bon-zhoor'},
+      {id:'french_p2', en:'How are you?', target:'Comment ça va ?', translit:'Koman sa va'},
+      {id:'french_p3', en:'I am fine', target:'Je vais bien', translit:'Zhuh vay byan'},
+      {id:'french_p4', en:'Thank you', target:'Merci', translit:'Mer-see'},
+      {id:'french_p5', en:'Please', target:'S\'il vous plaît', translit:'Seel voo pleh'},
+      {id:'french_p6', en:'Yes', target:'Oui', translit:'Wee'},
+      {id:'french_p7', en:'No', target:'Non', translit:'Noh'},
+      {id:'french_p8', en:'Good evening', target:'Bonsoir', translit:'Bon-swahr'},
+      {id:'french_p9', en:'What is your name?', target:'Comment tu t\'appelles ?', translit:'Koman tu tapel'},
+      {id:'french_p10', en:'My name is...', target:'Je m\'appelle ...', translit:'Zhuh mapel ...'}
+    ],
+    vocab: [
+      {id:'french_v1', en:'One', target:'Un', translit:'Uh(n)', category:'Numbers'},
+      {id:'french_v2', en:'Two', target:'Deux', translit:'Duh', category:'Numbers'},
+      {id:'french_v3', en:'Three', target:'Trois', translit:'Twah', category:'Numbers'},
+      {id:'french_v4', en:'Four', target:'Quatre', translit:'Katr', category:'Numbers'},
+      {id:'french_v5', en:'Five', target:'Cinq', translit:'Sank', category:'Numbers'},
+      {id:'french_v6', en:'Six', target:'Six', translit:'Sees', category:'Numbers'},
+      {id:'french_v7', en:'Seven', target:'Sept', translit:'Set', category:'Numbers'},
+      {id:'french_v8', en:'Eight', target:'Huit', translit:'Weet', category:'Numbers'},
+      {id:'french_v9', en:'Nine', target:'Neuf', translit:'Nuhf', category:'Numbers'},
+      {id:'french_v10', en:'Ten', target:'Dix', translit:'Dees', category:'Numbers'},
+      {id:'french_v11', en:'Red', target:'Rouge', translit:'Roozh', category:'Colors'},
+      {id:'french_v12', en:'Blue', target:'Bleu', translit:'Bluh', category:'Colors'},
+      {id:'french_v13', en:'Green', target:'Vert', translit:'Vehr', category:'Colors'},
+      {id:'french_v14', en:'Yellow', target:'Jaune', translit:'Zhohn', category:'Colors'},
+      {id:'french_v15', en:'Black', target:'Noir', translit:'Nwahr', category:'Colors'},
+      {id:'french_v16', en:'Mother', target:'Mère', translit:'Mehr', category:'Family'},
+      {id:'french_v17', en:'Father', target:'Père', translit:'Pehr', category:'Family'},
+      {id:'french_v18', en:'Brother', target:'Frère', translit:'Frehr', category:'Family'},
+      {id:'french_v19', en:'Sister', target:'Sœur', translit:'Suhr', category:'Family'},
+      {id:'french_v20', en:'Friend', target:'Ami', translit:'Amee', category:'Family'}
+    ]
+  },
+  bengali: {
+    phrases: [
+      {id:'bengali_p1', en:'Hello', target:'নমস্কার', translit:'Nomoshkar'},
+      {id:'bengali_p2', en:'How are you?', target:'আপনি কেমন আছেন?', translit:'Apni kemon achen?'},
+      {id:'bengali_p3', en:'I am fine', target:'আমি ভালো আছি', translit:'Ami bhalo achi'},
+      {id:'bengali_p4', en:'Thank you', target:'ধন্যবাদ', translit:'Dhonnobad'},
+      {id:'bengali_p5', en:'Please', target:'দয়া করে', translit:'Doya kore'},
+      {id:'bengali_p6', en:'Yes', target:'হ্যাঁ', translit:'Hyan'},
+      {id:'bengali_p7', en:'No', target:'না', translit:'Na'},
+      {id:'bengali_p8', en:'Good morning', target:'শুভ সকাল', translit:'Shubho sokal'},
+      {id:'bengali_p9', en:'What is your name?', target:'আপনার নাম কি?', translit:'Apnar naam ki?'},
+      {id:'bengali_p10', en:'My name is...', target:'আমার নাম ...', translit:'Amar naam ...'}
+    ],
+    vocab: [
+      {id:'bengali_v1', en:'One', target:'এক', translit:'Ek', category:'Numbers'},
+      {id:'bengali_v2', en:'Two', target:'দুই', translit:'Dui', category:'Numbers'},
+      {id:'bengali_v3', en:'Three', target:'তিন', translit:'Tin', category:'Numbers'},
+      {id:'bengali_v4', en:'Four', target:'চার', translit:'Char', category:'Numbers'},
+      {id:'bengali_v5', en:'Five', target:'পাঁচ', translit:'Pach', category:'Numbers'},
+      {id:'bengali_v6', en:'Six', target:'ছয়', translit:'Chhoy', category:'Numbers'},
+      {id:'bengali_v7', en:'Seven', target:'সাত', translit:'Shat', category:'Numbers'},
+      {id:'bengali_v8', en:'Eight', target:'আট', translit:'Aat', category:'Numbers'},
+      {id:'bengali_v9', en:'Nine', target:'নয়', translit:'Noy', category:'Numbers'},
+      {id:'bengali_v10', en:'Ten', target:'দশ', translit:'Dosh', category:'Numbers'},
+      {id:'bengali_v11', en:'Red', target:'লাল', translit:'Lal', category:'Colors'},
+      {id:'bengali_v12', en:'Blue', target:'নীল', translit:'Nil', category:'Colors'},
+      {id:'bengali_v13', en:'Green', target:'সবুজ', translit:'Sobuj', category:'Colors'},
+      {id:'bengali_v14', en:'Yellow', target:'হলুদ', translit:'Holud', category:'Colors'},
+      {id:'bengali_v15', en:'Black', target:'কালো', translit:'Kalo', category:'Colors'},
+      {id:'bengali_v16', en:'Mother', target:'মা', translit:'Ma', category:'Family'},
+      {id:'bengali_v17', en:'Father', target:'বাবা', translit:'Baba', category:'Family'},
+      {id:'bengali_v18', en:'Brother', target:'ভাই', translit:'Bhai', category:'Family'},
+      {id:'bengali_v19', en:'Sister', target:'বোন', translit:'Bon', category:'Family'},
+      {id:'bengali_v20', en:'Friend', target:'বন্ধু', translit:'Bondhu', category:'Family'}
+    ]
+  },
+  marathi: {
+    phrases: [
+      {id:'marathi_p1', en:'Hello', target:'नमस्कार', translit:'Namaskar'},
+      {id:'marathi_p2', en:'How are you?', target:'तुम्ही कसे आहात?', translit:'Tumhi kase aahat?'},
+      {id:'marathi_p3', en:'I am fine', target:'मी ठीक आहे', translit:'Mi theek aahe'},
+      {id:'marathi_p4', en:'Thank you', target:'धन्यवाद', translit:'Dhanyavaad'},
+      {id:'marathi_p5', en:'Please', target:'कृपया', translit:'Kripaya'},
+      {id:'marathi_p6', en:'Yes', target:'होय', translit:'Hoy'},
+      {id:'marathi_p7', en:'No', target:'नाही', translit:'Nahi'},
+      {id:'marathi_p8', en:'Good morning', target:'सुप्रभात', translit:'Suprabhat'},
+      {id:'marathi_p9', en:'What is your name?', target:'तुमचं नाव काय आहे?', translit:'Tumcha naav kay aahe?'},
+      {id:'marathi_p10', en:'My name is...', target:'माझं नाव ... आहे', translit:'Majhe naav ... aahe'}
+    ],
+    vocab: [
+      {id:'marathi_v1', en:'One', target:'एक', translit:'Ek', category:'Numbers'},
+      {id:'marathi_v2', en:'Two', target:'दोन', translit:'Don', category:'Numbers'},
+      {id:'marathi_v3', en:'Three', target:'तीन', translit:'Teen', category:'Numbers'},
+      {id:'marathi_v4', en:'Four', target:'चार', translit:'Char', category:'Numbers'},
+      {id:'marathi_v5', en:'Five', target:'पाच', translit:'Panch', category:'Numbers'},
+      {id:'marathi_v6', en:'Six', target:'सहा', translit:'Saha', category:'Numbers'},
+      {id:'marathi_v7', en:'Seven', target:'सात', translit:'Saat', category:'Numbers'},
+      {id:'marathi_v8', en:'Eight', target:'आठ', translit:'Aath', category:'Numbers'},
+      {id:'marathi_v9', en:'Nine', target:'नऊ', translit:'Nau', category:'Numbers'},
+      {id:'marathi_v10', en:'Ten', target:'दहा', translit:'Daha', category:'Numbers'},
+      {id:'marathi_v11', en:'Red', target:'लाल', translit:'Laal', category:'Colors'},
+      {id:'marathi_v12', en:'Blue', target:'निळा', translit:'Nila', category:'Colors'},
+      {id:'marathi_v13', en:'Green', target:'हिरवा', translit:'Hirva', category:'Colors'},
+      {id:'marathi_v14', en:'Yellow', target:'पिवळा', translit:'Pivla', category:'Colors'},
+      {id:'marathi_v15', en:'Black', target:'काळा', translit:'Kala', category:'Colors'},
+      {id:'marathi_v16', en:'Mother', target:'आई', translit:'Aai', category:'Family'},
+      {id:'marathi_v17', en:'Father', target:'बाबा', translit:'Baba', category:'Family'},
+      {id:'marathi_v18', en:'Brother', target:'भाऊ', translit:'Bhau', category:'Family'},
+      {id:'marathi_v19', en:'Sister', target:'बहीण', translit:'Bahin', category:'Family'},
+      {id:'marathi_v20', en:'Friend', target:'मित्र', translit:'Mitra', category:'Family'}
+    ]
+  },
+  kannada: {
+    phrases: [
+      {id:'kannada_p1', en:'Hello', target:'ನಮಸ್ಕಾರ', translit:'Namaskara'},
+      {id:'kannada_p2', en:'How are you?', target:'ನೀವು ಹೇಗಿದ್ದೀರಿ?', translit:'Neevu hegiddiri?'},
+      {id:'kannada_p3', en:'I am fine', target:'ನಾನು ಚೆನ್ನಾಗಿದ್ದೇನೆ', translit:'Naanu chennagiddene'},
+      {id:'kannada_p4', en:'Thank you', target:'ಧನ್ಯವಾದಗಳು', translit:'Dhanyavaadagalu'},
+      {id:'kannada_p5', en:'Please', target:'ದಯವಿಟ್ಟು', translit:'Dayavittu'},
+      {id:'kannada_p6', en:'Yes', target:'ಹೌದು', translit:'Haudu'},
+      {id:'kannada_p7', en:'No', target:'ಇಲ್ಲ', translit:'Illa'},
+      {id:'kannada_p8', en:'Good morning', target:'ಶುಭೋದಯ', translit:'Shubhodaya'},
+      {id:'kannada_p9', en:'What is your name?', target:'ನಿಮ್ಮ ಹೆಸರೇನು?', translit:'Nimma hesarenu?'},
+      {id:'kannada_p10', en:'My name is...', target:'ನನ್ನ ಹೆಸರು ...', translit:'Nanna hesaru ...'}
+    ],
+    vocab: [
+      {id:'kannada_v1', en:'One', target:'ಒಂದು', translit:'Ondu', category:'Numbers'},
+      {id:'kannada_v2', en:'Two', target:'ಎರಡು', translit:'Eradu', category:'Numbers'},
+      {id:'kannada_v3', en:'Three', target:'ಮೂರು', translit:'Moru', category:'Numbers'},
+      {id:'kannada_v4', en:'Four', target:'ನಾಲ್ಕು', translit:'Naalku', category:'Numbers'},
+      {id:'kannada_v5', en:'Five', target:'ಐದು', translit:'Aidu', category:'Numbers'},
+      {id:'kannada_v6', en:'Six', target:'ಆರು', translit:'Aaru', category:'Numbers'},
+      {id:'kannada_v7', en:'Seven', target:'ಏಳು', translit:'Elu', category:'Numbers'},
+      {id:'kannada_v8', en:'Eight', target:'ಎಂಟು', translit:'Entu', category:'Numbers'},
+      {id:'kannada_v9', en:'Nine', target:'ಒಂಬತ್ತು', translit:'Ombattu', category:'Numbers'},
+      {id:'kannada_v10', en:'Ten', target:'ಹತ್ತು', translit:'Hattu', category:'Numbers'},
+      {id:'kannada_v11', en:'Red', target:'ಕೆಂಪು', translit:'Kempu', category:'Colors'},
+      {id:'kannada_v12', en:'Blue', target:'ನೀಲಿ', translit:'Neeli', category:'Colors'},
+      {id:'kannada_v13', en:'Green', target:'ಹಸಿರು', translit:'Hasiru', category:'Colors'},
+      {id:'kannada_v14', en:'Yellow', target:'ಹಳದಿ', translit:'Haladi', category:'Colors'},
+      {id:'kannada_v15', en:'Black', target:'ಕಪ್ಪು', translit:'Kappu', category:'Colors'},
+      {id:'kannada_v16', en:'Mother', target:'ಅಮ್ಮ', translit:'Amma', category:'Family'},
+      {id:'kannada_v17', en:'Father', target:'ಅಪ್ಪ', translit:'Appa', category:'Family'},
+      {id:'kannada_v18', en:'Brother', target:'ಅಣ್ಣ', translit:'Anna', category:'Family'},
+      {id:'kannada_v19', en:'Sister', target:'ಅಕ್ಕ', translit:'Akka', category:'Family'},
+      {id:'kannada_v20', en:'Friend', target:'ಸ್ನೇಹಿತ', translit:'Snehita', category:'Family'}
+    ]
+  },
+  malayalam: {
+    phrases: [
+      {id:'malayalam_p1', en:'Hello', target:'നമസ്കാരം', translit:'Namaskaram'},
+      {id:'malayalam_p2', en:'How are you?', target:'സുഖമാണോ?', translit:'Sukhamaano?'},
+      {id:'malayalam_p3', en:'I am fine', target:'എനിക്ക് സുഖമാണ്', translit:'Enikku sukhamaanu'},
+      {id:'malayalam_p4', en:'Thank you', target:'നന്ദി', translit:'Nandi'},
+      {id:'malayalam_p5', en:'Please', target:'ദയവായി', translit:'Dayavaayi'},
+      {id:'malayalam_p6', en:'Yes', target:'അതെ', translit:'Athe'},
+      {id:'malayalam_p7', en:'No', target:'ഇല്ല', translit:'Illa'},
+      {id:'malayalam_p8', en:'Good morning', target:'സുപ്രഭാതം', translit:'Suprabhaatham'},
+      {id:'malayalam_p9', en:'What is your name?', target:'നിങ്ങളുടെ പേര് എന്താണ്?', translit:'Ningalude peru enthaanu?'},
+      {id:'malayalam_p10', en:'My name is...', target:'എന്റെ പേര് ...', translit:'Ente peru ...'}
+    ],
+    vocab: [
+      {id:'malayalam_v1', en:'One', target:'ഒന്ന്', translit:'Onnu', category:'Numbers'},
+      {id:'malayalam_v2', en:'Two', target:'രണ്ട്', translit:'Randu', category:'Numbers'},
+      {id:'malayalam_v3', en:'Three', target:'മൂന്ന്', translit:'Moonu', category:'Numbers'},
+      {id:'malayalam_v4', en:'Four', target:'നാല്', translit:'Naalu', category:'Numbers'},
+      {id:'malayalam_v5', en:'Five', target:'അഞ്ച്', translit:'Anchu', category:'Numbers'},
+      {id:'malayalam_v6', en:'Six', target:'ആറ്', translit:'Aaru', category:'Numbers'},
+      {id:'malayalam_v7', en:'Seven', target:'ഏഴ്', translit:'Ezhu', category:'Numbers'},
+      {id:'malayalam_v8', en:'Eight', target:'എട്ട്', translit:'Ettu', category:'Numbers'},
+      {id:'malayalam_v9', en:'Nine', target:'ഒമ്പത്', translit:'Ombathu', category:'Numbers'},
+      {id:'malayalam_v10', en:'Ten', target:'പത്ത്', translit:'Pathu', category:'Numbers'},
+      {id:'malayalam_v11', en:'Red', target:'ചുവപ്പ്', translit:'Chuvappu', category:'Colors'},
+      {id:'malayalam_v12', en:'Blue', target:'നീല', translit:'Neela', category:'Colors'},
+      {id:'malayalam_v13', en:'Green', target:'പച്ച', translit:'Pacha', category:'Colors'},
+      {id:'malayalam_v14', en:'Yellow', target:'മഞ്ഞ', translit:'Manja', category:'Colors'},
+      {id:'malayalam_v15', en:'Black', target:'കറുപ്പ്', translit:'Karuppu', category:'Colors'},
+      {id:'malayalam_v16', en:'Mother', target:'അമ്മ', translit:'Amma', category:'Family'},
+      {id:'malayalam_v17', en:'Father', target:'അച്ഛൻ', translit:'Achan', category:'Family'},
+      {id:'malayalam_v18', en:'Brother', target:'ചേട്ടൻ', translit:'Chettan', category:'Family'},
+      {id:'malayalam_v19', en:'Sister', target:'ചേച്ചി', translit:'Chechi', category:'Family'},
+      {id:'malayalam_v20', en:'Friend', target:'സുഹൃത്ത്', translit:'Suhruthu', category:'Family'}
+    ]
+  },
+  punjabi: {
+    phrases: [
+      {id:'punjabi_p1', en:'Hello', target:'ਸਤ ਸ੍ਰੀ ਅਕਾਲ', translit:'Sat Sri Akaal'},
+      {id:'punjabi_p2', en:'How are you?', target:'ਤੁਸੀਂ ਕਿਵੇਂ ਹੋ?', translit:'Tusi kiven ho?'},
+      {id:'punjabi_p3', en:'I am fine', target:'ਮੈਂ ਠੀਕ ਹਾਂ', translit:'Main theek haan'},
+      {id:'punjabi_p4', en:'Thank you', target:'ਧੰਨਵਾਦ', translit:'Dhannvaad'},
+      {id:'punjabi_p5', en:'Please', target:'ਕਿਰਪਾ ਕਰਕੇ', translit:'Kirpa karke'},
+      {id:'punjabi_p6', en:'Yes', target:'ਹਾਂ', translit:'Haan'},
+      {id:'punjabi_p7', en:'No', target:'ਨਹੀਂ', translit:'Nahin'},
+      {id:'punjabi_p8', en:'Good morning', target:'ਸ਼ੁਭ ਸਵੇਰ', translit:'Shubh sawer'},
+      {id:'punjabi_p9', en:'What is your name?', target:'ਤੁਹਾਡਾ ਨਾਮ ਕੀ ਹੈ?', translit:'Tuhada naam ki hai?'},
+      {id:'punjabi_p10', en:'My name is...', target:'ਮੇਰਾ ਨਾਮ ... ਹੈ', translit:'Mera naam ... hai'}
+    ],
+    vocab: [
+      {id:'punjabi_v1', en:'One', target:'ਇੱਕ', translit:'Ikk', category:'Numbers'},
+      {id:'punjabi_v2', en:'Two', target:'ਦੋ', translit:'Do', category:'Numbers'},
+      {id:'punjabi_v3', en:'Three', target:'ਤਿੰਨ', translit:'Tinn', category:'Numbers'},
+      {id:'punjabi_v4', en:'Four', target:'ਚਾਰ', translit:'Chaar', category:'Numbers'},
+      {id:'punjabi_v5', en:'Five', target:'ਪੰਜ', translit:'Panj', category:'Numbers'},
+      {id:'punjabi_v6', en:'Six', target:'ਛੇ', translit:'Chhe', category:'Numbers'},
+      {id:'punjabi_v7', en:'Seven', target:'ਸੱਤ', translit:'Satt', category:'Numbers'},
+      {id:'punjabi_v8', en:'Eight', target:'ਅੱਠ', translit:'Atth', category:'Numbers'},
+      {id:'punjabi_v9', en:'Nine', target:'ਨੌਂ', translit:'Naun', category:'Numbers'},
+      {id:'punjabi_v10', en:'Ten', target:'ਦਸ', translit:'Das', category:'Numbers'},
+      {id:'punjabi_v11', en:'Red', target:'ਲਾਲ', translit:'Laal', category:'Colors'},
+      {id:'punjabi_v12', en:'Blue', target:'ਨੀਲਾ', translit:'Neela', category:'Colors'},
+      {id:'punjabi_v13', en:'Green', target:'ਹਰਾ', translit:'Hara', category:'Colors'},
+      {id:'punjabi_v14', en:'Yellow', target:'ਪੀਲਾ', translit:'Peela', category:'Colors'},
+      {id:'punjabi_v15', en:'Black', target:'ਕਾਲਾ', translit:'Kaala', category:'Colors'},
+      {id:'punjabi_v16', en:'Mother', target:'ਮਾਂ', translit:'Maa', category:'Family'},
+      {id:'punjabi_v17', en:'Father', target:'ਪਿਤਾ', translit:'Pita', category:'Family'},
+      {id:'punjabi_v18', en:'Brother', target:'ਭਰਾ', translit:'Bhra', category:'Family'},
+      {id:'punjabi_v19', en:'Sister', target:'ਭੈਣ', translit:'Bhain', category:'Family'},
+      {id:'punjabi_v20', en:'Friend', target:'ਦੋਸਤ', translit:'Dost', category:'Family'}
+    ]
+  },
+  gujarati: {
+    phrases: [
+      {id:'gujarati_p1', en:'Hello', target:'નમસ્તે', translit:'Namaste'},
+      {id:'gujarati_p2', en:'How are you?', target:'તમે કેમ છો?', translit:'Tame kem chho?'},
+      {id:'gujarati_p3', en:'I am fine', target:'હું મજામાં છું', translit:'Hu majama chu'},
+      {id:'gujarati_p4', en:'Thank you', target:'આભાર', translit:'Aabhar'},
+      {id:'gujarati_p5', en:'Please', target:'કૃપા કરીને', translit:'Krupa karine'},
+      {id:'gujarati_p6', en:'Yes', target:'હા', translit:'Haa'},
+      {id:'gujarati_p7', en:'No', target:'ના', translit:'Naa'},
+      {id:'gujarati_p8', en:'Good morning', target:'સુપ્રભાત', translit:'Suprabhat'},
+      {id:'gujarati_p9', en:'What is your name?', target:'તમારું નામ શું છે?', translit:'Tamaru naam shu chhe?'},
+      {id:'gujarati_p10', en:'My name is...', target:'મારું નામ ... છે', translit:'Maru naam ... chhe'}
+    ],
+    vocab: [
+      {id:'gujarati_v1', en:'One', target:'એક', translit:'Ek', category:'Numbers'},
+      {id:'gujarati_v2', en:'Two', target:'બે', translit:'Be', category:'Numbers'},
+      {id:'gujarati_v3', en:'Three', target:'ત્રણ', translit:'Tran', category:'Numbers'},
+      {id:'gujarati_v4', en:'Four', target:'ચાર', translit:'Chaar', category:'Numbers'},
+      {id:'gujarati_v5', en:'Five', target:'પાંચ', translit:'Paanch', category:'Numbers'},
+      {id:'gujarati_v6', en:'Six', target:'છ', translit:'Chha', category:'Numbers'},
+      {id:'gujarati_v7', en:'Seven', target:'સાત', translit:'Saat', category:'Numbers'},
+      {id:'gujarati_v8', en:'Eight', target:'આઠ', translit:'Aath', category:'Numbers'},
+      {id:'gujarati_v9', en:'Nine', target:'નવ', translit:'Nav', category:'Numbers'},
+      {id:'gujarati_v10', en:'Ten', target:'દસ', translit:'Das', category:'Numbers'},
+      {id:'gujarati_v11', en:'Red', target:'લાલ', translit:'Laal', category:'Colors'},
+      {id:'gujarati_v12', en:'Blue', target:'વાદળી', translit:'Vadli', category:'Colors'},
+      {id:'gujarati_v13', en:'Green', target:'લીલો', translit:'Leelo', category:'Colors'},
+      {id:'gujarati_v14', en:'Yellow', target:'પીળો', translit:'Peelo', category:'Colors'},
+      {id:'gujarati_v15', en:'Black', target:'કાળો', translit:'Kaalo', category:'Colors'},
+      {id:'gujarati_v16', en:'Mother', target:'મા', translit:'Maa', category:'Family'},
+      {id:'gujarati_v17', en:'Father', target:'પિતા', translit:'Pita', category:'Family'},
+      {id:'gujarati_v18', en:'Brother', target:'ભાઈ', translit:'Bhai', category:'Family'},
+      {id:'gujarati_v19', en:'Sister', target:'બહેન', translit:'Bahen', category:'Family'},
+      {id:'gujarati_v20', en:'Friend', target:'મિત્ર', translit:'Mitra', category:'Family'}
+    ]
+  },
+  german: {
+    phrases: [
+      {id:'german_p1', en:'Hello', target:'Hallo', translit:'Hallo'},
+      {id:'german_p2', en:'How are you?', target:'Wie geht es dir?', translit:'Vee gayt es deer'},
+      {id:'german_p3', en:'I am fine', target:'Mir geht es gut', translit:'Meer gayt es goot'},
+      {id:'german_p4', en:'Thank you', target:'Danke', translit:'Dan-keh'},
+      {id:'german_p5', en:'Please', target:'Bitte', translit:'Bit-teh'},
+      {id:'german_p6', en:'Yes', target:'Ja', translit:'Yah'},
+      {id:'german_p7', en:'No', target:'Nein', translit:'Nine'},
+      {id:'german_p8', en:'Good morning', target:'Guten Morgen', translit:'Goo-ten Mor-gen'},
+      {id:'german_p9', en:'What is your name?', target:'Wie heißt du?', translit:'Vee hyst doo'},
+      {id:'german_p10', en:'My name is...', target:'Ich heiße ...', translit:'Ikh hy-seh ...'}
+    ],
+    vocab: [
+      {id:'german_v1', en:'One', target:'eins', translit:'Ines', category:'Numbers'},
+      {id:'german_v2', en:'Two', target:'zwei', translit:'Tsvy', category:'Numbers'},
+      {id:'german_v3', en:'Three', target:'drei', translit:'Dry', category:'Numbers'},
+      {id:'german_v4', en:'Four', target:'vier', translit:'Feer', category:'Numbers'},
+      {id:'german_v5', en:'Five', target:'fünf', translit:'Fyoonf', category:'Numbers'},
+      {id:'german_v6', en:'Six', target:'sechs', translit:'Zex', category:'Numbers'},
+      {id:'german_v7', en:'Seven', target:'sieben', translit:'Zee-ben', category:'Numbers'},
+      {id:'german_v8', en:'Eight', target:'acht', translit:'Akht', category:'Numbers'},
+      {id:'german_v9', en:'Nine', target:'neun', translit:'Noyn', category:'Numbers'},
+      {id:'german_v10', en:'Ten', target:'zehn', translit:'Tsayn', category:'Numbers'},
+      {id:'german_v11', en:'Red', target:'rot', translit:'Roht', category:'Colors'},
+      {id:'german_v12', en:'Blue', target:'blau', translit:'Blau', category:'Colors'},
+      {id:'german_v13', en:'Green', target:'grün', translit:'Gryoon', category:'Colors'},
+      {id:'german_v14', en:'Yellow', target:'gelb', translit:'Gelp', category:'Colors'},
+      {id:'german_v15', en:'Black', target:'schwarz', translit:'Shvarts', category:'Colors'},
+      {id:'german_v16', en:'Mother', target:'Mutter', translit:'Mut-ter', category:'Family'},
+      {id:'german_v17', en:'Father', target:'Vater', translit:'Fah-ter', category:'Family'},
+      {id:'german_v18', en:'Brother', target:'Bruder', translit:'Broo-der', category:'Family'},
+      {id:'german_v19', en:'Sister', target:'Schwester', translit:'Shves-ter', category:'Family'},
+      {id:'german_v20', en:'Friend', target:'Freund', translit:'Froynd', category:'Family'}
+    ]
+  },
+  arabic: {
+    phrases: [
+      {id:'arabic_p1', en:'Hello', target:'مرحبا', translit:'Marhaban'},
+      {id:'arabic_p2', en:'How are you?', target:'كيف حالك؟', translit:'Kayfa haluka?'},
+      {id:'arabic_p3', en:'I am fine', target:'أنا بخير', translit:'Ana bikhayr'},
+      {id:'arabic_p4', en:'Thank you', target:'شكرا', translit:'Shukran'},
+      {id:'arabic_p5', en:'Please', target:'من فضلك', translit:'Min fadlik'},
+      {id:'arabic_p6', en:'Yes', target:'نعم', translit:'Na\'am'},
+      {id:'arabic_p7', en:'No', target:'لا', translit:'La'},
+      {id:'arabic_p8', en:'Good morning', target:'صباح الخير', translit:'Sabah al-khayr'},
+      {id:'arabic_p9', en:'What is your name?', target:'ما اسمك؟', translit:'Ma ismuka?'},
+      {id:'arabic_p10', en:'My name is...', target:'اسمي ...', translit:'Ismi ...'}
+    ],
+    vocab: [
+      {id:'arabic_v1', en:'One', target:'واحد', translit:'Wahid', category:'Numbers'},
+      {id:'arabic_v2', en:'Two', target:'اثنان', translit:'Ithnan', category:'Numbers'},
+      {id:'arabic_v3', en:'Three', target:'ثلاثة', translit:'Thalatha', category:'Numbers'},
+      {id:'arabic_v4', en:'Four', target:'أربعة', translit:'Arba\'a', category:'Numbers'},
+      {id:'arabic_v5', en:'Five', target:'خمسة', translit:'Khamsa', category:'Numbers'},
+      {id:'arabic_v6', en:'Six', target:'ستة', translit:'Sitta', category:'Numbers'},
+      {id:'arabic_v7', en:'Seven', target:'سبعة', translit:'Sab\'a', category:'Numbers'},
+      {id:'arabic_v8', en:'Eight', target:'ثمانية', translit:'Thamaniya', category:'Numbers'},
+      {id:'arabic_v9', en:'Nine', target:'تسعة', translit:'Tis\'a', category:'Numbers'},
+      {id:'arabic_v10', en:'Ten', target:'عشرة', translit:'Ashara', category:'Numbers'},
+      {id:'arabic_v11', en:'Red', target:'أحمر', translit:'Ahmar', category:'Colors'},
+      {id:'arabic_v12', en:'Blue', target:'أزرق', translit:'Azraq', category:'Colors'},
+      {id:'arabic_v13', en:'Green', target:'أخضر', translit:'Akhdar', category:'Colors'},
+      {id:'arabic_v14', en:'Yellow', target:'أصفر', translit:'Asfar', category:'Colors'},
+      {id:'arabic_v15', en:'Black', target:'أسود', translit:'Aswad', category:'Colors'},
+      {id:'arabic_v16', en:'Mother', target:'أم', translit:'Umm', category:'Family'},
+      {id:'arabic_v17', en:'Father', target:'أب', translit:'Ab', category:'Family'},
+      {id:'arabic_v18', en:'Brother', target:'أخ', translit:'Akh', category:'Family'},
+      {id:'arabic_v19', en:'Sister', target:'أخت', translit:'Ukht', category:'Family'},
+      {id:'arabic_v20', en:'Friend', target:'صديق', translit:'Sadiq', category:'Family'}
+    ]
+  },
+  portuguese: {
+    phrases: [
+      {id:'portuguese_p1', en:'Hello', target:'Olá', translit:'Oh-lah'},
+      {id:'portuguese_p2', en:'How are you?', target:'Como você está?', translit:'Ko-mo vo-say es-tah'},
+      {id:'portuguese_p3', en:'I am fine', target:'Estou bem', translit:'Es-toh beng'},
+      {id:'portuguese_p4', en:'Thank you', target:'Obrigado', translit:'Oh-bree-gah-doo'},
+      {id:'portuguese_p5', en:'Please', target:'Por favor', translit:'Por fa-vor'},
+      {id:'portuguese_p6', en:'Yes', target:'Sim', translit:'Seeng'},
+      {id:'portuguese_p7', en:'No', target:'Não', translit:'Now(ng)'},
+      {id:'portuguese_p8', en:'Good morning', target:'Bom dia', translit:'Bong dee-ah'},
+      {id:'portuguese_p9', en:'What is your name?', target:'Qual é o seu nome?', translit:'Kwal eh oo seh-oo no-me'},
+      {id:'portuguese_p10', en:'My name is...', target:'Meu nome é ...', translit:'Meh-oo no-me eh ...'}
+    ],
+    vocab: [
+      {id:'portuguese_v1', en:'One', target:'um', translit:'Oong', category:'Numbers'},
+      {id:'portuguese_v2', en:'Two', target:'dois', translit:'Doyss', category:'Numbers'},
+      {id:'portuguese_v3', en:'Three', target:'três', translit:'Trays', category:'Numbers'},
+      {id:'portuguese_v4', en:'Four', target:'quatro', translit:'Kwa-troo', category:'Numbers'},
+      {id:'portuguese_v5', en:'Five', target:'cinco', translit:'Seen-koo', category:'Numbers'},
+      {id:'portuguese_v6', en:'Six', target:'seis', translit:'Says', category:'Numbers'},
+      {id:'portuguese_v7', en:'Seven', target:'sete', translit:'Set-chee', category:'Numbers'},
+      {id:'portuguese_v8', en:'Eight', target:'oito', translit:'Oy-too', category:'Numbers'},
+      {id:'portuguese_v9', en:'Nine', target:'nove', translit:'No-vee', category:'Numbers'},
+      {id:'portuguese_v10', en:'Ten', target:'dez', translit:'Dess', category:'Numbers'},
+      {id:'portuguese_v11', en:'Red', target:'vermelho', translit:'Ver-mel-yoo', category:'Colors'},
+      {id:'portuguese_v12', en:'Blue', target:'azul', translit:'A-zool', category:'Colors'},
+      {id:'portuguese_v13', en:'Green', target:'verde', translit:'Ver-jee', category:'Colors'},
+      {id:'portuguese_v14', en:'Yellow', target:'amarelo', translit:'A-ma-rel-oo', category:'Colors'},
+      {id:'portuguese_v15', en:'Black', target:'preto', translit:'Pray-too', category:'Colors'},
+      {id:'portuguese_v16', en:'Mother', target:'mãe', translit:'My(ng)', category:'Family'},
+      {id:'portuguese_v17', en:'Father', target:'pai', translit:'Pie', category:'Family'},
+      {id:'portuguese_v18', en:'Brother', target:'irmão', translit:'Eer-mow(ng)', category:'Family'},
+      {id:'portuguese_v19', en:'Sister', target:'irmã', translit:'Eer-mah(ng)', category:'Family'},
+      {id:'portuguese_v20', en:'Friend', target:'amigo', translit:'A-mee-goo', category:'Family'}
+    ]
+  },
+  japanese: {
+    phrases: [
+      {id:'japanese_p1', en:'Hello', target:'こんにちは', translit:'Konnichiwa'},
+      {id:'japanese_p2', en:'How are you?', target:'お元気ですか?', translit:'Ogenki desu ka?'},
+      {id:'japanese_p3', en:'I am fine', target:'元気です', translit:'Genki desu'},
+      {id:'japanese_p4', en:'Thank you', target:'ありがとう', translit:'Arigatou'},
+      {id:'japanese_p5', en:'Please', target:'お願いします', translit:'Onegaishimasu'},
+      {id:'japanese_p6', en:'Yes', target:'はい', translit:'Hai'},
+      {id:'japanese_p7', en:'No', target:'いいえ', translit:'Iie'},
+      {id:'japanese_p8', en:'Good morning', target:'おはようございます', translit:'Ohayou gozaimasu'},
+      {id:'japanese_p9', en:'What is your name?', target:'お名前は何ですか?', translit:'Onamae wa nan desu ka?'},
+      {id:'japanese_p10', en:'My name is...', target:'私の名前は...です', translit:'Watashi no namae wa ... desu'}
+    ],
+    vocab: [
+      {id:'japanese_v1', en:'One', target:'一', translit:'Ichi', category:'Numbers'},
+      {id:'japanese_v2', en:'Two', target:'二', translit:'Ni', category:'Numbers'},
+      {id:'japanese_v3', en:'Three', target:'三', translit:'San', category:'Numbers'},
+      {id:'japanese_v4', en:'Four', target:'四', translit:'Yon', category:'Numbers'},
+      {id:'japanese_v5', en:'Five', target:'五', translit:'Go', category:'Numbers'},
+      {id:'japanese_v6', en:'Six', target:'六', translit:'Roku', category:'Numbers'},
+      {id:'japanese_v7', en:'Seven', target:'七', translit:'Nana', category:'Numbers'},
+      {id:'japanese_v8', en:'Eight', target:'八', translit:'Hachi', category:'Numbers'},
+      {id:'japanese_v9', en:'Nine', target:'九', translit:'Kyuu', category:'Numbers'},
+      {id:'japanese_v10', en:'Ten', target:'十', translit:'Juu', category:'Numbers'},
+      {id:'japanese_v11', en:'Red', target:'赤', translit:'Aka', category:'Colors'},
+      {id:'japanese_v12', en:'Blue', target:'青', translit:'Ao', category:'Colors'},
+      {id:'japanese_v13', en:'Green', target:'緑', translit:'Midori', category:'Colors'},
+      {id:'japanese_v14', en:'Yellow', target:'黄色', translit:'Kiiro', category:'Colors'},
+      {id:'japanese_v15', en:'Black', target:'黒', translit:'Kuro', category:'Colors'},
+      {id:'japanese_v16', en:'Mother', target:'母', translit:'Haha', category:'Family'},
+      {id:'japanese_v17', en:'Father', target:'父', translit:'Chichi', category:'Family'},
+      {id:'japanese_v18', en:'Brother', target:'兄', translit:'Ani', category:'Family'},
+      {id:'japanese_v19', en:'Sister', target:'姉', translit:'Ane', category:'Family'},
+      {id:'japanese_v20', en:'Friend', target:'友達', translit:'Tomodachi', category:'Family'}
+    ]
+  }
+};
+
 const NAV_ITEMS = [
   {id:'home', label:'Home', icon:'🏠'},
   {id:'lessons', label:'Lessons', icon:'📘'},
@@ -1465,6 +2033,7 @@ const NAV_ITEMS = [
   {id:'rhymes', label:'Rhymes', icon:'🎵'},
   {id:'practice', label:'Practice', icon:'🎯'},
   {id:'teachers', label:'Teachers', icon:'🧑‍🏫'},
+  {id:'languages', label:'Languages', icon:'🌍'},
   {id:'progress', label:'My Progress', icon:'📊'},
   {id:'settings', label:'Settings', icon:'⚙️'}
 ];
@@ -1524,6 +2093,7 @@ function renderView(id){
   else if(id==='rhymes') renderRhymes();
   else if(id==='practice') renderPractice();
   else if(id==='teachers') renderTeachers();
+  else if(id==='languages') renderLanguages();
   else if(id==='progress') renderProgress();
   else if(id==='settings') renderSettings();
 }
@@ -1563,13 +2133,16 @@ if('speechSynthesis' in window){
   speechSynthesis.onvoiceschanged = loadVoices;
 }
 /* Common TTS voice names are not reliably tagged with gender by the Web Speech API,
-   so we match on well-known voice names shipped by major browsers/OSes as a heuristic. */
+   so we match on well-known voice names shipped by major browsers/OSes as a heuristic.
+   "Baby" reuses the female hint list as its closest available base voice — the childlike
+   effect itself comes from the pitch/rate shift applied in speak(), not voice selection. */
 const FEMALE_VOICE_HINTS = ['female','woman','zira','samantha','karen','susan','victoria','moira','tessa','fiona','veena','lekha','heera','kalpana','amelie','anna','helena','katja','paulina','ava','allison','ioana'];
 const MALE_VOICE_HINTS = ['male','man','david','daniel','mark','alex','fred','aaron','ravi','hemant','rishi','thomas','yannick','stefan','diego','jorge','xander'];
 function voiceGenderScore(voiceName, wantGender){
   const n = (voiceName||'').toLowerCase();
-  const hints = wantGender==='female' ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
-  const oppositeHints = wantGender==='female' ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
+  const wantsFemaleLike = wantGender!=='male';
+  const hints = wantsFemaleLike ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
+  const oppositeHints = wantsFemaleLike ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
   if(hints.some(h=>n.includes(h))) return 2;
   if(oppositeHints.some(h=>n.includes(h))) return -2;
   return 0;
@@ -1591,28 +2164,55 @@ function pickVoice(langCode, gender){
   }
   return pool[0] || voicesCache[0] || null;
 }
-function speak(text, langCode, onend, gender){
+/* Pitch/rate shift applied on top of whatever voice is found — this is what actually makes
+   male / female / baby sound distinct and consistent, since many devices only have one
+   voice per language anyway. */
+function pitchForVoiceGender(g){
+  if(g==='male') return 0.78;
+  if(g==='baby') return 1.55;
+  return 1.05; // female (default)
+}
+function speak(text, langCode, onend, genderOverride){
   if(!('speechSynthesis' in window)){
     toast('Speech playback is not supported in this browser.','error');
     if(onend) onend();
     return false;
   }
   speechSynthesis.cancel();
+  const gender = genderOverride || state.voiceGender || 'female';
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(langCode||'en-US', gender);
   if(v) u.voice = v;
   u.lang = langCode || 'en-US';
-  u.rate = state.speakRate || 0.95;
-  /* Many devices only ship ONE voice per non-English language (often female by default),
-     so gender-matching a voice isn't always possible. As a fallback, shift pitch so
-     male and female teachers still sound distinct even when sharing the same base voice. */
-  u.pitch = gender==='male' ? 0.78 : (gender==='female' ? 1.05 : 1.0);
+  u.rate = (state.speakRate || 0.95) * (gender==='baby' ? 1.08 : 1);
+  u.pitch = pitchForVoiceGender(gender);
   if(onend) u.onend = onend;
   u.onerror = ()=>{ toast('Voice for this language may not be installed on your device.','error'); if(onend) onend(); };
   speechSynthesis.speak(u);
   return true;
 }
 function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+/* Reusable Male/Female/Baby voice toggle — reads and writes the single global
+   state.voiceGender preference so it stays in sync everywhere it appears. */
+const VOICE_GENDER_OPTIONS = [{key:'male', label:'👨 Male'}, {key:'female', label:'👩 Female'}, {key:'baby', label:'👶 Baby'}];
+function voiceGenderToggleHTML(idPrefix){
+  return `<div class="chip-select" id="${idPrefix}-voiceGenderRow">
+    ${VOICE_GENDER_OPTIONS.map(o=>`<button type="button" class="chip-opt ${state.voiceGender===o.key?'selected':''}" data-vg="${o.key}">${o.label}</button>`).join('')}
+  </div>`;
+}
+function wireVoiceGenderToggle(idPrefix, onChange){
+  const row = document.getElementById(idPrefix+'-voiceGenderRow');
+  if(!row) return;
+  row.addEventListener('click', e=>{
+    const btn = e.target.closest('[data-vg]'); if(!btn) return;
+    state.voiceGender = btn.getAttribute('data-vg');
+    saveState();
+    row.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('selected'));
+    btn.classList.add('selected');
+    if(onChange) onChange();
+  });
+}
 /* For playing ENGLISH model sentences with any teacher persona: use the teacher's own
    voice if it's an English variant, otherwise fall back to their chosen accent so the
    sentence stays intelligible as English rather than being read in another language. */
@@ -1854,6 +2454,8 @@ function checkBadges(){
   if(b.storiesRead.length>=2) earn('stories2','Story Reader 📖');
   if(b.rhymesLearned.length>=5) earn('rhymes5','Rhyme Time 🎵');
   if(b.toddlerWordsLearned.length>=20) earn('words20','First Words Star ⭐');
+  const totalLangItems = Object.values(state.langProgress.learnedItems).reduce((sum,arr)=>sum+arr.length, 0);
+  if(totalLangItems>=15) earn('lang15','Language Explorer 🌍');
 }
 function totalLessonMinutesTarget(){ return state.profile.dailyMinutes; }
 
@@ -1898,6 +2500,8 @@ function renderHome(){
       ${quickCard('vocabulary','🧠','Vocabulary','Learn new words')}
       ${quickCard('grammar','✏️','Grammar','Master the rules')}
       ${quickCard('stories','📖','Stories','Read & listen')}
+      ${quickCard('languages','🌍','Other Languages','Hindi, Tamil, Spanish & more')}
+      ${quickCard('rhymes','🎵','Rhymes','For little learners')}
     </div>
   `;
 }
@@ -1913,16 +2517,22 @@ function quickCard(view, icon, title, sub){
    TEACHERS SECTION
 ==================================================================== */
 let previewingId = null;
+function teacherLabel(t){ return t.language + ' Teacher'; }
 function renderTeachers(){
   document.getElementById('view-teachers').innerHTML = `
     <div class="page-head"><h2>Meet Your AI Teachers</h2><p>Choose a teacher by language or accent. Tap the speaker to preview their voice, or start a conversation to practise live.</p></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;font-weight:700;margin-bottom:8px;">Voice</p>
+      ${voiceGenderToggleHTML('teachers')}
+    </div>
     <div class="grid grid-3" id="teacherGrid"></div>
   `;
+  wireVoiceGenderToggle('teachers');
   const grid = document.getElementById('teacherGrid');
   grid.innerHTML = TEACHERS.map(t=>`
     <div class="card" style="text-align:center;">
       <div style="width:64px;height:64px;border-radius:50%;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 10px auto;">🧑‍🏫</div>
-      <h4 style="font-size:15px;">${t.name}</h4>
+      <h4 style="font-size:15px;">${teacherLabel(t)}</h4>
       <div style="font-size:20px;margin:2px 0;">${t.flag}</div>
       <div class="pill pill-blue" style="margin-bottom:6px;">${esc(t.language)}</div>
       <p style="font-size:12px;min-height:32px;">${esc(t.accentDesc)}</p>
@@ -1938,20 +2548,20 @@ function renderTeachers(){
 }
 function previewVoice(teacherId, btnEl){
   const t = TEACHERS.find(x=>x.id===teacherId);
-  const greeting = TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`;
+  const greeting = TEACHER_GREETING[teacherId] || `Hello, I am your ${t.language} teacher.`;
   if(previewingId===teacherId){ stopSpeak(); previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; return; }
   previewingId = teacherId;
   if(btnEl) btnEl.textContent = '⏹ Stop';
   showGenericModal(`
-    <div class="modal-head"><h3>${t.flag} ${t.name}</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <div class="modal-head"><h3>${t.flag} ${teacherLabel(t)}</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
     <p class="pill pill-purple" style="margin:6px 0 12px 0;">${esc(t.language)} voice preview</p>
     <div class="card" style="background:var(--surface-2);"><p style="color:var(--text);font-style:italic;">"${esc(greeting)}"</p></div>
     <div style="display:flex;gap:8px;margin-top:14px;">
-      <button class="btn btn-primary btn-sm" onclick="speak(${JSON.stringify(greeting)}, '${t.voiceLang}', null, '${t.gender}')">▶ Replay</button>
+      <button class="btn btn-primary btn-sm" onclick="speak(${JSON.stringify(greeting)}, '${t.voiceLang}')">▶ Replay</button>
       <button class="btn btn-soft btn-sm" onclick="stopSpeak()">⏹ Stop</button>
     </div>
   `);
-  const ok = speak(greeting, t.voiceLang, ()=>{ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; }, t.gender);
+  const ok = speak(greeting, t.voiceLang, ()=>{ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; });
   if(!ok){ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; }
 }
 
@@ -1966,11 +2576,11 @@ let activeChat = null; // {teacherId, messages:[{from,text}]}
 function openTeacherChat(teacherId){
   const t = TEACHERS.find(x=>x.id===teacherId);
   const saved = state.chatHistory[teacherId];
-  activeChat = { teacherId, messages: (saved && saved.length) ? saved : [{from:'teacher', text: TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`}] };
+  activeChat = { teacherId, messages: (saved && saved.length) ? saved : [{from:'teacher', text: TEACHER_GREETING[teacherId] || `Hello, I am your ${t.language} teacher.`}] };
   if(!saved || !saved.length){ state.chatHistory[teacherId] = activeChat.messages; saveState(); }
   renderChatModal();
   document.getElementById('chatModal').classList.remove('hidden');
-  if(!saved || !saved.length) speak(activeChat.messages[0].text, t.voiceLang, null, t.gender);
+  if(!saved || !saved.length) speak(activeChat.messages[0].text, t.voiceLang);
 }
 function closeTeacherChat(){
   document.getElementById('chatModal').classList.add('hidden');
@@ -1985,13 +2595,14 @@ function renderChatModal(){
     <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;">
       <div style="display:flex;align-items:center;gap:10px;">
         <div style="width:40px;height:40px;border-radius:50%;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:19px;">🧑‍🏫</div>
-        <div><h4 style="margin:0;font-size:15px;">${t.name} ${t.flag}</h4><p style="font-size:11.5px;">${esc(t.language)} · sample fallback dialogue</p></div>
+        <div><h4 style="margin:0;font-size:15px;">${teacherLabel(t)} ${t.flag}</h4><p style="font-size:11.5px;">${esc(t.language)} · sample fallback dialogue</p></div>
       </div>
       <button class="icon-btn" onclick="closeTeacherChat()">✕</button>
     </div>
     <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
-    <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;">
+    <div style="padding:10px 14px;border-top:1px solid var(--border);flex-shrink:0;">
       <p style="font-size:10.5px;margin-bottom:8px;">⚠️ No AI service is connected in this preview — replies use predefined sample dialogue, not live AI feedback. Your conversation is saved on this device so you can continue later.</p>
+      <div style="margin-bottom:8px;">${voiceGenderToggleHTML('chat')}</div>
       <div class="chip-select" id="quickReplyRow" style="margin-bottom:8px;">
         ${quick.map(q=>`<button type="button" class="chip-opt" data-quick="${esc(q)}" style="font-size:11.5px;padding:6px 10px;">${esc(q)}</button>`).join('')}
       </div>
@@ -2007,6 +2618,7 @@ function renderChatModal(){
     </div>
   `;
   renderChatMessages();
+  wireVoiceGenderToggle('chat');
   document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
   document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChatMessage(); });
   document.getElementById('quickReplyRow').addEventListener('click', e=>{
@@ -2022,14 +2634,14 @@ function renderChatModal(){
   });
   document.getElementById('chatListenBtn').addEventListener('click', ()=>{
     const last = [...activeChat.messages].reverse().find(m=>m.from==='teacher');
-    if(last) speak(last.text, t.voiceLang, null, t.gender);
+    if(last) speak(last.text, t.voiceLang);
   });
   document.getElementById('chatClearBtn').addEventListener('click', ()=>{
     activeChat.messages = [{from:'teacher', text: TEACHER_GREETING[activeChat.teacherId]}];
     state.chatHistory[activeChat.teacherId] = activeChat.messages;
     saveState();
     renderChatMessages();
-    speak(activeChat.messages[0].text, t.voiceLang, null, t.gender);
+    speak(activeChat.messages[0].text, t.voiceLang);
   });
 }
 function renderChatMessages(){
@@ -2058,10 +2670,192 @@ function sendChatMessage(){
     renderChatMessages();
     state.chatHistory[activeChat.teacherId] = activeChat.messages;
     saveState();
-    speak(reply, t.voiceLang.startsWith('en')?t.voiceLang:'en-US', null, t.gender);
+    speak(reply, t.voiceLang.startsWith('en')?t.voiceLang:'en-US');
   }, 450);
 }
 document.getElementById('chatModal').addEventListener('click', e=>{ if(e.target.id==='chatModal') closeTeacherChat(); });
+
+/* ====================================================================
+   LEARN OTHER LANGUAGES (a separate mode — here the target language
+   itself is what's being learned, unlike Spoken English)
+==================================================================== */
+let langTab = 'phrases'; // 'phrases' | 'vocab' | 'practice'
+let langVocabCatFilter = 'All';
+function renderLanguages(){
+  const activeLang = state.langProgress.activeLang;
+  if(!activeLang){ renderLanguagePicker(); return; }
+  renderLanguageHub(activeLang);
+}
+function renderLanguagePicker(){
+  document.getElementById('view-languages').innerHTML = `
+    <div class="page-head"><h2>Learn Other Languages</h2><p>Pick a language to learn its phrases, vocabulary, and practice with quizzes — separate from your Spoken English lessons.</p></div>
+    <div class="grid grid-3" id="langPickerGrid"></div>
+  `;
+  document.getElementById('langPickerGrid').innerHTML = OTHER_LANGUAGES.map(l=>{
+    const learned = (state.langProgress.learnedItems[l.id] || []).length;
+    const total = LANG_CONTENT[l.id].phrases.length + LANG_CONTENT[l.id].vocab.length;
+    return `<button class="card" style="text-align:center;cursor:pointer;border:none;" data-lang="${l.id}">
+      <div style="font-size:34px;">${l.flag}</div>
+      <h4 style="margin-top:10px;">${esc(l.name)}</h4>
+      <p style="font-size:12px;">${learned}/${total} items learned</p>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('[data-lang]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      state.langProgress.activeLang = btn.getAttribute('data-lang');
+      saveState();
+      langTab = 'phrases';
+      renderLanguages();
+    });
+  });
+}
+function renderLanguageHub(langId){
+  const lang = OTHER_LANGUAGES.find(l=>l.id===langId);
+  const content = LANG_CONTENT[langId];
+  const learnedArr = state.langProgress.learnedItems[langId] || [];
+  const totalItems = content.phrases.length + content.vocab.length;
+  document.getElementById('view-languages').innerHTML = `
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+      <div><h2>${lang.flag} Learning ${esc(lang.name)}</h2><p>${learnedArr.length}/${totalItems} items learned</p></div>
+      <button class="btn btn-soft btn-sm" id="langChangeBtn">🔁 Change language</button>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;font-weight:700;margin-bottom:8px;">Voice</p>
+      ${voiceGenderToggleHTML('lang')}
+    </div>
+    <div class="chip-select" id="langTabRow" style="margin-bottom:16px;">
+      <button type="button" class="chip-opt ${langTab==='phrases'?'selected':''}" data-tab="phrases">💬 Phrases</button>
+      <button type="button" class="chip-opt ${langTab==='vocab'?'selected':''}" data-tab="vocab">🧠 Vocabulary</button>
+      <button type="button" class="chip-opt ${langTab==='practice'?'selected':''}" data-tab="practice">🎯 Practice</button>
+    </div>
+    <div id="langTabBody"></div>
+  `;
+  document.getElementById('langChangeBtn').addEventListener('click', ()=>{
+    state.langProgress.activeLang = null;
+    saveState();
+    renderLanguages();
+  });
+  wireVoiceGenderToggle('lang');
+  document.querySelectorAll('#langTabRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ langTab=b.getAttribute('data-tab'); renderLanguageHub(langId); }));
+  if(langTab==='phrases') renderLangPhrases(langId);
+  else if(langTab==='vocab') renderLangVocab(langId);
+  else renderLangPracticeIntro(langId);
+}
+function markLangItemLearned(langId, itemId){
+  if(!state.langProgress.learnedItems[langId]) state.langProgress.learnedItems[langId] = [];
+  if(!state.langProgress.learnedItems[langId].includes(itemId)){
+    state.langProgress.learnedItems[langId].push(itemId);
+    addPoints(1);
+    checkBadges();
+    saveState();
+  }
+}
+function renderLangPhrases(langId){
+  const lang = OTHER_LANGUAGES.find(l=>l.id===langId);
+  const content = LANG_CONTENT[langId];
+  const learnedArr = state.langProgress.learnedItems[langId] || [];
+  document.getElementById('langTabBody').innerHTML = `<div class="grid grid-3" id="langPhrasesGrid"></div>`;
+  document.getElementById('langPhrasesGrid').innerHTML = content.phrases.map(p=>{
+    const done = learnedArr.includes(p.id);
+    return `<button class="card" style="text-align:left;cursor:pointer;border:${done?'2px solid var(--success)':'1px solid var(--border)'};" data-phrase="${p.id}">
+      <p style="font-size:12px;">${esc(p.en)}</p>
+      <h4 style="margin-top:6px;font-size:18px;">${esc(p.target)}</h4>
+      <p style="font-size:12px;font-style:italic;margin-top:2px;">${esc(p.translit)}</p>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('[data-phrase]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const p = content.phrases.find(x=>x.id===btn.getAttribute('data-phrase'));
+      speak(p.target, lang.voiceLang);
+      markLangItemLearned(langId, p.id);
+      renderLangPhrases(langId);
+    });
+  });
+}
+function renderLangVocab(langId){
+  const lang = OTHER_LANGUAGES.find(l=>l.id===langId);
+  const content = LANG_CONTENT[langId];
+  const learnedArr = state.langProgress.learnedItems[langId] || [];
+  const cats = ['All', ...new Set(content.vocab.map(v=>v.category))];
+  document.getElementById('langTabBody').innerHTML = `
+    <div class="chip-select" id="langVocabCatRow" style="margin-bottom:14px;">
+      ${cats.map(c=>`<button type="button" class="chip-opt ${c===langVocabCatFilter?'selected':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>
+    <div class="grid grid-4" id="langVocabGrid"></div>
+  `;
+  document.querySelectorAll('#langVocabCatRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ langVocabCatFilter=b.getAttribute('data-cat'); renderLangVocab(langId); }));
+  const list = langVocabCatFilter==='All' ? content.vocab : content.vocab.filter(v=>v.category===langVocabCatFilter);
+  document.getElementById('langVocabGrid').innerHTML = list.map(v=>{
+    const done = learnedArr.includes(v.id);
+    return `<button class="card" style="text-align:center;cursor:pointer;border:${done?'2px solid var(--success)':'1px solid var(--border)'};" data-vocab="${v.id}">
+      <p style="font-size:11.5px;">${esc(v.en)}</p>
+      <h4 style="margin-top:6px;font-size:17px;">${esc(v.target)}</h4>
+      <p style="font-size:11px;font-style:italic;">${esc(v.translit)}</p>
+    </button>`;
+  }).join('');
+  document.querySelectorAll('[data-vocab]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const v = content.vocab.find(x=>x.id===btn.getAttribute('data-vocab'));
+      speak(v.target, lang.voiceLang);
+      markLangItemLearned(langId, v.id);
+      renderLangVocab(langId);
+    });
+  });
+}
+function renderLangPracticeIntro(langId){
+  const content = LANG_CONTENT[langId];
+  const score = state.langProgress.quizScores[langId];
+  const totalItems = content.phrases.length + content.vocab.length;
+  document.getElementById('langTabBody').innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-size:32px;">🎯</div>
+      <h3 style="margin-top:10px;">Quick Quiz</h3>
+      <p style="font-size:13px;">Answer questions picking the correct word or phrase from ${totalItems} you've been learning.</p>
+      ${score ? `<p style="margin-top:8px;"><span class="pill pill-success">Last score: ${score.score}/${score.total}</span></p>` : ''}
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="startLangQuiz('${langId}')">Start Quiz →</button>
+    </div>
+  `;
+}
+function startLangQuiz(langId){
+  const content = LANG_CONTENT[langId];
+  const pool = [...content.phrases, ...content.vocab];
+  const questions = buildLangQuizQuestions(pool, Math.min(8, pool.length));
+  let idx = 0, score = 0;
+  function next(){
+    if(idx >= questions.length){
+      state.langProgress.quizScores[langId] = {score, total:questions.length};
+      addPoints(score*2);
+      checkBadges();
+      saveState();
+      showGenericModal(`
+        <div class="modal-head"><h3>🎯 Quiz Complete</h3><button class="icon-btn" onclick="closeGenericModal();renderLanguageHub('${langId}');">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🎉</div>
+          <h2 style="margin-top:10px;">${score} / ${questions.length}</h2>
+          <p>Great practice! Points added to your progress.</p>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal();renderLanguageHub('${langId}');">Done</button>
+        </div>
+      `);
+      return;
+    }
+    const q = questions[idx];
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Q${idx+1}/${questions.length}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+      <div id="langQuizBox" style="margin-top:10px;"></div>
+    `);
+    renderInlineMCQ('langQuizBox', q, (correct)=>{ if(correct) score++; setTimeout(()=>{ idx++; next(); }, 900); });
+  }
+  next();
+}
+function buildLangQuizQuestions(pool, count){
+  const shuffled = shuffle([...pool]);
+  const picks = shuffled.slice(0, count);
+  return picks.map(item=>{
+    const distractors = shuffle(pool.filter(p=>p.id!==item.id)).slice(0,2).map(p=>p.target);
+    const options = shuffle([item.target, ...distractors]);
+    return { q:`How do you say "${item.en}"?`, options, answer: options.indexOf(item.target) };
+  });
+}
 
 /* ====================================================================
    SPEAKING PRACTICE
@@ -2117,7 +2911,7 @@ function renderSpeak(){
       </div>
       <div class="card">
         <label class="field-label" style="margin-top:0;">Teacher / Accent</label>
-        <select id="speakTeacherSelect">${TEACHERS.map(t=>`<option value="${t.id}" ${t.id===speakState.teacherId?'selected':''}>${t.flag} ${t.name} — ${t.language}</option>`).join('')}</select>
+        <select id="speakTeacherSelect">${TEACHERS.map(t=>`<option value="${t.id}" ${t.id===speakState.teacherId?'selected':''}>${t.flag} ${t.language}</option>`).join('')}</select>
       </div>
     </div>
 
@@ -2143,6 +2937,11 @@ function renderSpeak(){
         </div>
       </div>
 
+      <div style="margin-top:14px;">
+        <p style="font-size:11.5px;margin-bottom:6px;">Voice</p>
+        <div style="display:flex;justify-content:center;">${voiceGenderToggleHTML('speak')}</div>
+      </div>
+
       <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
         <button class="btn btn-soft" id="speakPrevBtn" ${speakState.sentenceIdx===0?'disabled':''}>◀ Previous</button>
         <button class="btn btn-outline" id="speakListenBtn">🔊 Listen to model</button>
@@ -2155,13 +2954,14 @@ function renderSpeak(){
   `;
   document.getElementById('speakTopicSelect').addEventListener('change', e=>{ speakState.topicId=e.target.value; speakState.sentenceIdx=0; renderSpeak(); });
   document.getElementById('speakTeacherSelect').addEventListener('change', e=>{ speakState.teacherId=e.target.value; renderSpeak(); });
+  wireVoiceGenderToggle('speak', ()=>{});
   document.querySelectorAll('[data-jump]').forEach(b=>b.addEventListener('click', ()=>{ speakState.sentenceIdx = parseInt(b.getAttribute('data-jump')); renderSpeak(); }));
   document.querySelectorAll('[data-speed]').forEach(b=>b.addEventListener('click', ()=>{
     const opt = SPEED_OPTIONS.find(s=>s.key===b.getAttribute('data-speed'));
     state.speakRate = opt.rate; saveState(); renderSpeak();
   }));
-  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher), null, teacher.gender) );
-  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher), null, teacher.gender) );
+  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
+  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
   document.getElementById('speakPrevBtn').addEventListener('click', ()=>{
     if(speakState.sentenceIdx>0){ speakState.sentenceIdx--; renderSpeak(); }
   });
@@ -2522,12 +3322,17 @@ let toddlerCatFilter = 'All';
 function renderRhymes(){
   document.getElementById('view-rhymes').innerHTML = `
     <div class="page-head"><h2>Rhymes & First Words</h2><p>Simple nursery rhymes and picture-word cards for little learners, ages 1 to 5.</p></div>
+    <div class="card" style="margin-bottom:16px;">
+      <p style="font-size:12.5px;font-weight:700;margin-bottom:8px;">Voice (try Baby for little ones!)</p>
+      ${voiceGenderToggleHTML('rhymes')}
+    </div>
     <div class="chip-select" id="rhymesTabRow" style="margin-bottom:16px;">
       <button type="button" class="chip-opt ${rhymesTab==='rhymes'?'selected':''}" data-tab="rhymes">🎵 Rhymes</button>
       <button type="button" class="chip-opt ${rhymesTab==='words'?'selected':''}" data-tab="words">🔤 First Words</button>
     </div>
     <div id="rhymesTabBody"></div>
   `;
+  wireVoiceGenderToggle('rhymes');
   document.querySelectorAll('#rhymesTabRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ rhymesTab=b.getAttribute('data-tab'); renderRhymes(); }));
   if(rhymesTab==='rhymes') renderRhymesGrid(); else renderToddlerWordsGrid();
 }
@@ -2571,7 +3376,7 @@ function openRhymeDetail(id){
   document.getElementById('rhymePlayBtn').addEventListener('click', ()=>{
     const prevRate = state.speakRate;
     state.speakRate = 0.8;
-    speak(fullText, 'en-US', ()=>{ state.speakRate = prevRate; }, 'female');
+    speak(fullText, 'en-US', ()=>{ state.speakRate = prevRate; });
   });
 }
 function markRhymeLearned(id){
@@ -2610,7 +3415,7 @@ function renderToddlerWordsGrid(){
       const w = TODDLER_WORDS.find(x=>x.id===btn.getAttribute('data-word'));
       const prevRate = state.speakRate;
       state.speakRate = 0.8;
-      speak(w.word, 'en-US', ()=>{ state.speakRate = prevRate; }, 'female');
+      speak(w.word, 'en-US', ()=>{ state.speakRate = prevRate; });
       if(!state.progress.toddlerWordsLearned.includes(w.id)){
         state.progress.toddlerWordsLearned.push(w.id);
         addPoints(1);
@@ -2733,7 +3538,8 @@ function renderProgress(){
     streak3:{icon:'🔥',label:'3-Day Streak'}, streak7:{icon:'🏆',label:'7-Day Streak'},
     lessons3:{icon:'📘',label:'Lesson Explorer'}, vocab10:{icon:'🧠',label:'Word Collector'},
     stories2:{icon:'📖',label:'Story Reader'},
-    rhymes5:{icon:'🎵',label:'Rhyme Time'}, words20:{icon:'⭐',label:'First Words Star'}
+    rhymes5:{icon:'🎵',label:'Rhyme Time'}, words20:{icon:'⭐',label:'First Words Star'},
+    lang15:{icon:'🌍',label:'Language Explorer'}
   };
   document.getElementById('view-progress').innerHTML = `
     <div class="page-head"><h2>My Progress</h2><p>Track your streak, points and learning milestones.</p></div>
@@ -2808,6 +3614,12 @@ function renderSettings(){
     </div>
 
     <div class="card" style="max-width:560px;margin-top:16px;">
+      <h4>Voice</h4>
+      <p style="font-size:12.5px;margin:6px 0 10px 0;">Applies to every spoken audio in the app — teachers, lessons, vocabulary, stories, and rhymes.</p>
+      ${voiceGenderToggleHTML('settings')}
+    </div>
+
+    <div class="card" style="max-width:560px;margin-top:16px;">
       <h4>Data</h4>
       <p style="font-size:12.5px;margin-bottom:10px;">Your progress is stored only on this device, in your browser.</p>
       <button class="btn btn-danger-soft btn-sm" id="resetProgressBtn">Reset all progress</button>
@@ -2823,6 +3635,7 @@ function renderSettings(){
       btn.classList.add('selected');
     });
   });
+  wireVoiceGenderToggle('settings');
   document.getElementById('settingsSaveBtn').addEventListener('click', ()=>{
     const get = (g)=> document.querySelector(`[data-group="${g}"] .chip-opt.selected`).getAttribute('data-value');
     state.profile.name = document.getElementById('set-name').value.trim() || 'Learner';
