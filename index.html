@@ -240,6 +240,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       <section class="section-view" id="view-vocabulary"></section>
       <section class="section-view" id="view-grammar"></section>
       <section class="section-view" id="view-stories"></section>
+      <section class="section-view" id="view-rhymes"></section>
       <section class="section-view" id="view-practice"></section>
       <section class="section-view" id="view-teachers"></section>
       <section class="section-view" id="view-progress"></section>
@@ -283,7 +284,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '3.0.0';
+const APP_VERSION = '4.1.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -312,7 +313,8 @@ function freshState(){
       streak:0, lastActiveDate:null, activeDays:[], points:0,
       lessonsCompleted:[], confidenceScore:40,
       vocabFavorites:[], vocabLearned:[],
-      grammarDone:[], storiesRead:[], quizzesDone:{}
+      grammarDone:[], storiesRead:[], quizzesDone:{},
+      rhymesLearned:[], toddlerWordsLearned:[]
     },
     badges:[]
   };
@@ -608,13 +610,163 @@ const LESSONS = [
     conversation:[['A: How do you celebrate your favourite festival?','B: We decorate the house, cook special food, and visit family.']],
     grammar:'Use Simple Present for regular traditions: "We celebrate...", "Every year, families gather..."',
     practice:[{q:'Choose the correct sentence:', options:['We celebrating Diwali every year.','We celebrate Diwali every year.','We celebrated Diwali every year always.'], answer:1}]
+  },
+  { id:'l21', title:'Public Speaking Basics', level:'Advanced', category:'Communication', minutes:13,
+    objective:'Build confidence speaking in front of a group.',
+    vocabulary:['Audience','Confidence','Pause','Eye contact','Rehearse'],
+    examples:['Make eye contact with your audience.','Pause briefly before your key point.','I rehearsed my speech three times.'],
+    listening:'Listen: "Good afternoon everyone. Thank you for being here today. Let\'s get started."',
+    speaking:['Introduce yourself to an audience in two sentences.','Practise pausing for effect before a key point.','Thank an audience at the end of a talk.'],
+    conversation:[['A: How do you calm your nerves before speaking?','B: I take a deep breath and remember I know my topic well.']],
+    grammar:'Use short, confident sentences (not long complex ones) when speaking publicly, for clarity.',
+    practice:[{q:'Best public-speaking habit:', options:['Speaking very fast without pausing','Making eye contact and pausing for emphasis','Reading directly from notes without looking up'], answer:1}]
+  },
+  { id:'l22', title:'Writing and Talking About Emails', level:'Intermediate', category:'Business and Office', minutes:12,
+    objective:'Discuss and describe professional email etiquette.',
+    vocabulary:['Subject line','CC','Reply-all','Draft','Attachment'],
+    examples:['Please keep the subject line clear.','I\'ll CC my manager on this email.','Don\'t forget the attachment.'],
+    listening:'Listen: "Could you please attach the file and CC the finance team on this email?"',
+    speaking:['Explain what a subject line is for.','Ask someone to CC you on an email.','Describe the tone you\'d use in a formal email.'],
+    conversation:[['A: Did you get my email about the schedule?','B: Yes, but I think the attachment didn\'t come through — could you resend it?']],
+    grammar:'Use polite modal verbs ("Could you...", "Would you mind...") when asking for something by email.',
+    practice:[{q:'Most polite email request:', options:['Send the file now.','Could you please send the file when convenient?','File. Now.'], answer:1}]
+  },
+  { id:'l23', title:'Texting and Messaging Etiquette', level:'Elementary', category:'Communication', minutes:9,
+    objective:'Use appropriate tone and phrases in texts and chat messages.',
+    vocabulary:['Informal','Emoji','Reply','Typo','Abbreviation'],
+    examples:['This message sounds a bit too informal for work.','Sorry, that was a typo!','I\'ll reply as soon as I can.'],
+    listening:'Listen: "Hey, are you free for a quick call later? Let me know!"',
+    speaking:['Rewrite a casual text more formally.','Ask a friend if they are free to talk.','Politely tell someone you will reply later.'],
+    conversation:[['A: Hey, u free 2 chat?','B (more formal): Hi! Are you free to chat sometime today?']],
+    grammar:'Match your tone to the context: casual abbreviations suit friends, full sentences suit formal chats.',
+    practice:[{q:'More appropriate for a formal work chat:', options:['hey wassup, need that file asap!','Hi, could you share the file when you get a chance?','giv me da file'], answer:1}]
+  },
+  { id:'l24', title:'Shopping Online', level:'Elementary', category:'Shopping and Travelling', minutes:10,
+    objective:'Talk about ordering and tracking items online.',
+    vocabulary:['Cart','Track order','Delivery','Return policy','Coupon'],
+    examples:['I added the shoes to my cart.','Could you track my order for me?','What is the return policy?'],
+    listening:'Listen: "Your order has been shipped and will be delivered within three days."',
+    speaking:['Ask how to track an online order.','Ask about a store\'s return policy.','Explain why you want to return an item.'],
+    conversation:[['A: Has my order been delivered yet?','B: Let me check — it says it will arrive by tomorrow evening.']],
+    grammar:'Use Present Continuous / Passive for order status: "Your order is being processed." "It has been shipped."',
+    practice:[{q:'Correct order-status sentence:', options:['Your order is ship.','Your order has been shipped.','Your order ship already.'], answer:1}]
+  },
+  { id:'l25', title:'At the Pharmacy', level:'Elementary', category:'Everyday English', minutes:9,
+    objective:'Buy medicine and understand basic instructions.',
+    vocabulary:['Pharmacy','Dosage','Tablet','Over-the-counter','Pharmacist'],
+    examples:['Do you have anything for a headache?','What is the correct dosage?','This medicine is over-the-counter.'],
+    listening:'Listen: "Take one tablet twice a day after food." ',
+    speaking:['Ask the pharmacist for a headache remedy.','Ask how many times a day to take a medicine.','Ask if a medicine needs a prescription.'],
+    conversation:[['A: Do you have something for a cough?','B: Yes, this syrup works well — take one spoon twice a day.']],
+    grammar:'Use imperatives for instructions: "Take one tablet.", "Drink plenty of water."',
+    practice:[{q:'Choose the instruction sentence:', options:['I am taking medicine.','Take one tablet after food.','Medicine is good.'], answer:1}]
+  },
+  { id:'l26', title:'At the Salon', level:'Beginner', category:'Everyday English', minutes:8,
+    objective:'Describe what you want at a salon or barber shop.',
+    vocabulary:['Haircut','Trim','Appointment','Style','Colour'],
+    examples:['I would like a haircut, please.','Just a light trim, please.','Could I book an appointment for Saturday?'],
+    listening:'Listen: "How would you like your hair today? Just a trim, or a new style?"',
+    speaking:['Ask for a haircut appointment.','Describe the hairstyle you want.','Say you just want a light trim.'],
+    conversation:[['A: How would you like it cut today?','B: Just a trim, please — not too short.']],
+    grammar:'Use "would like" for polite requests about services: "I would like a haircut."',
+    practice:[{q:'Most polite request:', options:['Cut my hair now.','I would like a haircut, please.','Hair. Cut.'], answer:1}]
+  },
+  { id:'l27', title:'Visiting a Museum', level:'Elementary', category:'Shopping and Travelling', minutes:10,
+    objective:'Talk about visiting a museum or exhibition.',
+    vocabulary:['Exhibit','Guide','Artifact','Gallery','Admission'],
+    examples:['What time does the museum open?','Is there a guided tour available?','This artifact is over 500 years old.'],
+    listening:'Listen: "Welcome to the museum. The guided tour starts in ten minutes near the main gallery."',
+    speaking:['Ask about museum opening hours.','Ask if a guided tour is available.','Describe your favourite exhibit.'],
+    conversation:[['A: Is there a student discount on admission?','B: Yes, with a valid student ID, the ticket is half price.']],
+    grammar:'Use "there is / there are" to describe what exists at a place: "There is a guided tour." "There are many exhibits."',
+    practice:[{q:'Choose the correct sentence:', options:['There is many exhibits.','There are many exhibits.','There be many exhibits.'], answer:1}]
+  },
+  { id:'l28', title:'Describing People', level:'Beginner', category:'Everyday English', minutes:9,
+    objective:'Describe a person\'s appearance and personality.',
+    vocabulary:['Friendly','Tall','Curly hair','Outgoing','Reserved'],
+    examples:['She has curly hair and a friendly smile.','He is quite tall and outgoing.','My friend is a bit reserved at first.'],
+    listening:'Listen: "My best friend is tall, has short hair, and is always cheerful."',
+    speaking:['Describe a close friend\'s appearance.','Describe a family member\'s personality.','Describe yourself in three sentences.'],
+    conversation:[['A: What does your brother look like?','B: He is tall, has short black hair, and always wears glasses.']],
+    grammar:'Use "have/has" for physical features and "be" for personality: "She has curly hair." "She is friendly."',
+    practice:[{q:'Choose the correct sentence:', options:['She is curly hair.','She has curly hair.','She have curly hair.'], answer:1}]
+  },
+  { id:'l29', title:'Describing Places', level:'Elementary', category:'Everyday English', minutes:10,
+    objective:'Describe a city, town, or place you know well.',
+    vocabulary:['Crowded','Peaceful','Scenic','Historic','Bustling'],
+    examples:['My hometown is peaceful and green.','The old city is historic and full of monuments.','The market street is always bustling.'],
+    listening:'Listen: "My city is quite crowded, but it has beautiful parks and a rich history."',
+    speaking:['Describe your hometown in three sentences.','Compare a city and a village.','Describe the most scenic place you have visited.'],
+    conversation:[['A: What is your city like?','B: It\'s quite bustling, but there are peaceful parks too.']],
+    grammar:'Use adjectives after "is/are" to describe places: "The city is crowded." "The parks are peaceful."',
+    practice:[{q:'Choose the correct sentence:', options:['The city crowded.','The city is crowded.','The city crowding.'], answer:1}]
+  },
+  { id:'l30', title:'Comparing Products', level:'Intermediate', category:'Shopping and Travelling', minutes:11,
+    objective:'Compare products when shopping or reviewing options.',
+    vocabulary:['Affordable','Durable','Value for money','Feature','Compare'],
+    examples:['This phone is more affordable than that one.','This brand is known for durable products.','Let\'s compare the features first.'],
+    listening:'Listen: "This model is a bit more expensive, but it offers better battery life and durability."',
+    speaking:['Compare two phones or laptops you know.','Explain which product offers better value for money.','Ask a shopkeeper to compare two products.'],
+    conversation:[['A: Which one would you recommend?','B: This one is pricier, but it\'s more durable and has better features.']],
+    grammar:'Use comparatives with "than": "cheaper than", "more durable than", "better than".',
+    practice:[{q:'Choose the correct sentence:', options:['This is durable than that.','This is more durable than that.','This is durabler than that.'], answer:1}]
+  },
+  { id:'l31', title:'Giving and Receiving Feedback', level:'Advanced', category:'Business and Office', minutes:12,
+    objective:'Give and receive feedback constructively.',
+    vocabulary:['Constructive','Strength','Improvement','Suggestion','Acknowledge'],
+    examples:['I have some constructive feedback to share.','One area for improvement is time management.','Thank you for the suggestion.'],
+    listening:'Listen: "Your presentation was clear. One suggestion — try to slow down slightly during the data section."',
+    speaking:['Give a colleague positive feedback on their work.','Suggest one area of improvement politely.','Respond gracefully to feedback you receive.'],
+    conversation:[['A: I noticed the report had a few errors — maybe a second review would help.','B: Thank you, that\'s fair feedback, I\'ll double-check next time.']],
+    grammar:'Soften feedback with phrases like "One suggestion is...", "It might help to..." rather than blunt statements.',
+    practice:[{q:'Most constructive feedback phrasing:', options:['This is wrong.','One suggestion is to double-check the numbers.','You always make mistakes.'], answer:1}]
+  },
+  { id:'l32', title:'Talking About Sports and Fitness', level:'Beginner', category:'Everyday English', minutes:9,
+    objective:'Talk about sports, fitness habits and preferences.',
+    vocabulary:['Workout','Team sport','Score','Fitness','Match'],
+    examples:['I do a workout every morning.','My favourite team sport is football.','Who won the match yesterday?'],
+    listening:'Listen: "I usually go for a run in the morning and play football on weekends."',
+    speaking:['Describe your favourite sport.','Say how often you exercise.','Ask a friend about a recent match they watched.'],
+    conversation:[['A: Do you play any sports?','B: Yes, I play badminton twice a week with my friends.']],
+    grammar:'Use frequency adverbs (always, usually, often, sometimes, never) with Simple Present for habits.',
+    practice:[{q:'Choose the correct sentence:', options:['I always am exercising.','I always exercise in the morning.','I exercise always morning.'], answer:1}]
+  },
+  { id:'l33', title:'Talking About Cooking and Food', level:'Beginner', category:'Everyday English', minutes:9,
+    objective:'Describe cooking steps and food preferences.',
+    vocabulary:['Recipe','Ingredient','Boil','Chop','Flavour'],
+    examples:['First, chop the onions finely.','This recipe needs five ingredients.','I love the flavour of this dish.'],
+    listening:'Listen: "First, boil the water. Then add the pasta and cook for ten minutes."',
+    speaking:['Describe how to make your favourite dish in three steps.','Say what ingredients you need for a simple recipe.','Ask a friend for their favourite recipe.'],
+    conversation:[['A: How do you make this dish?','B: First you chop the vegetables, then you cook them with some spices.']],
+    grammar:'Use imperatives and sequencing words (first, then, finally) to give cooking instructions.',
+    practice:[{q:'Choose the correct sequencing word:', options:['First chop the onions. Final, add salt.','First, chop the onions. Finally, add salt.','First chop onions final add salt.'], answer:1}]
+  },
+  { id:'l34', title:'Taking Care of Pets', level:'Beginner', category:'Everyday English', minutes:8,
+    objective:'Talk about pets and pet care.',
+    vocabulary:['Pet','Vet','Feed','Walk','Vaccinate'],
+    examples:['I have a pet dog named Leo.','I walk my dog every evening.','We take him to the vet regularly.'],
+    listening:'Listen: "My cat needs to be fed twice a day and taken to the vet once a year."',
+    speaking:['Describe a pet you have or would like to have.','Say how often you would walk or feed a pet.','Ask a friend about their pet\'s name and habits.'],
+    conversation:[['A: Do you have any pets?','B: Yes, I have a cat. I feed her twice a day.']],
+    grammar:'Use "have/has" for possession and Simple Present for pet-care routines.',
+    practice:[{q:'Choose the correct sentence:', options:['I has a dog.','I have a dog.','I having a dog.'], answer:1}]
+  },
+  { id:'l35', title:'Online Meetings and Video Calls', level:'Intermediate', category:'Business and Office', minutes:11,
+    objective:'Handle common phrases used in online meetings.',
+    vocabulary:['Mute','Screen share','Connection','Agenda','Reschedule'],
+    examples:['Could you mute yourself, please?','Can you share your screen?','Let\'s stick to today\'s agenda.'],
+    listening:'Listen: "Sorry, you\'re on mute — could you please unmute and repeat that?"',
+    speaking:['Ask someone to share their screen.','Politely tell someone they are on mute.','Suggest rescheduling a meeting.'],
+    conversation:[['A: Can everyone see my screen clearly?','B: Yes, it looks good — please go ahead.']],
+    grammar:'Use polite imperatives and questions for online meeting management: "Could you...", "Let\'s..."',
+    practice:[{q:'Most appropriate phrase in a video call:', options:['You are on mute!','Could you please unmute yourself?','Speak louder now.'], answer:1}]
   }
 ];
 
 /* ====================================================================
    DATA: VOCABULARY
 ==================================================================== */
-const VOCAB_CATEGORIES = ['Everyday English','School and Education','College and Campus','Business and Office','Shopping and Travelling','Communication','Professional English','Technology','Health and Wellness'];
+const VOCAB_CATEGORIES = ['Everyday English','School and Education','College and Campus','Business and Office','Shopping and Travelling','Communication','Professional English','Technology','Health and Wellness','Sports and Fitness','Environment and Nature'];
 const VOCABULARY = [
   {id:'v1', word:'Breakfast', meaning:'The first meal of the day', translation:'नाश्ता (Hindi)', pronunciation:'/ˈbrek.fəst/', example:'I eat breakfast at 8 AM.', category:'Everyday English'},
   {id:'v2', word:'Commute', meaning:'To travel regularly between home and work', translation:'आना-जाना (Hindi)', pronunciation:'/kəˈmjuːt/', example:'My commute takes 40 minutes.', category:'Everyday English'},
@@ -699,7 +851,68 @@ const VOCABULARY = [
   {id:'v81', word:'Wellbeing', meaning:'The state of being healthy and content', translation:'कल्याण (Hindi)', pronunciation:'/ˌwelˈbiː.ɪŋ/', example:'A short walk improves your wellbeing.', category:'Health and Wellness'},
   {id:'v82', word:'Checkup', meaning:'A routine examination to confirm good health', translation:'जांच (Hindi)', pronunciation:'/ˈtʃek.ʌp/', example:'I have a yearly health checkup.', category:'Health and Wellness'},
   {id:'v83', word:'Immunity', meaning:'The body\'s ability to resist illness', translation:'प्रतिरक्षा (Hindi)', pronunciation:'/ɪˈmjuː.nə.ti/', example:'Eating fruit boosts your immunity.', category:'Health and Wellness'},
-  {id:'v84', word:'Balanced diet', meaning:'Eating a healthy variety of foods', translation:'संतुलित आहार (Hindi)', pronunciation:'/ˈbæl.ənst ˈdaɪ.ət/', example:'A balanced diet includes fruits and vegetables.', category:'Health and Wellness'}
+  {id:'v84', word:'Balanced diet', meaning:'Eating a healthy variety of foods', translation:'संतुलित आहार (Hindi)', pronunciation:'/ˈbæl.ənst ˈdaɪ.ət/', example:'A balanced diet includes fruits and vegetables.', category:'Health and Wellness'},
+  {id:'v85', word:'Punctual', meaning:'Arriving or doing something at the right time', translation:'समयनिष्ठ (Hindi)', pronunciation:'/ˈpʌŋk.tʃu.əl/', example:'She is always punctual for meetings.', category:'Everyday English'},
+  {id:'v86', word:'Habit', meaning:'Something you do regularly, often without thinking', translation:'आदत (Hindi)', pronunciation:'/ˈhæb.ɪt/', example:'Reading before bed is a good habit.', category:'Everyday English'},
+  {id:'v87', word:'Polite', meaning:'Having good manners and being respectful', translation:'विनम्र (Hindi)', pronunciation:'/pəˈlaɪt/', example:'He is always polite to strangers.', category:'Everyday English'},
+  {id:'v88', word:'Casual', meaning:'Relaxed and informal', translation:'अनौपचारिक (Hindi)', pronunciation:'/ˈkæʒ.u.əl/', example:'It was a casual gathering with friends.', category:'Everyday English'},
+  {id:'v89', word:'Occasion', meaning:'A particular event or time', translation:'अवसर (Hindi)', pronunciation:'/əˈkeɪ.ʒən/', example:'We wore new clothes for the occasion.', category:'Everyday English'},
+  {id:'v90', word:'Lecture', meaning:'A talk given to teach about a subject', translation:'व्याख्यान (Hindi)', pronunciation:'/ˈlek.tʃər/', example:'The lecture on history was interesting.', category:'School and Education'},
+  {id:'v91', word:'Classmate', meaning:'A student in the same class as you', translation:'सहपाठी (Hindi)', pronunciation:'/ˈklæs.meɪt/', example:'My classmate helped me with homework.', category:'School and Education'},
+  {id:'v92', word:'Exam', meaning:'A formal test of knowledge or skill', translation:'परीक्षा (Hindi)', pronunciation:'/ɪɡˈzæm/', example:'My exam is next Monday.', category:'School and Education'},
+  {id:'v93', word:'Marks', meaning:'The score given for schoolwork or exams', translation:'अंक (Hindi)', pronunciation:'/mɑːrks/', example:'She scored good marks in science.', category:'School and Education'},
+  {id:'v94', word:'Uniform', meaning:'Special clothing worn by all students at a school', translation:'वर्दी (Hindi)', pronunciation:'/ˈjuː.nɪ.fɔːrm/', example:'Students must wear their uniform daily.', category:'School and Education'},
+  {id:'v95', word:'Campus', meaning:'The grounds and buildings of a college or university', translation:'परिसर (Hindi)', pronunciation:'/ˈkæm.pəs/', example:'The campus has a large library.', category:'College and Campus'},
+  {id:'v96', word:'Credit', meaning:'A unit that measures course completion in college', translation:'क्रेडिट (Hindi)', pronunciation:'/ˈkred.ɪt/', example:'I need six credits to complete this semester.', category:'College and Campus'},
+  {id:'v97', word:'Mentor', meaning:'An experienced person who guides and advises you', translation:'मार्गदर्शक (Hindi)', pronunciation:'/ˈmen.tɔːr/', example:'My mentor helped me choose my career path.', category:'College and Campus'},
+  {id:'v98', word:'Thesis', meaning:'A long research paper written for a degree', translation:'शोध निबंध (Hindi)', pronunciation:'/ˈθiː.sɪs/', example:'She is defending her thesis next week.', category:'College and Campus'},
+  {id:'v99', word:'Lecture hall', meaning:'A large room where lectures are given', translation:'व्याख्यान कक्ष (Hindi)', pronunciation:'/ˈlek.tʃər hɔːl/', example:'The lecture hall was completely full.', category:'College and Campus'},
+  {id:'v100', word:'Briefing', meaning:'A short meeting giving instructions or information', translation:'संक्षिप्त जानकारी (Hindi)', pronunciation:'/ˈbriː.fɪŋ/', example:'We have a briefing before the client call.', category:'Business and Office'},
+  {id:'v101', word:'Merger', meaning:'Two companies joining to form one', translation:'विलय (Hindi)', pronunciation:'/ˈmɜːr.dʒər/', example:'The merger was announced yesterday.', category:'Business and Office'},
+  {id:'v102', word:'Revenue', meaning:'Income generated by a business', translation:'राजस्व (Hindi)', pronunciation:'/ˈrev.ə.nuː/', example:'Revenue increased by ten percent.', category:'Business and Office'},
+  {id:'v103', word:'Budget', meaning:'A plan for how money will be spent', translation:'बजट (Hindi)', pronunciation:'/ˈbʌdʒ.ɪt/', example:'We need to stick to the budget.', category:'Business and Office'},
+  {id:'v104', word:'Turnover', meaning:'The total sales a business makes in a period', translation:'कारोबार (Hindi)', pronunciation:'/ˈtɜːrn.oʊ.vər/', example:'Annual turnover grew significantly this year.', category:'Business and Office'},
+  {id:'v105', word:'Currency', meaning:'The money used in a particular country', translation:'मुद्रा (Hindi)', pronunciation:'/ˈkʌr.ən.si/', example:'I need to exchange currency at the airport.', category:'Shopping and Travelling'},
+  {id:'v106', word:'Visa', meaning:'Official permission to enter a foreign country', translation:'वीज़ा (Hindi)', pronunciation:'/ˈviː.zə/', example:'I applied for a tourist visa.', category:'Shopping and Travelling'},
+  {id:'v107', word:'Souvenir', meaning:'An item kept as a memory of a place', translation:'स्मृति चिन्ह (Hindi)', pronunciation:'/ˌsuː.vəˈnɪr/', example:'I bought a souvenir from the market.', category:'Shopping and Travelling'},
+  {id:'v108', word:'Terminal', meaning:'A building where passengers board flights', translation:'टर्मिनल (Hindi)', pronunciation:'/ˈtɜːr.mɪ.nəl/', example:'Our flight departs from Terminal 2.', category:'Shopping and Travelling'},
+  {id:'v109', word:'Baggage', meaning:'Bags and suitcases you take when travelling', translation:'सामान (Hindi)', pronunciation:'/ˈbæɡ.ɪdʒ/', example:'Please collect your baggage from belt 4.', category:'Shopping and Travelling'},
+  {id:'v110', word:'Articulate', meaning:'Able to express ideas clearly', translation:'सुव्यक्त (Hindi)', pronunciation:'/ɑːrˈtɪk.jə.lət/', example:'She is a very articulate speaker.', category:'Communication'},
+  {id:'v111', word:'Fluent', meaning:'Able to speak a language smoothly and easily', translation:'धाराप्रवाह (Hindi)', pronunciation:'/ˈfluː.ənt/', example:'He is fluent in three languages.', category:'Communication'},
+  {id:'v112', word:'Gesture', meaning:'A movement of the body to express meaning', translation:'हाव-भाव (Hindi)', pronunciation:'/ˈdʒes.tʃər/', example:'She waved as a friendly gesture.', category:'Communication'},
+  {id:'v113', word:'Persuade', meaning:'To convince someone to do or believe something', translation:'राजी करना (Hindi)', pronunciation:'/pərˈsweɪd/', example:'He persuaded me to join the team.', category:'Communication'},
+  {id:'v114', word:'Diplomatic', meaning:'Tactful and careful when dealing with people', translation:'कूटनीतिक (Hindi)', pronunciation:'/ˌdɪp.ləˈmæt.ɪk/', example:'She gave a diplomatic answer to a tricky question.', category:'Communication'},
+  {id:'v115', word:'Efficient', meaning:'Doing something well without wasting time or effort', translation:'कुशल (Hindi)', pronunciation:'/ɪˈfɪʃ.ənt/', example:'The new process is much more efficient.', category:'Professional English'},
+  {id:'v116', word:'Punctuality', meaning:'The quality of being on time', translation:'समयनिष्ठता (Hindi)', pronunciation:'/ˌpʌŋk.tʃuˈæl.ə.ti/', example:'Punctuality is valued in this company.', category:'Professional English'},
+  {id:'v117', word:'Versatile', meaning:'Able to adapt to many different tasks', translation:'बहुमुखी (Hindi)', pronunciation:'/ˈvɜːr.sə.taɪl/', example:'She is a versatile employee who can handle many roles.', category:'Professional English'},
+  {id:'v118', word:'Reliable', meaning:'Consistently good and able to be trusted', translation:'भरोसेमंद (Hindi)', pronunciation:'/rɪˈlaɪ.ə.bəl/', example:'He is a reliable team member.', category:'Professional English'},
+  {id:'v119', word:'Diligent', meaning:'Showing careful and persistent effort', translation:'परिश्रमी (Hindi)', pronunciation:'/ˈdɪl.ɪ.dʒənt/', example:'She is diligent about meeting deadlines.', category:'Professional English'},
+  {id:'v120', word:'Browser', meaning:'Software used to access websites', translation:'ब्राउज़र (Hindi)', pronunciation:'/ˈbraʊ.zər/', example:'Please open your browser and go to the site.', category:'Technology'},
+  {id:'v121', word:'Server', meaning:'A computer that provides data to other computers', translation:'सर्वर (Hindi)', pronunciation:'/ˈsɜːr.vər/', example:'The server is down for maintenance.', category:'Technology'},
+  {id:'v122', word:'Cloud storage', meaning:'Storing data online instead of on a device', translation:'क्लाउड स्टोरेज (Hindi)', pronunciation:'/klaʊd ˈstɔːr.ɪdʒ/', example:'I saved the file to cloud storage.', category:'Technology'},
+  {id:'v123', word:'Firewall', meaning:'A security system that blocks unauthorised access', translation:'फ़ायरवॉल (Hindi)', pronunciation:'/ˈfaɪər.wɔːl/', example:'The company firewall blocks unsafe websites.', category:'Technology'},
+  {id:'v124', word:'App', meaning:'A software program used on a phone or computer', translation:'ऐप (Hindi)', pronunciation:'/æp/', example:'I downloaded a new fitness app.', category:'Technology'},
+  {id:'v125', word:'Posture', meaning:'The position in which you hold your body', translation:'मुद्रा (Hindi)', pronunciation:'/ˈpɒs.tʃər/', example:'Good posture helps prevent back pain.', category:'Health and Wellness'},
+  {id:'v126', word:'Vitamin', meaning:'A nutrient needed for good health', translation:'विटामिन (Hindi)', pronunciation:'/ˈvɪt.ə.mɪn/', example:'Oranges are rich in vitamin C.', category:'Health and Wellness'},
+  {id:'v127', word:'Sleep cycle', meaning:'The regular pattern of sleep through the night', translation:'नींद चक्र (Hindi)', pronunciation:'/sliːp ˈsaɪ.kəl/', example:'A regular sleep cycle improves focus.', category:'Health and Wellness'},
+  {id:'v128', word:'Mindfulness', meaning:'Being fully aware and present in the moment', translation:'सजगता (Hindi)', pronunciation:'/ˈmaɪnd.fəl.nəs/', example:'She practises mindfulness every morning.', category:'Health and Wellness'},
+  {id:'v129', word:'Wellness routine', meaning:'A regular set of habits for staying healthy', translation:'स्वास्थ्य दिनचर्या (Hindi)', pronunciation:'/ˈwel.nəs ruːˈtiːn/', example:'Walking every evening is part of my wellness routine.', category:'Health and Wellness'},
+  {id:'v130', word:'Marathon', meaning:'A long-distance running race', translation:'मैराथन (Hindi)', pronunciation:'/ˈmær.ə.θɒn/', example:'She is training for her first marathon.', category:'Sports and Fitness'},
+  {id:'v131', word:'Coach', meaning:'A person who trains athletes or a sports team', translation:'प्रशिक्षक (Hindi)', pronunciation:'/koʊtʃ/', example:'Our coach motivates us before every match.', category:'Sports and Fitness'},
+  {id:'v132', word:'Tournament', meaning:'A series of matches to find an overall winner', translation:'टूर्नामेंट (Hindi)', pronunciation:'/ˈtʊr.nə.mənt/', example:'Our school is hosting a cricket tournament.', category:'Sports and Fitness'},
+  {id:'v133', word:'Stadium', meaning:'A large venue for sports events', translation:'स्टेडियम (Hindi)', pronunciation:'/ˈsteɪ.di.əm/', example:'The stadium was full for the final match.', category:'Sports and Fitness'},
+  {id:'v134', word:'Referee', meaning:'An official who enforces the rules in a match', translation:'रेफरी (Hindi)', pronunciation:'/ˌref.əˈriː/', example:'The referee gave a penalty in the second half.', category:'Sports and Fitness'},
+  {id:'v135', word:'Warm-up', meaning:'Light exercise done before intense activity', translation:'वार्म-अप (Hindi)', pronunciation:'/ˈwɔːrm ʌp/', example:'Always do a warm-up before running.', category:'Sports and Fitness'},
+  {id:'v136', word:'Stamina', meaning:'The ability to sustain physical effort over time', translation:'सहनशक्ति (Hindi)', pronunciation:'/ˈstæm.ɪ.nə/', example:'Regular exercise builds your stamina.', category:'Sports and Fitness'},
+  {id:'v137', word:'Endurance', meaning:'The ability to continue an activity for a long time', translation:'धैर्य क्षमता (Hindi)', pronunciation:'/ɪnˈdʊr.əns/', example:'Marathon runners need great endurance.', category:'Sports and Fitness'},
+  {id:'v138', word:'Pollution', meaning:'Harmful substances damaging the environment', translation:'प्रदूषण (Hindi)', pronunciation:'/pəˈluː.ʃən/', example:'Air pollution is a serious problem in cities.', category:'Environment and Nature'},
+  {id:'v139', word:'Recycle', meaning:'To process waste for reuse', translation:'पुनर्चक्रण करना (Hindi)', pronunciation:'/ˌriːˈsaɪ.kəl/', example:'We recycle paper and plastic at home.', category:'Environment and Nature'},
+  {id:'v140', word:'Sustainable', meaning:'Able to continue without harming the environment', translation:'टिकाऊ (Hindi)', pronunciation:'/səˈsteɪ.nə.bəl/', example:'The company uses sustainable packaging.', category:'Environment and Nature'},
+  {id:'v141', word:'Wildlife', meaning:'Animals living in their natural environment', translation:'वन्यजीव (Hindi)', pronunciation:'/ˈwaɪld.laɪf/', example:'The forest is home to diverse wildlife.', category:'Environment and Nature'},
+  {id:'v142', word:'Climate change', meaning:'Long-term changes in global temperatures and weather', translation:'जलवायु परिवर्तन (Hindi)', pronunciation:'/ˈklaɪ.mət tʃeɪndʒ/', example:'Climate change is affecting weather patterns.', category:'Environment and Nature'},
+  {id:'v143', word:'Renewable energy', meaning:'Energy from natural sources that do not run out', translation:'नवीकरणीय ऊर्जा (Hindi)', pronunciation:'/rɪˈnuː.ə.bəl ˈen.ər.dʒi/', example:'Solar power is a form of renewable energy.', category:'Environment and Nature'},
+  {id:'v144', word:'Conservation', meaning:'The protection of nature and natural resources', translation:'संरक्षण (Hindi)', pronunciation:'/ˌkɒn.sərˈveɪ.ʃən/', example:'The park focuses on wildlife conservation.', category:'Environment and Nature'},
+  {id:'v145', word:'Biodiversity', meaning:'The variety of plant and animal life in an area', translation:'जैव विविधता (Hindi)', pronunciation:'/ˌbaɪ.oʊ.daɪˈvɜːr.sə.ti/', example:'Rainforests have incredible biodiversity.', category:'Environment and Nature'}
 ];
 
 /* ====================================================================
@@ -765,7 +978,43 @@ const GRAMMAR_TOPICS = [
     quiz:[{q:'Choose the correctly ordered sentence:', options:['Every day I school go to.','I go to school every day.','Go I every day to school.'], answer:1}] },
   { id:'g20', title:'Commonly Confused Words', level:'Intermediate', explanation:'Some words are frequently confused: its (possessive) vs it\'s (it is); their (possessive) vs there (place) vs they\'re (they are); your (possessive) vs you\'re (you are).',
     examples:['The dog wagged its tail.','It\'s raining outside.','Their house is near the park. / The keys are there. / They\'re coming soon.'],
-    quiz:[{q:'Choose the correct word: "___ going to be late for the meeting."', options:['Your','You\'re','Youre'], answer:1}] }
+    quiz:[{q:'Choose the correct word: "___ going to be late for the meeting."', options:['Your','You\'re','Youre'], answer:1}] },
+  { id:'g21', title:'Adjectives vs Adverbs', level:'Elementary', explanation:'Adjectives describe nouns ("a quick runner"). Adverbs describe verbs, often ending in -ly ("She runs quickly").',
+    examples:['He is a careful driver.','He drives carefully.','She gave a quick reply.','She replied quickly.'],
+    quiz:[{q:'Choose the correct word: "She sings ___."', options:['beautiful','beautifully','beauty'], answer:1}] },
+  { id:'g22', title:'Prepositions of Time (in, on, at)', level:'Elementary', explanation:'Use "in" for months/years ("in June"), "on" for days/dates ("on Monday"), and "at" for exact times ("at 5 PM").',
+    examples:['I was born in 1998.','The meeting is on Friday.','We start at 9 AM.'],
+    quiz:[{q:'Choose the correct preposition: "The exam is ___ March."', options:['in','on','at'], answer:0}] },
+  { id:'g23', title:'Question Tags', level:'Intermediate', explanation:'Question tags turn a statement into a question, often to confirm something: "It\'s hot, isn\'t it?" "You don\'t smoke, do you?"',
+    examples:['You like coffee, don\'t you?','She isn\'t coming, is she?','They finished the project, didn\'t they?'],
+    quiz:[{q:'Complete the tag: "You are coming, ___?"', options:['aren\'t you','don\'t you','isn\'t it'], answer:0}] },
+  { id:'g24', title:'Direct and Indirect Questions', level:'Advanced', explanation:'Indirect (embedded) questions sound more polite: "Where is the station?" becomes "Could you tell me where the station is?" Note the word order changes — no inversion in the embedded part.',
+    examples:['Direct: Where is the bathroom? Indirect: Could you tell me where the bathroom is?','Direct: What time is it? Indirect: Do you know what time it is?'],
+    quiz:[{q:'Choose the correct indirect question:', options:['Could you tell me where is the station?','Could you tell me where the station is?','Could you tell me where station is?'], answer:1}] },
+  { id:'g25', title:'Expressing Opinions', level:'Intermediate', explanation:'Useful phrases for giving opinions: "In my opinion...", "I think that...", "From my point of view...", "I believe..."',
+    examples:['In my opinion, this plan will work.','I think we should wait a little longer.','From my point of view, honesty matters most.'],
+    quiz:[{q:'Which phrase introduces an opinion?', options:['According to the report...','In my opinion...','The weather today is...'], answer:1}] },
+  { id:'g26', title:'Making Suggestions', level:'Elementary', explanation:'Common ways to suggest something: "Why don\'t we...", "How about...", "Let\'s...", "Maybe we could..."',
+    examples:['Why don\'t we go for a walk?','How about trying the new restaurant?','Let\'s finish this before lunch.'],
+    quiz:[{q:'Choose the correct suggestion:', options:['How about to go for a walk?','How about going for a walk?','How about go for a walk?'], answer:1}] },
+  { id:'g27', title:'Giving Advice (should, ought to, had better)', level:'Intermediate', explanation:'"Should" and "ought to" give general advice; "had better" is stronger, often with a warning of consequence.',
+    examples:['You should drink more water.','You ought to see a doctor.','You had better leave now or you\'ll miss the bus.'],
+    quiz:[{q:'Choose the correct sentence:', options:['You should to rest.','You should rest.','You should resting.'], answer:1}] },
+  { id:'g28', title:'Expressing Certainty and Uncertainty', level:'Intermediate', explanation:'Use "definitely / certainly" for certainty and "might / may / perhaps" for uncertainty.',
+    examples:['She will definitely come to the party.','It might rain later.','Perhaps we should leave earlier.'],
+    quiz:[{q:'Choose the word showing more uncertainty:', options:['definitely','certainly','might'], answer:2}] },
+  { id:'g29', title:'Causative Verbs (have/get something done)', level:'Advanced', explanation:'Use "have/get something done" when someone else does an action for you: "I had my hair cut" means someone else cut it, not you.',
+    examples:['I had my car repaired.','She is getting her house painted.','We had the documents printed.'],
+    quiz:[{q:'Choose the correct causative form:', options:['I cut my hair yesterday (by a barber).','I had my hair cut yesterday.','I having my hair cut yesterday.'], answer:1}] },
+  { id:'g30', title:'Used to / Would for Past Habits', level:'Intermediate', explanation:'"Used to" describes past habits or states that are no longer true: "I used to live in Delhi." "Would" also describes repeated past actions but not states.',
+    examples:['I used to play cricket every day.','We would visit our grandparents every summer.','She used to be shy, but not anymore.'],
+    quiz:[{q:'Choose the correct sentence about a past habit:', options:['I use to wake up early.','I used to wake up early.','I am used to wake up early.'], answer:1}] },
+  { id:'g31', title:'Too / Enough', level:'Elementary', explanation:'"Too" means more than necessary (too hot). "Enough" means a sufficient amount, and comes after adjectives but before nouns: "old enough", "enough time".',
+    examples:['This tea is too hot to drink.','Are you old enough to vote?','We don\'t have enough time.'],
+    quiz:[{q:'Choose the correct sentence:', options:['I have enough money time.','I don\'t have enough time.','I have time enough.'], answer:1}] },
+  { id:'g32', title:'Already, Yet, Still', level:'Intermediate', explanation:'"Already" shows something happened sooner than expected (used in positive sentences). "Yet" is used in questions/negatives for something expected but not done. "Still" shows something ongoing.',
+    examples:['I have already finished my homework.','Have you finished yet?','She is still waiting for the bus.'],
+    quiz:[{q:'Choose the correct word: "I haven\'t received the parcel ___."', options:['already','yet','still'], answer:1}] }
 ];
 
 /* ====================================================================
@@ -846,6 +1095,61 @@ const STORIES = [
     text:'Before the annual team presentation, Rohit was anxious about speaking in front of senior leadership. He practised his slides every evening for a week, timed his delivery, and prepared answers for likely questions. On the day, his presentation was clear and confident, and his manager complimented him afterward for the well-structured content and calm delivery.',
     vocab:[{w:'Leadership', m:'The senior people who manage or guide an organisation'},{w:'Delivery', m:'The way something is spoken or presented'}],
     questions:[{q:'How did Rohit prepare?', options:['He did not prepare at all','He practised his slides and timed his delivery','He asked someone else to present'], answer:1},{q:'What did his manager say?', options:['Nothing','He complimented Rohit\'s clear and confident presentation','He criticised the presentation'], answer:1}]
+  },
+  { id:'s16', title:'The Tortoise and the Hare', ageGroup:'Class 1-5', level:'Beginner',
+    text:'A hare laughed at a slow tortoise and challenged him to a race. Confident he would win easily, the hare ran ahead and then stopped to nap under a tree. The tortoise kept walking slowly and steadily, without stopping. When the hare woke up, he saw the tortoise had already crossed the finish line. Slow and steady had won the race.',
+    vocab:[{w:'Confident', m:'Feeling sure about yourself'},{w:'Steady', m:'Moving in a constant, controlled way'}],
+    questions:[{q:'Why did the hare lose?', options:['He ran too fast the whole time','He stopped to nap','The tortoise cheated'], answer:1},{q:'What lesson does the story teach?', options:['Speed always wins','Slow and steady can win','Naps are bad'], answer:1}]
+  },
+  { id:'s17', title:'Sharing Lunch', ageGroup:'Class 1-5', level:'Beginner',
+    text:'On a school picnic, Tina forgot to bring her lunch box. She felt sad and hungry watching her classmates eat. Noticing this, her friend Om shared half of his sandwich with her without being asked. Tina was grateful and promised to share her snacks the next time. From that day, they always shared their lunch together.',
+    vocab:[{w:'Grateful', m:'Feeling thankful'},{w:'Share', m:'To give part of something to someone else'}],
+    questions:[{q:'Why was Tina sad?', options:['She lost a game','She forgot her lunch box','She missed the bus'], answer:1},{q:'What did Om do?', options:['He ignored her','He shared his sandwich','He laughed at her'], answer:1}]
+  },
+  { id:'s18', title:'The School Debate Competition', ageGroup:'Class 6-10', level:'Elementary',
+    text:'Aditi was nervous about representing her class in the school debate competition. She researched her topic thoroughly, practised in front of a mirror, and asked her teacher for feedback. During the debate, she spoke clearly and answered the opposing team\'s points calmly. Although her team did not win, her teacher praised her confidence and clear thinking.',
+    vocab:[{w:'Represent', m:'To act or speak on behalf of a group'},{w:'Opposing', m:'On the other side of an argument or competition'}],
+    questions:[{q:'How did Aditi prepare?', options:['She did not prepare','She researched and practised','She copied a friend\'s notes'], answer:1},{q:'What did her teacher praise?', options:['Her costume','Her confidence and clear thinking','Her handwriting'], answer:1}]
+  },
+  { id:'s19', title:'Learning to Ride a Bicycle', ageGroup:'Class 1-5', level:'Beginner',
+    text:'Sam fell off his bicycle many times while learning to ride. Each time, his father encouraged him to try again instead of giving up. After a week of practice, Sam finally balanced on his own and rode across the park without falling. He felt proud and thanked his father for never giving up on him.',
+    vocab:[{w:'Balance', m:'To keep steady and not fall'},{w:'Encourage', m:'To give someone confidence to try something'}],
+    questions:[{q:'What helped Sam succeed?', options:['Giving up quickly','His father\'s encouragement and practice','Buying a new bicycle'], answer:1},{q:'How did Sam feel at the end?', options:['Disappointed','Proud','Angry'], answer:1}]
+  },
+  { id:'s20', title:'The New Sports Captain', ageGroup:'Class 11-12', level:'Intermediate',
+    text:'When Vikram was chosen as the school football captain, some teammates doubted his experience. Instead of arguing, he organised extra practice sessions, listened to everyone\'s ideas, and led by example on the field. By the end of the season, the team had improved greatly, and even his doubters admitted he was a fair and capable captain.',
+    vocab:[{w:'Doubt', m:'A feeling of uncertainty about someone or something'},{w:'Capable', m:'Having the ability to do something well'}],
+    questions:[{q:'How did Vikram respond to doubts?', options:['He argued with his teammates','He organised practice and led by example','He quit as captain'], answer:1},{q:'What did the doubters admit later?', options:['He was a fair and capable captain','He was a bad captain','Nothing changed'], answer:0}]
+  },
+  { id:'s21', title:'Studying Abroad', ageGroup:'College', level:'Intermediate',
+    text:'When Sana received a scholarship to study abroad, she felt both excited and anxious. She researched the new country\'s culture, connected with other students online before leaving, and packed carefully. In her first week, she attended an orientation, made a few friends, and slowly began to feel comfortable in her new environment.',
+    vocab:[{w:'Scholarship', m:'Financial support given for study'},{w:'Orientation', m:'An introductory event to help newcomers settle in'}],
+    questions:[{q:'How did Sana feel before leaving?', options:['Only excited','Excited and anxious','Uninterested'], answer:1},{q:'What did she do to prepare?', options:['Nothing at all','Researched the culture and connected with students online','Cancelled her trip'], answer:1}]
+  },
+  { id:'s22', title:'A Group Assignment Conflict', ageGroup:'College', level:'Intermediate',
+    text:'During a group assignment, two members disagreed strongly about which approach to take. Instead of letting the argument continue, Ravi suggested they each present their idea briefly and let the group vote. The group chose a combined approach using the best of both ideas, and the assignment turned out better than expected.',
+    vocab:[{w:'Approach', m:'A way of doing or dealing with something'},{w:'Combined', m:'Joined together'}],
+    questions:[{q:'What did Ravi suggest?', options:['Ignoring the disagreement','Presenting both ideas and voting','Doing the assignment alone'], answer:1},{q:'What was the outcome?', options:['The assignment failed','A combined approach worked well','They submitted late'], answer:1}]
+  },
+  { id:'s23', title:'Returning to Work After a Break', ageGroup:'Adult', level:'Intermediate',
+    text:'After a two-year career break, Meena felt nervous about returning to work. She updated her skills through an online course, practised interview questions, and reached out to old colleagues for guidance. Her first weeks back were challenging, but her manager was supportive, and within a month she felt confident in her role again.',
+    vocab:[{w:'Career break', m:'A planned pause from working life'},{w:'Supportive', m:'Providing help and encouragement'}],
+    questions:[{q:'How did Meena prepare to return to work?', options:['She did nothing special','She updated her skills and practised interviews','She avoided contacting anyone'], answer:1},{q:'How did she feel after a month?', options:['Still nervous','Confident in her role','She quit again'], answer:1}]
+  },
+  { id:'s24', title:'A Misunderstanding at Work', ageGroup:'Adult', level:'Advanced',
+    text:'Deepak assumed his colleague had ignored his email, so he sent a curt follow-up message. Later, he learned his colleague had simply been on leave. Realising his mistake, Deepak apologised for the tone of his message and explained he had jumped to conclusions. His colleague appreciated the honest apology, and their working relationship remained strong.',
+    vocab:[{w:'Curt', m:'Rude or short in speech or writing'},{w:'Assume', m:'To think something is true without proof'}],
+    questions:[{q:'What mistake did Deepak make?', options:['He forgot to send an email','He assumed his colleague ignored him and reacted rudely','He missed a deadline'], answer:1},{q:'How did he fix it?', options:['He ignored the issue','He apologised honestly','He blamed his colleague more'], answer:1}]
+  },
+  { id:'s25', title:'Volunteering at a Shelter', ageGroup:'Adult', level:'Intermediate',
+    text:'Every weekend, Arjun volunteers at a local animal shelter, feeding and walking the dogs. At first, he found it tiring after a busy work week, but seeing the animals become happier and healthier gave him a deep sense of purpose. He now encourages his friends to volunteer too, saying it has taught him patience and empathy.',
+    vocab:[{w:'Volunteer', m:'To offer to do something without expecting payment'},{w:'Purpose', m:'A sense of meaning or reason for doing something'}],
+    questions:[{q:'What does Arjun do every weekend?', options:['He rests at home','He volunteers at an animal shelter','He works overtime'], answer:1},{q:'What has volunteering taught him?', options:['Nothing new','Patience and empathy','How to cook'], answer:1}]
+  },
+  { id:'s26', title:'Launching a Small Business', ageGroup:'Adult', level:'Advanced',
+    text:'After years of working in a corporate job, Lakshmi decided to launch her own bakery. She spent months perfecting recipes, researching suppliers, and building a small but loyal customer base through social media. The first year was difficult, with long hours and slow sales, but by the second year, her bakery had become a well-loved spot in the neighbourhood.',
+    vocab:[{w:'Loyal', m:'Faithful and consistent in support'},{w:'Supplier', m:'A business that provides goods or materials'}],
+    questions:[{q:'What did Lakshmi launch?', options:['A clothing store','A bakery','A gym'], answer:1},{q:'What was the first year like?', options:['Easy and profitable','Difficult with long hours','She closed the business'], answer:1}]
   }
 ];
 
@@ -916,6 +1220,60 @@ const PRACTICE_SETS = [
   { id:'p14', title:'Conversation Completion — Workplace', type:'mcq', level:'Advanced', items:[
     {q:'A: "We are running behind schedule."  B: ___', options:['That is not my problem.','Let\'s discuss how we can catch up.','I don\'t care about the schedule.'], answer:1, explain:'This response is constructive and solution-focused.'},
     {q:'A: "I disagree with this approach."  B: ___', options:['You are wrong.','I see your point — could you explain your concern?','Whatever you say.'], answer:1, explain:'This response acknowledges disagreement professionally and invites discussion.'}
+  ]},
+  { id:'p15', title:'Grammar Quiz — Adjectives & Adverbs', type:'mcq', level:'Elementary', items:[
+    {q:'Choose the correct word: "He is a ___ driver."', options:['careful','carefully','care'], answer:0, explain:'"Careful" is an adjective describing the noun "driver".'},
+    {q:'Choose the correct word: "She speaks English ___."', options:['fluent','fluently','fluency'], answer:1, explain:'"Fluently" is an adverb describing the verb "speaks".'}
+  ]},
+  { id:'p16', title:'Fill in the Blanks — Modal Verbs', type:'fill', level:'Intermediate', items:[
+    {q:'You ___ (should) apologise for being late.', answer:'should', explain:'"Should" is used to give advice.'},
+    {q:'___ (could) you help me carry this bag?', answer:'Could', explain:'"Could" is used for polite requests.'},
+    {q:'Students ___ (must) submit their assignment by Friday.', answer:'must', explain:'"Must" shows a strong obligation.'}
+  ]},
+  { id:'p17', title:'Sentence Arrangement — Office Life', type:'arrange', level:'Intermediate', items:[
+    {words:['agenda','begin','with', 'let\'s', 'today\'s'], answer:'let\'s begin with today\'s agenda'},
+    {words:['report','the','by','submitted','was','Friday'], answer:'the report was submitted by Friday'},
+    {words:['could','elaborate','you','please','on','that'], answer:'could you please elaborate on that'}
+  ]},
+  { id:'p18', title:'Listen and Choose — Weather & Directions', type:'listen', level:'Elementary', items:[
+    {audio:'Turn left at the next signal.', q:'What did you hear?', options:['Turn right at the next signal.','Turn left at the next signal.','Go straight past the signal.'], answer:1},
+    {audio:'It looks like it might rain later today.', q:'What did you hear?', options:['It is sunny all day today.','It looks like it might rain later today.','It rained yesterday.'], answer:1}
+  ]},
+  { id:'p19', title:'Vocabulary Quiz — Technology', type:'mcq', level:'Intermediate', items:[
+    {q:'What does "download" mean?', options:['Send data to the internet','Copy data from the internet to your device','Delete a file'], answer:1, explain:'Download means bringing data from the internet onto your device.'},
+    {q:'What is a "firewall"?', options:['A type of computer game','A security system that blocks unauthorised access','A kind of internet browser'], answer:1, explain:'A firewall protects a network from unauthorised access.'}
+  ]},
+  { id:'p20', title:'Fill in the Blanks — Health & Wellness', type:'fill', level:'Elementary', items:[
+    {q:'I ___ (drink) plenty of water every day.', answer:'drink', explain:'Present simple for a regular habit.'},
+    {q:'She ___ (sleep) eight hours last night.', answer:'slept', explain:'Past simple of sleep is slept.'},
+    {q:'Doctors recommend a ___ diet for good health.', answer:'balanced', explain:'A balanced diet includes a healthy variety of foods.'}
+  ]},
+  { id:'p21', title:'Sentence Arrangement — Everyday Requests', type:'arrange', level:'Beginner', items:[
+    {words:['have','I','water','of','glass','a','could'], answer:'could I have a glass of water'},
+    {words:['open','you','window','the','could'], answer:'could you open the window'},
+    {words:['help','need','I','your'], answer:'I need your help'}
+  ]},
+  { id:'p22', title:'Listen and Choose — Shopping', type:'listen', level:'Beginner', items:[
+    {audio:'Do you have this in a smaller size?', q:'What did you hear?', options:['Do you have this in a smaller size?','Do you have this in a bigger size?','Is this on sale today?'], answer:0},
+    {audio:'I would like to return this item, please.', q:'What did you hear?', options:['I would like to buy this item.','I would like to return this item, please.','This item is too expensive.'], answer:1}
+  ]},
+  { id:'p23', title:'Conversation Completion — Everyday Life', type:'mcq', level:'Beginner', items:[
+    {q:'A: "Nice weather today, isn\'t it?"  B: ___', options:['Yes, perfect for a walk!','I am from Delhi.','No problem.'], answer:0, explain:'This naturally continues a small-talk conversation about the weather.'},
+    {q:'A: "Could you pass the salt, please?"  B: ___', options:['Sure, here you go.','I don\'t like salt.','Yes, I am fine.'], answer:0, explain:'This directly responds to the simple request.'}
+  ]},
+  { id:'p24', title:'Grammar Quiz — Conditionals & Reported Speech', type:'mcq', level:'Advanced', items:[
+    {q:'Choose the correct form: "If I ___ time, I would help you."', options:['have','had','will have'], answer:1, explain:'Second conditional uses past simple in the if-clause for hypothetical situations.'},
+    {q:'Report this correctly: She said, "I will call you tomorrow."', options:['She said she will call me tomorrow.','She said she would call me the next day.','She says she would call me tomorrow.'], answer:1, explain:'Reported speech shifts "will" to "would" and "tomorrow" to "the next day".'}
+  ]},
+  { id:'p25', title:'Fill in the Blanks — Travel', type:'fill', level:'Elementary', items:[
+    {q:'We ___ (book) our tickets online yesterday.', answer:'booked', explain:'Past simple of book is booked.'},
+    {q:'Could I have a ___ seat, please? (near the window)', answer:'window', explain:'"Window seat" is the seat next to the window.'},
+    {q:'Our flight ___ (delay) by two hours.', answer:'was delayed', explain:'Passive voice: the flight was delayed by something.'}
+  ]},
+  { id:'p26', title:'Sentence Arrangement — Giving Advice', type:'arrange', level:'Intermediate', items:[
+    {words:['see','you','a','should','doctor'], answer:'you should see a doctor'},
+    {words:['leave','better','had','now','you'], answer:'you had better leave now'},
+    {words:['rest','more','you','ought','to','get'], answer:'you ought to get more rest'}
   ]}
 ];
 
@@ -942,7 +1300,159 @@ const SPEAKING_TOPICS = [
   { id:'sp17', title:'Renting a House', sentences:['What is the monthly rent?','Is the security deposit refundable?','Are utilities included in the rent?'] },
   { id:'sp18', title:'Festivals & Culture', sentences:['We celebrate this festival every year.','It is a family tradition.','How do you celebrate this occasion?'] },
   { id:'sp19', title:'Negotiation', sentences:['Could we find a middle ground?','I\'d like to propose a different timeline.','We are flexible on the terms.'] },
-  { id:'sp20', title:'Handling Complaints', sentences:['I apologise for the inconvenience.','We will resolve this as soon as possible.','Thank you for your patience.'] }
+  { id:'sp20', title:'Handling Complaints', sentences:['I apologise for the inconvenience.','We will resolve this as soon as possible.','Thank you for your patience.'] },
+  { id:'sp21', title:'Public Speaking', sentences:['Good afternoon, everyone.','Thank you all for being here today.','Let\'s begin with a quick overview.'] },
+  { id:'sp22', title:'Emails & Messages', sentences:['Could you please send me the file?','I\'ll get back to you by tomorrow.','Thank you for your quick reply.'] },
+  { id:'sp23', title:'At the Pharmacy', sentences:['Do you have anything for a headache?','What is the correct dosage?','Is a prescription needed for this?'] },
+  { id:'sp24', title:'At the Salon', sentences:['I would like a haircut, please.','Just a light trim, please.','Could I book an appointment for Saturday?'] },
+  { id:'sp25', title:'Describing People', sentences:['She has curly hair and a friendly smile.','He is quite tall and outgoing.','My friend is a bit reserved at first.'] },
+  { id:'sp26', title:'Describing Places', sentences:['My hometown is peaceful and green.','The market street is always bustling.','This city has a rich history.'] },
+  { id:'sp27', title:'Sports & Fitness', sentences:['I do a workout every morning.','My favourite sport is football.','Who won the match yesterday?'] },
+  { id:'sp28', title:'Cooking & Food', sentences:['First, chop the onions finely.','This recipe needs five ingredients.','I love the flavour of this dish.'] },
+  { id:'sp29', title:'Pets & Animals', sentences:['I have a pet dog named Leo.','I walk my dog every evening.','We take him to the vet regularly.'] },
+  { id:'sp30', title:'Online Meetings', sentences:['Could you mute yourself, please?','Can you share your screen?','Let\'s stick to today\'s agenda.'] },
+  { id:'sp31', title:'Environment & Nature', sentences:['We should recycle more at home.','Pollution is a serious problem in cities.','Renewable energy is better for the planet.'] }
+];
+
+/* ====================================================================
+   DATA: NURSERY RHYMES (classic public-domain rhymes for ages 1-5)
+==================================================================== */
+const RHYMES = [
+  { id:'r1', title:'Twinkle, Twinkle, Little Star',
+    lines:['Twinkle, twinkle, little star,','How I wonder what you are!','Up above the world so high,','Like a diamond in the sky.','Twinkle, twinkle, little star,','How I wonder what you are!'],
+    action:'Open and close your hands like a twinkling star while singing.',
+    vocabHighlight:[{w:'Twinkle', m:'To shine with a flickering light'},{w:'Diamond', m:'A sparkling precious stone'}] },
+  { id:'r2', title:'Baa, Baa, Black Sheep',
+    lines:['Baa, baa, black sheep,','Have you any wool?','Yes sir, yes sir,','Three bags full.','One for the master,','One for the dame,','And one for the little boy','Who lives down the lane.'],
+    action:'Pretend to hold three bags and count them on your fingers.',
+    vocabHighlight:[{w:'Wool', m:'The soft hair of a sheep'},{w:'Lane', m:'A small, narrow road'}] },
+  { id:'r3', title:'Jack and Jill',
+    lines:['Jack and Jill went up the hill','To fetch a pail of water.','Jack fell down and broke his crown,','And Jill came tumbling after.'],
+    action:'Walk your fingers "up the hill" then tumble them back down.',
+    vocabHighlight:[{w:'Fetch', m:'To go and bring something back'},{w:'Pail', m:'A bucket'}] },
+  { id:'r4', title:'Humpty Dumpty',
+    lines:['Humpty Dumpty sat on a wall,','Humpty Dumpty had a great fall.','All the king\'s horses and all the king\'s men','Couldn\'t put Humpty together again.'],
+    action:'Make a round shape with your arms, then "fall" and pretend to be surprised.',
+    vocabHighlight:[{w:'Wall', m:'A structure that separates or encloses'}] },
+  { id:'r5', title:'Row, Row, Row Your Boat',
+    lines:['Row, row, row your boat,','Gently down the stream.','Merrily, merrily, merrily, merrily,','Life is but a dream.'],
+    action:'Sit facing your child and gently rock back and forth like rowing.',
+    vocabHighlight:[{w:'Stream', m:'A small flowing river'},{w:'Merrily', m:'In a happy, cheerful way'}] },
+  { id:'r6', title:'Itsy Bitsy Spider',
+    lines:['The itsy bitsy spider climbed up the water spout.','Down came the rain and washed the spider out.','Out came the sun and dried up all the rain,','And the itsy bitsy spider climbed up the spout again.'],
+    action:'Use your fingers to make a climbing spider motion.',
+    vocabHighlight:[{w:'Spout', m:'A pipe or tube that water flows through'}] },
+  { id:'r7', title:'Hickory Dickory Dock',
+    lines:['Hickory dickory dock,','The mouse ran up the clock.','The clock struck one,','The mouse ran down,','Hickory dickory dock.'],
+    action:'Run your fingers up an imaginary clock and back down.',
+    vocabHighlight:[{w:'Struck', m:'Made a sound, like a clock chiming'}] },
+  { id:'r8', title:'Rain, Rain, Go Away',
+    lines:['Rain, rain, go away,','Come again another day.','Little children want to play,','Rain, rain, go away.'],
+    action:'Wave your hands as if shooing the rain away.',
+    vocabHighlight:[{w:'Away', m:'To or at a distance from a place'}] },
+  { id:'r9', title:'Mary Had a Little Lamb',
+    lines:['Mary had a little lamb,','Its fleece was white as snow.','And everywhere that Mary went,','The lamb was sure to go.'],
+    action:'Pretend to pat a soft, woolly lamb.',
+    vocabHighlight:[{w:'Fleece', m:'The woolly coat of a lamb'}] },
+  { id:'r10', title:'Five Little Ducks',
+    lines:['Five little ducks went out one day,','Over the hill and far away.','Mother duck said, "Quack, quack, quack, quack,"','But only four little ducks came back.'],
+    action:'Hold up five fingers and put one down each time a duck doesn\'t come back.',
+    vocabHighlight:[{w:'Quack', m:'The sound a duck makes'}] },
+  { id:'r11', title:'Hey Diddle Diddle',
+    lines:['Hey diddle diddle, the cat and the fiddle,','The cow jumped over the moon.','The little dog laughed to see such sport,','And the dish ran away with the spoon.'],
+    action:'Jump up like the cow jumping over the moon.',
+    vocabHighlight:[{w:'Fiddle', m:'Another word for a violin'}] },
+  { id:'r12', title:'Little Miss Muffet',
+    lines:['Little Miss Muffet sat on a tuffet,','Eating her curds and whey.','Along came a spider, who sat down beside her,','And frightened Miss Muffet away.'],
+    action:'Pretend to sit down, then jump up "frightened" like Miss Muffet.',
+    vocabHighlight:[{w:'Tuffet', m:'A small low seat or mound'},{w:'Frightened', m:'Feeling scared'}] },
+  { id:'r13', title:'Old MacDonald Had a Farm',
+    lines:['Old MacDonald had a farm, E-I-E-I-O!','And on his farm he had a cow, E-I-E-I-O!','With a moo-moo here, and a moo-moo there,','Here a moo, there a moo, everywhere a moo-moo,','Old MacDonald had a farm, E-I-E-I-O!'],
+    action:'Take turns naming different farm animals and making their sounds.',
+    vocabHighlight:[{w:'Farm', m:'Land used for growing crops or keeping animals'}] },
+  { id:'r14', title:'Ring a Ring o\' Roses',
+    lines:['Ring a ring o\' roses,','A pocket full of posies,','A-tishoo! A-tishoo!','We all fall down.'],
+    action:'Hold hands in a circle, walk around, and gently fall down at the end.',
+    vocabHighlight:[{w:'Posies', m:'Small bunches of flowers'}] },
+  { id:'r15', title:'The Wheels on the Bus',
+    lines:['The wheels on the bus go round and round,','Round and round, round and round.','The wheels on the bus go round and round,','All through the town.','The wipers on the bus go swish, swish, swish...','The horn on the bus goes beep, beep, beep...'],
+    action:'Roll your hands in circles for the wheels, then act out wipers and a horn.',
+    vocabHighlight:[{w:'Wipers', m:'The parts on a vehicle that clean the windscreen'}] }
+];
+
+/* ====================================================================
+   DATA: FIRST WORDS FOR TODDLERS (ages 1-5) — simple picture-word cards
+==================================================================== */
+const TODDLER_CATEGORIES = ['Colors','Numbers','Animals','Body Parts','Family','Shapes','Fruits and Vegetables','Everyday Objects'];
+const TODDLER_WORDS = [
+  {id:'t1', word:'Red', emoji:'🔴', translation:'लाल', category:'Colors'},
+  {id:'t2', word:'Blue', emoji:'🔵', translation:'नीला', category:'Colors'},
+  {id:'t3', word:'Yellow', emoji:'🟡', translation:'पीला', category:'Colors'},
+  {id:'t4', word:'Green', emoji:'🟢', translation:'हरा', category:'Colors'},
+  {id:'t5', word:'Orange', emoji:'🟠', translation:'नारंगी', category:'Colors'},
+  {id:'t6', word:'Purple', emoji:'🟣', translation:'बैंगनी', category:'Colors'},
+  {id:'t7', word:'Pink', emoji:'🌸', translation:'गुलाबी', category:'Colors'},
+  {id:'t8', word:'Black', emoji:'⚫', translation:'काला', category:'Colors'},
+  {id:'t9', word:'White', emoji:'⚪', translation:'सफ़ेद', category:'Colors'},
+  {id:'t10', word:'Brown', emoji:'🟤', translation:'भूरा', category:'Colors'},
+  {id:'t11', word:'One', emoji:'1️⃣', translation:'एक', category:'Numbers'},
+  {id:'t12', word:'Two', emoji:'2️⃣', translation:'दो', category:'Numbers'},
+  {id:'t13', word:'Three', emoji:'3️⃣', translation:'तीन', category:'Numbers'},
+  {id:'t14', word:'Four', emoji:'4️⃣', translation:'चार', category:'Numbers'},
+  {id:'t15', word:'Five', emoji:'5️⃣', translation:'पांच', category:'Numbers'},
+  {id:'t16', word:'Six', emoji:'6️⃣', translation:'छह', category:'Numbers'},
+  {id:'t17', word:'Seven', emoji:'7️⃣', translation:'सात', category:'Numbers'},
+  {id:'t18', word:'Eight', emoji:'8️⃣', translation:'आठ', category:'Numbers'},
+  {id:'t19', word:'Nine', emoji:'9️⃣', translation:'नौ', category:'Numbers'},
+  {id:'t20', word:'Ten', emoji:'🔟', translation:'दस', category:'Numbers'},
+  {id:'t21', word:'Dog', emoji:'🐶', translation:'कुत्ता', category:'Animals'},
+  {id:'t22', word:'Cat', emoji:'🐱', translation:'बिल्ली', category:'Animals'},
+  {id:'t23', word:'Cow', emoji:'🐄', translation:'गाय', category:'Animals'},
+  {id:'t24', word:'Lion', emoji:'🦁', translation:'शेर', category:'Animals'},
+  {id:'t25', word:'Elephant', emoji:'🐘', translation:'हाथी', category:'Animals'},
+  {id:'t26', word:'Bird', emoji:'🐦', translation:'चिड़िया', category:'Animals'},
+  {id:'t27', word:'Fish', emoji:'🐟', translation:'मछली', category:'Animals'},
+  {id:'t28', word:'Duck', emoji:'🦆', translation:'बत्तख', category:'Animals'},
+  {id:'t29', word:'Horse', emoji:'🐴', translation:'घोड़ा', category:'Animals'},
+  {id:'t30', word:'Monkey', emoji:'🐒', translation:'बंदर', category:'Animals'},
+  {id:'t31', word:'Head', emoji:'🧑', translation:'सिर', category:'Body Parts'},
+  {id:'t32', word:'Eyes', emoji:'👀', translation:'आंखें', category:'Body Parts'},
+  {id:'t33', word:'Nose', emoji:'👃', translation:'नाक', category:'Body Parts'},
+  {id:'t34', word:'Mouth', emoji:'👄', translation:'मुंह', category:'Body Parts'},
+  {id:'t35', word:'Ears', emoji:'👂', translation:'कान', category:'Body Parts'},
+  {id:'t36', word:'Hands', emoji:'✋', translation:'हाथ', category:'Body Parts'},
+  {id:'t37', word:'Feet', emoji:'🦶', translation:'पैर', category:'Body Parts'},
+  {id:'t38', word:'Hair', emoji:'💇', translation:'बाल', category:'Body Parts'},
+  {id:'t39', word:'Mother', emoji:'👩', translation:'माँ', category:'Family'},
+  {id:'t40', word:'Father', emoji:'👨', translation:'पिता', category:'Family'},
+  {id:'t41', word:'Sister', emoji:'👧', translation:'बहन', category:'Family'},
+  {id:'t42', word:'Brother', emoji:'👦', translation:'भाई', category:'Family'},
+  {id:'t43', word:'Grandmother', emoji:'👵', translation:'दादी / नानी', category:'Family'},
+  {id:'t44', word:'Grandfather', emoji:'👴', translation:'दादा / नाना', category:'Family'},
+  {id:'t45', word:'Baby', emoji:'👶', translation:'बच्चा', category:'Family'},
+  {id:'t46', word:'Friend', emoji:'🧑‍🤝‍🧑', translation:'दोस्त', category:'Family'},
+  {id:'t47', word:'Circle', emoji:'⭕', translation:'वृत्त', category:'Shapes'},
+  {id:'t48', word:'Square', emoji:'🟥', translation:'वर्ग', category:'Shapes'},
+  {id:'t49', word:'Triangle', emoji:'🔺', translation:'त्रिकोण', category:'Shapes'},
+  {id:'t50', word:'Star', emoji:'⭐', translation:'तारा', category:'Shapes'},
+  {id:'t51', word:'Heart', emoji:'❤️', translation:'दिल', category:'Shapes'},
+  {id:'t52', word:'Rectangle', emoji:'▭', translation:'आयत', category:'Shapes'},
+  {id:'t53', word:'Apple', emoji:'🍎', translation:'सेब', category:'Fruits and Vegetables'},
+  {id:'t54', word:'Banana', emoji:'🍌', translation:'केला', category:'Fruits and Vegetables'},
+  {id:'t55', word:'Mango', emoji:'🥭', translation:'आम', category:'Fruits and Vegetables'},
+  {id:'t56', word:'Grapes', emoji:'🍇', translation:'अंगूर', category:'Fruits and Vegetables'},
+  {id:'t57', word:'Carrot', emoji:'🥕', translation:'गाजर', category:'Fruits and Vegetables'},
+  {id:'t58', word:'Tomato', emoji:'🍅', translation:'टमाटर', category:'Fruits and Vegetables'},
+  {id:'t59', word:'Potato', emoji:'🥔', translation:'आलू', category:'Fruits and Vegetables'},
+  {id:'t60', word:'Watermelon', emoji:'🍉', translation:'तरबूज़', category:'Fruits and Vegetables'},
+  {id:'t61', word:'Ball', emoji:'⚽', translation:'गेंद', category:'Everyday Objects'},
+  {id:'t62', word:'Book', emoji:'📖', translation:'किताब', category:'Everyday Objects'},
+  {id:'t63', word:'Chair', emoji:'🪑', translation:'कुर्सी', category:'Everyday Objects'},
+  {id:'t64', word:'Table', emoji:'🍽️', translation:'मेज़', category:'Everyday Objects'},
+  {id:'t65', word:'Cup', emoji:'🥤', translation:'कप', category:'Everyday Objects'},
+  {id:'t66', word:'Spoon', emoji:'🥄', translation:'चम्मच', category:'Everyday Objects'},
+  {id:'t67', word:'Bed', emoji:'🛏️', translation:'बिस्तर', category:'Everyday Objects'},
+  {id:'t68', word:'Door', emoji:'🚪', translation:'दरवाज़ा', category:'Everyday Objects'}
 ];
 
 const NAV_ITEMS = [
@@ -952,6 +1462,7 @@ const NAV_ITEMS = [
   {id:'vocabulary', label:'Vocabulary', icon:'🧠'},
   {id:'grammar', label:'Grammar', icon:'✏️'},
   {id:'stories', label:'Stories', icon:'📖'},
+  {id:'rhymes', label:'Rhymes', icon:'🎵'},
   {id:'practice', label:'Practice', icon:'🎯'},
   {id:'teachers', label:'Teachers', icon:'🧑‍🏫'},
   {id:'progress', label:'My Progress', icon:'📊'},
@@ -1010,6 +1521,7 @@ function renderView(id){
   else if(id==='vocabulary') renderVocabulary();
   else if(id==='grammar') renderGrammar();
   else if(id==='stories') renderStories();
+  else if(id==='rhymes') renderRhymes();
   else if(id==='practice') renderPractice();
   else if(id==='teachers') renderTeachers();
   else if(id==='progress') renderProgress();
@@ -1235,6 +1747,8 @@ function checkBadges(){
   if(b.lessonsCompleted.length>=3) earn('lessons3','Lesson Explorer 📘');
   if(b.vocabLearned.length>=10) earn('vocab10','Word Collector 🧠');
   if(b.storiesRead.length>=2) earn('stories2','Story Reader 📖');
+  if(b.rhymesLearned.length>=5) earn('rhymes5','Rhyme Time 🎵');
+  if(b.toddlerWordsLearned.length>=20) earn('words20','First Words Star ⭐');
 }
 function totalLessonMinutesTarget(){ return state.profile.dailyMinutes; }
 
@@ -1896,6 +2410,114 @@ function openStoryDetail(id){
 }
 
 /* ====================================================================
+   RHYMES & FIRST WORDS (ages 1-5)
+==================================================================== */
+let rhymesTab = 'rhymes'; // 'rhymes' | 'words'
+let toddlerCatFilter = 'All';
+function renderRhymes(){
+  document.getElementById('view-rhymes').innerHTML = `
+    <div class="page-head"><h2>Rhymes & First Words</h2><p>Simple nursery rhymes and picture-word cards for little learners, ages 1 to 5.</p></div>
+    <div class="chip-select" id="rhymesTabRow" style="margin-bottom:16px;">
+      <button type="button" class="chip-opt ${rhymesTab==='rhymes'?'selected':''}" data-tab="rhymes">🎵 Rhymes</button>
+      <button type="button" class="chip-opt ${rhymesTab==='words'?'selected':''}" data-tab="words">🔤 First Words</button>
+    </div>
+    <div id="rhymesTabBody"></div>
+  `;
+  document.querySelectorAll('#rhymesTabRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ rhymesTab=b.getAttribute('data-tab'); renderRhymes(); }));
+  if(rhymesTab==='rhymes') renderRhymesGrid(); else renderToddlerWordsGrid();
+}
+function renderRhymesGrid(){
+  const learned = state.progress.rhymesLearned;
+  document.getElementById('rhymesTabBody').innerHTML = `
+    <div class="grid grid-3" id="rhymesGrid"></div>
+  `;
+  document.getElementById('rhymesGrid').innerHTML = RHYMES.map(r=>{
+    const done = learned.includes(r.id);
+    return `<div class="card">
+      ${done?'<span class="pill pill-success">✓ Learned</span>':'<span class="pill pill-purple">🎵 Rhyme</span>'}
+      <h4 style="margin-top:10px;">${esc(r.title)}</h4>
+      <p style="font-size:12.5px;font-style:italic;">"${esc(r.lines[0])}"</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openRhymeDetail('${r.id}')">Listen & Read →</button>
+    </div>`;
+  }).join('');
+}
+function openRhymeDetail(id){
+  const r = RHYMES.find(x=>x.id===id);
+  const fullText = r.lines.join(' ');
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-purple">🎵 Nursery Rhyme</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(r.title)}</h2>
+    <div class="card" style="background:var(--surface-2);">
+      ${r.lines.map(l=>`<p style="color:var(--text);font-size:16px;line-height:1.9;margin:0;">${esc(l)}</p>`).join('')}
+    </div>
+    <div style="display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;">
+      <button class="btn btn-primary btn-sm" id="rhymePlayBtn">🔊 Listen (sing-along pace)</button>
+      <button class="btn btn-soft btn-sm" onclick="stopSpeak()">⏹ Stop</button>
+    </div>
+    <div class="card" style="background:var(--surface-2);margin-top:14px;">
+      <p style="font-size:12.5px;"><b style="color:var(--text);">👋 Action for little ones:</b> ${esc(r.action)}</p>
+    </div>
+    ${r.vocabHighlight && r.vocabHighlight.length ? `
+    <h4 style="margin-top:14px;">New Words</h4>
+    ${r.vocabHighlight.map(v=>`<p style="font-size:13px;"><b style="color:var(--text);">${esc(v.w)}</b> — ${esc(v.m)}</p>`).join('')}
+    ` : ''}
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="markRhymeLearned('${r.id}')">${state.progress.rhymesLearned.includes(r.id) ? '✓ Learned' : 'Mark as Learned'}</button>
+  `);
+  document.getElementById('rhymePlayBtn').addEventListener('click', ()=>{
+    const prevRate = state.speakRate;
+    state.speakRate = 0.8;
+    speak(fullText, 'en-US', ()=>{ state.speakRate = prevRate; }, 'female');
+  });
+}
+function markRhymeLearned(id){
+  if(!state.progress.rhymesLearned.includes(id)){
+    state.progress.rhymesLearned.push(id);
+    addPoints(5);
+    checkBadges();
+    toast('Rhyme learned! +5 points','success');
+  }
+  saveState();
+  closeGenericModal();
+  if(currentView==='rhymes') renderRhymes();
+}
+function renderToddlerWordsGrid(){
+  const learned = state.progress.toddlerWordsLearned;
+  document.getElementById('rhymesTabBody').innerHTML = `
+    <div class="chip-select" id="toddlerCatRow" style="margin-bottom:14px;">
+      <button type="button" class="chip-opt ${toddlerCatFilter==='All'?'selected':''}" data-cat="All">All</button>
+      ${TODDLER_CATEGORIES.map(c=>`<button type="button" class="chip-opt ${c===toddlerCatFilter?'selected':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>
+    <p style="font-size:12px;margin-bottom:12px;">${learned.length}/${TODDLER_WORDS.length} words explored</p>
+    <div class="grid grid-4" id="toddlerWordsGrid"></div>
+  `;
+  document.querySelectorAll('#toddlerCatRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ toddlerCatFilter=b.getAttribute('data-cat'); renderToddlerWordsGrid(); }));
+  const list = toddlerCatFilter==='All' ? TODDLER_WORDS : TODDLER_WORDS.filter(w=>w.category===toddlerCatFilter);
+  document.getElementById('toddlerWordsGrid').innerHTML = list.map(w=>{
+    const done = learned.includes(w.id);
+    return `<button class="card" style="text-align:center;border:${done?'2px solid var(--success)':'1px solid var(--border)'};cursor:pointer;" data-word="${w.id}">
+      <div style="font-size:40px;">${w.emoji}</div>
+      <h4 style="margin-top:8px;font-size:16px;">${esc(w.word)}</h4>
+      <p style="font-size:11.5px;">${esc(w.translation)}</p>
+    </button>`;
+  }).join('') || `<div class="empty-state"><span class="ic">🔤</span>No words in this category yet.</div>`;
+  document.querySelectorAll('[data-word]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const w = TODDLER_WORDS.find(x=>x.id===btn.getAttribute('data-word'));
+      const prevRate = state.speakRate;
+      state.speakRate = 0.8;
+      speak(w.word, 'en-US', ()=>{ state.speakRate = prevRate; }, 'female');
+      if(!state.progress.toddlerWordsLearned.includes(w.id)){
+        state.progress.toddlerWordsLearned.push(w.id);
+        addPoints(1);
+        checkBadges();
+        saveState();
+        renderToddlerWordsGrid();
+      }
+    });
+  });
+}
+
+/* ====================================================================
    PRACTICE / ASSESSMENT
 ==================================================================== */
 function renderPractice(){
@@ -2005,7 +2627,8 @@ function renderProgress(){
   const badgeInfo = {
     streak3:{icon:'🔥',label:'3-Day Streak'}, streak7:{icon:'🏆',label:'7-Day Streak'},
     lessons3:{icon:'📘',label:'Lesson Explorer'}, vocab10:{icon:'🧠',label:'Word Collector'},
-    stories2:{icon:'📖',label:'Story Reader'}
+    stories2:{icon:'📖',label:'Story Reader'},
+    rhymes5:{icon:'🎵',label:'Rhyme Time'}, words20:{icon:'⭐',label:'First Words Star'}
   };
   document.getElementById('view-progress').innerHTML = `
     <div class="page-head"><h2>My Progress</h2><p>Track your streak, points and learning milestones.</p></div>
