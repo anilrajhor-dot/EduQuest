@@ -712,6 +712,13 @@ function speak(text, langCode, onend){
   return true;
 }
 function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+/* For playing ENGLISH model sentences with any teacher persona: use the teacher's own
+   voice if it's an English variant, otherwise fall back to their chosen accent so the
+   sentence stays intelligible as English rather than being read in another language. */
+function englishVoiceFor(teacher){
+  if(teacher.voiceLang && teacher.voiceLang.toLowerCase().startsWith('en')) return teacher.voiceLang;
+  return state.profile.accent === 'British English' ? 'en-GB' : 'en-US';
+}
 
 /* ====================================================================
    SPEECH: RECOGNITION (mic input — graceful fallback if unsupported)
@@ -1039,7 +1046,7 @@ function renderSpeak(){
       </div>
       <div class="card">
         <label class="field-label" style="margin-top:0;">Teacher / Accent</label>
-        <select id="speakTeacherSelect">${TEACHERS.filter(t=>['sarah','david'].includes(t.id) || t.id===speakState.teacherId).map(t=>`<option value="${t.id}" ${t.id===speakState.teacherId?'selected':''}>${t.flag} ${t.name} — ${t.language}</option>`).join('')}</select>
+        <select id="speakTeacherSelect">${TEACHERS.map(t=>`<option value="${t.id}" ${t.id===speakState.teacherId?'selected':''}>${t.flag} ${t.name} — ${t.language}</option>`).join('')}</select>
       </div>
     </div>
 
@@ -1057,8 +1064,8 @@ function renderSpeak(){
   `;
   document.getElementById('speakTopicSelect').addEventListener('change', e=>{ speakState.topicId=e.target.value; speakState.sentenceIdx=0; renderSpeak(); });
   document.getElementById('speakTeacherSelect').addEventListener('change', e=>{ speakState.teacherId=e.target.value; renderSpeak(); });
-  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], teacher.voiceLang) );
-  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], teacher.voiceLang) );
+  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
+  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], englishVoiceFor(teacher)) );
   document.getElementById('speakNextBtn').addEventListener('click', ()=>{
     speakState.sentenceIdx = (speakState.sentenceIdx+1) % topic.sentences.length;
     renderSpeak();
