@@ -1,0 +1,1567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>SpokenEnglish — Speak with Confidence</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ===================== DESIGN TOKENS ===================== */
+:root{
+  --blue:#3B5BFE;
+  --blue-deep:#2440D6;
+  --purple:#8B5CF6;
+  --purple-deep:#6D28D9;
+  --grad: linear-gradient(135deg,var(--blue) 0%,var(--purple) 100%);
+  --bg:#F3F5FF;
+  --surface:#FFFFFF;
+  --surface-2:#F7F8FF;
+  --border:#E3E6FA;
+  --text:#1C2140;
+  --muted:#6B7195;
+  --success:#1FAE6B;
+  --success-bg:#E7F9F1;
+  --warn:#F5A623;
+  --warn-bg:#FFF6E5;
+  --danger:#EF4444;
+  --danger-bg:#FDEAEA;
+  --shadow: 0 8px 24px -8px rgba(59,91,254,0.18);
+  --shadow-sm: 0 2px 8px rgba(28,33,64,0.06);
+  --radius:18px;
+  --radius-sm:12px;
+  --font-head:'Baloo 2', 'Inter', sans-serif;
+  --font-body:'Inter', sans-serif;
+}
+[data-theme="dark"]{
+  --bg:#0F1130;
+  --surface:#191C3E;
+  --surface-2:#20244D;
+  --border:#2B2F5C;
+  --text:#EAECFB;
+  --muted:#9498C4;
+  --success-bg:#123528;
+  --warn-bg:#3A2E10;
+  --danger-bg:#3A1818;
+  --shadow: 0 8px 28px -8px rgba(0,0,0,0.5);
+  --shadow-sm: 0 2px 10px rgba(0,0,0,0.35);
+}
+
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:var(--font-body);
+  -webkit-font-smoothing:antialiased;
+  transition:background .3s ease,color .3s ease;
+  padding-bottom:76px;
+}
+h1,h2,h3,h4,.brand,.nav-label,.big-num{font-family:var(--font-head);}
+h1,h2,h3,h4{margin:0 0 4px 0;font-weight:700;letter-spacing:-0.01em;}
+p{margin:0;color:var(--muted);line-height:1.55;}
+button{font-family:var(--font-body);cursor:pointer;}
+a{color:inherit;text-decoration:none;}
+::selection{background:var(--purple);color:#fff;}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px;}
+@media (prefers-reduced-motion: reduce){*{animation-duration:0.001ms !important;transition-duration:0.001ms !important;}}
+
+.hidden{display:none !important;}
+.visually-hidden{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);}
+
+/* ===================== LAYOUT SHELL ===================== */
+.app-shell{display:flex;min-height:100vh;}
+
+.sidebar{
+  width:240px;flex-shrink:0;background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:22px 16px;display:none;flex-direction:column;gap:4px;
+  position:sticky;top:0;height:100vh;
+}
+.brand-row{display:flex;align-items:center;gap:10px;padding:6px 10px 22px 10px;}
+.brand-mark{width:38px;height:38px;border-radius:12px;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+.brand{font-size:19px;font-weight:800;color:var(--text);}
+.brand small{display:block;font-family:var(--font-body);font-weight:500;font-size:11px;color:var(--muted);letter-spacing:.02em;}
+
+.side-link{
+  display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:12px;
+  color:var(--muted);font-weight:600;font-size:14.5px;border:none;background:transparent;width:100%;text-align:left;
+}
+.side-link .ic{font-size:18px;width:22px;text-align:center;}
+.side-link:hover{background:var(--surface-2);color:var(--text);}
+.side-link.active{background:var(--grad);color:#fff;box-shadow:var(--shadow);}
+
+.main-col{flex:1;min-width:0;display:flex;flex-direction:column;}
+
+.topbar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:14px 18px;position:sticky;top:0;z-index:20;
+  background:var(--bg);backdrop-filter:blur(6px);
+}
+.topbar-mobile-brand{display:flex;align-items:center;gap:8px;}
+.topbar-mobile-brand .brand-mark{width:30px;height:30px;font-size:15px;border-radius:9px;}
+.topbar-mobile-brand .brand{font-size:16px;}
+.topbar-actions{display:flex;align-items:center;gap:8px;}
+
+.icon-btn{
+  width:40px;height:40px;border-radius:12px;border:1px solid var(--border);
+  background:var(--surface);display:flex;align-items:center;justify-content:center;font-size:17px;color:var(--text);
+}
+.icon-btn:hover{background:var(--surface-2);}
+
+.profile-chip{display:flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;background:var(--surface);border:1px solid var(--border);}
+.profile-chip .avatar{width:30px;height:30px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;color:#fff;font-weight:700;font-size:13px;}
+.profile-chip span{font-size:13.5px;font-weight:600;}
+
+main{padding:4px 16px 24px 16px;max-width:1180px;width:100%;margin:0 auto;}
+.section-view{display:none;animation:fadein .35s ease;}
+.section-view.active{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(6px);}to{opacity:1;transform:translateY(0);}}
+
+.page-head{margin:6px 2px 18px 2px;}
+.page-head p{margin-top:2px;font-size:14.5px;}
+
+/* Bottom nav (mobile) */
+.bottom-nav{
+  position:fixed;bottom:0;left:0;right:0;z-index:30;
+  background:var(--surface);border-top:1px solid var(--border);
+  display:flex;justify-content:space-around;padding:6px 2px 8px 2px;
+  box-shadow:0 -4px 18px rgba(28,33,64,0.08);
+}
+.bn-item{display:flex;flex-direction:column;align-items:center;gap:2px;background:none;border:none;color:var(--muted);font-size:10.5px;font-weight:600;padding:5px 4px;border-radius:10px;flex:1;max-width:64px;}
+.bn-item .ic{font-size:19px;}
+.bn-item.active{color:var(--blue);}
+.bn-more{position:relative;}
+
+@media(min-width:900px){
+  .sidebar{display:flex;}
+  .bottom-nav{display:none;}
+  body{padding-bottom:0;}
+  main{padding:8px 28px 40px 28px;}
+  .topbar-mobile-brand{display:none;}
+}
+@media(max-width:899px){
+  .topbar-desktop-actions .search-box{display:none;}
+}
+
+/* ===================== CARDS / GRID ===================== */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:var(--shadow-sm);}
+.grid{display:grid;gap:14px;}
+.grid-2{grid-template-columns:repeat(auto-fit,minmax(230px,1fr));}
+.grid-3{grid-template-columns:repeat(auto-fit,minmax(190px,1fr));}
+.grid-4{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));}
+
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:11px 18px;border-radius:12px;border:none;font-weight:700;font-size:14px;
+}
+.btn-primary{background:var(--grad);color:#fff;box-shadow:var(--shadow);}
+.btn-primary:active{transform:scale(.98);}
+.btn-outline{background:var(--surface);border:1.5px solid var(--border);color:var(--text);}
+.btn-outline:hover{border-color:var(--blue);color:var(--blue);}
+.btn-soft{background:var(--surface-2);color:var(--text);border:none;}
+.btn-sm{padding:7px 13px;font-size:12.5px;border-radius:10px;}
+.btn-danger-soft{background:var(--danger-bg);color:var(--danger);border:none;}
+.btn:disabled{opacity:.45;cursor:not-allowed;}
+.btn-icon-only{width:42px;height:42px;padding:0;border-radius:50%;}
+
+.pill{display:inline-flex;align-items:center;gap:5px;padding:4px 11px;border-radius:999px;font-size:11.5px;font-weight:700;background:var(--surface-2);color:var(--muted);}
+.pill-blue{background:#E9EDFF;color:var(--blue-deep);}
+[data-theme="dark"] .pill-blue{background:#232A66;color:#AFC0FF;}
+.pill-purple{background:#F1E9FE;color:var(--purple-deep);}
+[data-theme="dark"] .pill-purple{background:#332259;color:#D3BBFF;}
+.pill-success{background:var(--success-bg);color:var(--success);}
+.pill-warn{background:var(--warn-bg);color:var(--warn);}
+
+.progress-track{height:9px;background:var(--surface-2);border-radius:999px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--grad);border-radius:999px;transition:width .5s ease;}
+
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(15,17,48,0.55);backdrop-filter:blur(3px);
+  display:flex;align-items:center;justify-content:center;z-index:100;padding:16px;
+}
+.modal{background:var(--surface);border-radius:22px;max-width:480px;width:100%;max-height:88vh;overflow-y:auto;box-shadow:0 30px 60px -15px rgba(0,0,0,0.3);}
+.modal-wide{max-width:640px;}
+.modal-pad{padding:26px;}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px;}
+
+input[type=text],input[type=number],select,textarea{
+  width:100%;padding:11px 13px;border-radius:11px;border:1.5px solid var(--border);
+  background:var(--surface-2);color:var(--text);font-family:var(--font-body);font-size:14px;
+}
+textarea{resize:vertical;}
+label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--muted);margin:14px 0 6px 0;}
+.chip-select{display:flex;flex-wrap:wrap;gap:8px;}
+.chip-opt{padding:8px 14px;border-radius:11px;border:1.5px solid var(--border);background:var(--surface-2);font-size:13px;font-weight:600;color:var(--text);}
+.chip-opt.selected{background:var(--grad);border-color:transparent;color:#fff;}
+
+.empty-state{text-align:center;padding:40px 16px;color:var(--muted);}
+.empty-state .ic{font-size:38px;display:block;margin-bottom:10px;}
+</style>
+</head>
+<body data-theme="light">
+
+<!-- ========================= APP SHELL ========================= -->
+<div class="app-shell">
+
+  <!-- Sidebar (desktop) -->
+  <nav class="sidebar" aria-label="Main navigation">
+    <div class="brand-row">
+      <div class="brand-mark">🗣️</div>
+      <div class="brand">SpokenEnglish<small>Speak with confidence</small></div>
+    </div>
+    <div id="sideNavLinks"></div>
+    <div style="flex:1"></div>
+    <button class="side-link" id="sideThemeBtn"><span class="ic">🌙</span><span>Dark mode</span></button>
+    <button class="side-link" data-nav="settings"><span class="ic">⚙️</span><span>Settings</span></button>
+  </nav>
+
+  <div class="main-col">
+    <header class="topbar">
+      <div class="topbar-mobile-brand">
+        <div class="brand-mark">🗣️</div>
+        <div class="brand">SpokenEnglish</div>
+      </div>
+      <div class="topbar-actions">
+        <button class="icon-btn" id="topThemeBtn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
+        <button class="profile-chip" data-nav="settings" id="profileChipBtn">
+          <span class="avatar" id="avatarInitial">?</span>
+          <span id="profileChipName">Learner</span>
+        </button>
+      </div>
+    </header>
+
+    <main id="mainContent">
+      <!-- Section views injected/controlled via JS by toggling .active -->
+      <section class="section-view" id="view-home"></section>
+      <section class="section-view" id="view-lessons"></section>
+      <section class="section-view" id="view-speak"></section>
+      <section class="section-view" id="view-vocabulary"></section>
+      <section class="section-view" id="view-grammar"></section>
+      <section class="section-view" id="view-stories"></section>
+      <section class="section-view" id="view-practice"></section>
+      <section class="section-view" id="view-teachers"></section>
+      <section class="section-view" id="view-progress"></section>
+      <section class="section-view" id="view-settings"></section>
+    </main>
+  </div>
+</div>
+
+<!-- Bottom nav (mobile) -->
+<nav class="bottom-nav" id="bottomNav" aria-label="Main navigation mobile"></nav>
+
+<!-- ========================= ONBOARDING MODAL ========================= -->
+<div class="modal-overlay hidden" id="onboardModal">
+  <div class="modal modal-wide">
+    <div class="modal-pad" id="onboardBody"></div>
+  </div>
+</div>
+
+<!-- ========================= GENERIC MODAL (lesson/story/quiz detail) ========================= -->
+<div class="modal-overlay hidden" id="genericModal">
+  <div class="modal modal-wide">
+    <div class="modal-pad" id="genericModalBody"></div>
+  </div>
+</div>
+
+<!-- ========================= TEACHER CHAT MODAL ========================= -->
+<div class="modal-overlay hidden" id="chatModal">
+  <div class="modal modal-wide" style="display:flex;flex-direction:column;height:82vh;">
+    <div id="chatModalBody" style="display:flex;flex-direction:column;height:100%;"></div>
+  </div>
+</div>
+
+<div id="toastHost" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;"></div>
+
+<script>
+/* ====================================================================
+   SPOKENENGLISH — APP LOGIC
+   All data below is local sample content. No backend, no API keys.
+   AI Teacher conversations use predefined fallback dialogues — clearly
+   labelled as sample responses, not live AI-generated feedback.
+==================================================================== */
+
+/* ---------------- STORAGE HELPERS ---------------- */
+const STORE_KEY = 'spokenEnglish_v1';
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORE_KEY);
+    if(raw) return JSON.parse(raw);
+  }catch(e){}
+  return null;
+}
+function saveState(){
+  try{ localStorage.setItem(STORE_KEY, JSON.stringify(state)); }catch(e){}
+}
+
+/* ---------------- DEFAULT STATE ---------------- */
+function freshState(){
+  return {
+    onboarded:false,
+    profile:{
+      name:'', ageGroup:'Adult', level:'Beginner', objective:'Everyday Conversations',
+      accent:'American English', explainLang:'English', dailyMinutes:15
+    },
+    theme:'light',
+    progress:{
+      streak:0, lastActiveDate:null, activeDays:[], points:0,
+      lessonsCompleted:[], confidenceScore:40,
+      vocabFavorites:[], vocabLearned:[],
+      grammarDone:[], storiesRead:[], quizzesDone:{}
+    },
+    badges:[]
+  };
+}
+let state = loadState() || freshState();
+// migrate missing fields if an older version is present
+(function migrate(){
+  const f = freshState();
+  for(const k in f){ if(!(k in state)) state[k]=f[k]; }
+  for(const k in f.profile){ if(!(k in state.profile)) state.profile[k]=f.profile[k]; }
+  for(const k in f.progress){ if(!(k in state.progress)) state.progress[k]=f.progress[k]; }
+})();
+
+/* ---------------- TOAST ---------------- */
+function toast(msg, type){
+  const host = document.getElementById('toastHost');
+  const el = document.createElement('div');
+  el.style.cssText = 'background:var(--surface);border:1px solid var(--border);box-shadow:var(--shadow);padding:11px 18px;border-radius:12px;font-size:13.5px;font-weight:600;color:var(--text);max-width:88vw;';
+  if(type==='success'){ el.style.borderColor='var(--success)'; el.textContent = '✓ '+msg; }
+  else if(type==='error'){ el.style.borderColor='var(--danger)'; el.textContent = '✕ '+msg; }
+  else { el.textContent = msg; }
+  host.appendChild(el);
+  setTimeout(()=>{ el.style.transition='opacity .4s'; el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 2400);
+}
+
+function esc(str){
+  const d = document.createElement('div'); d.textContent = str==null?'':String(str); return d.innerHTML;
+}
+
+/* ====================================================================
+   DATA: TEACHERS  (configurable — add more objects to extend the roster)
+==================================================================== */
+const TEACHERS = [
+  { id:'maya',  name:'Teacher Anjali',    flag:'🇮🇳', language:'Hindi',    accentDesc:'Explains in Hindi · teaches neutral Indian English', voiceLang:'hi-IN', color:'#3B5BFE' },
+  { id:'sofia', name:'Teacher Sofia',     flag:'🇪🇸', language:'Spanish',  accentDesc:'Explains in Spanish · teaches conversational English', voiceLang:'es-ES', color:'#F5A623' },
+  { id:'priya', name:'Teacher Sowmya',    flag:'🇮🇳', language:'Telugu',   accentDesc:'Explains in Telugu · teaches everyday English', voiceLang:'te-IN', color:'#1FAE6B' },
+  { id:'anaya', name:'Teacher Meenakshi', flag:'🇮🇳', language:'Tamil',    accentDesc:'Explains in Tamil · teaches everyday English', voiceLang:'ta-IN', color:'#8B5CF6' },
+  { id:'rahul', name:'Teacher Sourav',    flag:'🇮🇳', language:'Bengali',  accentDesc:'Explains in Bengali · teaches everyday English', voiceLang:'bn-IN', color:'#EF4444' },
+  { id:'sneha', name:'Teacher Swati',     flag:'🇮🇳', language:'Marathi',  accentDesc:'Explains in Marathi · teaches everyday English', voiceLang:'mr-IN', color:'#F5A623' },
+  { id:'sarah', name:'Teacher Sarah', flag:'🇺🇸', language:'American English', accentDesc:'American accent · office & interview focus', voiceLang:'en-US', color:'#3B5BFE' },
+  { id:'david', name:'Teacher David', flag:'🇬🇧', language:'British English',  accentDesc:'British accent · formal, precise style', voiceLang:'en-GB', color:'#2440D6' },
+  { id:'chloe', name:'Teacher Chloe', flag:'🇫🇷', language:'French',   accentDesc:'Explains in French · teaches conversational English', voiceLang:'fr-FR', color:'#8B5CF6' },
+  { id:'tariq', name:'Teacher Tariq', flag:'🇸🇦', language:'Arabic',   accentDesc:'Explains in Arabic · teaches everyday English', voiceLang:'ar-SA', color:'#1FAE6B' },
+  { id:'elena', name:'Teacher Elena', flag:'🇩🇪', language:'German',   accentDesc:'Explains in German · teaches precise English', voiceLang:'de-DE', color:'#EF4444' },
+];
+const TEACHER_GREETING = {
+  maya:'Namaste! Main Teacher Anjali hoon. Aaj hum saath mein English बोलेंगे. Ready?',
+  sofia:'¡Hola! Soy la profesora Sofía. Hoy vamos a practicar inglés juntos. ¿Listo?',
+  priya:'నమస్కారం! నేను టీచర్ సౌమ్య. ఈరోజు మనం ఇంగ్లీష్ మాట్లాడదాం. సిద్ధమేనా?',
+  anaya:'வணக்கம்! நான் ஆசிரியர் மீனாட்சி. இன்று ஆங்கிலம் பேசுவோம். தயாரா?',
+  rahul:'নমস্কার! আমি টিচার সৌরভ। আজ আমরা একসাথে ইংরেজি বলব। প্রস্তুত?',
+  sneha:'नमस्कार! मी टीचर स्वाती. आज आपण एकत्र इंग्रजी बोलूया. तयार आहात का?',
+  sarah:'Hi there! I\'m Teacher Sarah. Let\'s practise some confident, everyday American English today. Ready?',
+  david:'Hello! I\'m Teacher David. Let\'s work on clear, well-structured English together. Shall we begin?',
+  chloe:'Bonjour! Je suis Professeure Chloé. Aujourd\'hui, nous allons pratiquer l\'anglais ensemble. Prêt?',
+  tariq:'مرحبا! أنا المعلم طارق. سنتدرب على الإنجليزية معًا اليوم. هل أنت مستعد؟',
+  elena:'Hallo! Ich bin Lehrerin Elena. Heute üben wir gemeinsam Englisch. Bist du bereit?'
+};
+/* Predefined fallback conversation trees per teacher (clearly-labelled sample dialogue,
+   not a live AI). Each entry: user-facing prompt -> teacher reply + gentle correction tip. */
+function fallbackTeacherReply(teacherId, level, userText){
+  const t = TEACHERS.find(x=>x.id===teacherId);
+  const text = (userText||'').trim();
+  if(!text){ return "I didn't catch that — could you try saying a full sentence?"; }
+  const lower = text.toLowerCase();
+  const bank = [
+    { match:/^(hi|hello|hey)/, reply:"Hello! Nice to meet you. Can you introduce yourself in one full sentence — for example, \"My name is ___ and I am from ___.\"" },
+    { match:/my name is|i am from|i'm from/, reply:"Good sentence! Small tip: say \"I am from ___\" or \"I'm from ___\" — both are correct in spoken English. Now tell me, what do you do every day?" },
+    { match:/i (like|love|enjoy)/, reply:"Great, that's a natural way to talk about preferences. Try adding a reason: \"I like ___ because ___.\" Can you try that?" },
+    { match:/because/, reply:"Well explained! Using 'because' to give reasons makes your English sound much more fluent. Let's try another topic — describe your typical morning." },
+    { match:/i (goes|go|going)/, reply:"Almost! For present habits we say \"I go\" (not \"I goes\"). \"Goes\" is only for he/she/it. Try the sentence again with \"I go\"." },
+    { match:/yesterday|last (week|night|year)/, reply:"Good, you're using the past tense context. Make sure the verb matches — for example \"I went\" instead of \"I go\" when talking about yesterday." },
+    { match:/.*/, reply:"That's a good attempt. Try to build a complete sentence with a subject and a verb — for example: \"I ___ every day.\" Want to try again?" }
+  ];
+  const hit = bank.find(b=>b.match.test(lower));
+  let reply = hit ? hit.reply : bank[bank.length-1].reply;
+  if(level==='Beginner') reply = reply.replace(/Well explained!|Great, that's/,'Good job!');
+  return reply;
+}
+
+/* ====================================================================
+   DATA: LESSONS
+==================================================================== */
+const LESSONS = [
+  { id:'l1', title:'Introducing Yourself', level:'Beginner', category:'Everyday English', minutes:10,
+    objective:'Learn to confidently introduce yourself in English.',
+    vocabulary:['Name','Introduce','Profession','Hometown','Nice to meet you'],
+    examples:['Hi, my name is Arjun.','I am from Gurugram.','I work as a teacher.','Nice to meet you!'],
+    listening:'Listen: "Hello! My name is Ravi. I am from Delhi. I work in a bank. Nice to meet you."',
+    speaking:['Say your full name clearly.','Say where you are from.','Say what you do.'],
+    conversation:[['A: Hi, I\'m Meera. What\'s your name?','B: Hi Meera, I\'m Arjun. Nice to meet you.'],['A: Where are you from?','B: I\'m from Pune. And you?']],
+    grammar:'Use "I am" / "I\'m" + noun or adjective to describe yourself. Example: I am a student. I\'m from Delhi.',
+    practice:[{q:'Choose the correct sentence:', options:['I is a teacher.','I am a teacher.','I are a teacher.'], answer:1}]
+  },
+  { id:'l2', title:'Talking About Your Day', level:'Beginner', category:'Everyday English', minutes:12,
+    objective:'Describe your daily routine using simple present tense.',
+    vocabulary:['Wake up','Breakfast','Office','Commute','Evening'],
+    examples:['I wake up at 6 AM.','I have breakfast at 7.','I go to office by bus.','I relax in the evening.'],
+    listening:'Listen: "I wake up early, have breakfast, and go to work by metro."',
+    speaking:['Describe your morning routine.','Describe how you travel to work or school.','Describe your evening activities.'],
+    conversation:[['A: What time do you wake up?','B: I usually wake up at 6:30.'],['A: How do you go to office?','B: I take the metro every day.']],
+    grammar:'Simple Present Tense: Subject + verb (add -s for he/she/it). Example: He wakes up early. I wake up early.',
+    practice:[{q:'Fill in the blank: She ___ (go) to office by bus.', options:['go','goes','going'], answer:1}]
+  },
+  { id:'l3', title:'Ordering Food at a Restaurant', level:'Elementary', category:'Shopping and Travelling', minutes:12,
+    objective:'Practice polite phrases for ordering food.',
+    vocabulary:['Menu','Order','Waiter','Bill','Recommend'],
+    examples:['Could I see the menu, please?','I would like to order the pasta.','Could you recommend something?','Can we have the bill, please?'],
+    listening:'Listen: "Excuse me, could I see the menu please? I would like to order a coffee and a sandwich."',
+    speaking:['Ask for the menu politely.','Order two items politely.','Ask for the bill.'],
+    conversation:[['A: Are you ready to order?','B: Yes, I would like the grilled chicken, please.'],['A: Anything to drink?','B: Just water, thank you.']],
+    grammar:'Use "Could I..." or "I would like..." for polite requests — more formal than "I want".',
+    practice:[{q:'Which is more polite?', options:['Give me water.','Could I have some water, please?'], answer:1}]
+  },
+  { id:'l4', title:'Interview Basics', level:'Intermediate', category:'Business and Office', minutes:15,
+    objective:'Answer common interview questions confidently.',
+    vocabulary:['Strength','Weakness','Experience','Achievement','Teamwork'],
+    examples:['My biggest strength is problem-solving.','I have three years of experience in sales.','I led a team of five people.'],
+    listening:'Listen: "Tell me about yourself. I am a software engineer with four years of experience in web development."',
+    speaking:['Answer: Tell me about yourself.','Answer: What is your biggest strength?','Answer: Why should we hire you?'],
+    conversation:[['A: Tell me about yourself.','B: I am a marketing professional with five years of experience in digital campaigns.'],['A: Why do you want this job?','B: I am excited about the opportunity to grow and contribute my skills.']],
+    grammar:'Use Present Perfect for experience: "I have worked..." / "I have led..." — connects the past to now.',
+    practice:[{q:'Choose the correct form:', options:['I have work here for 3 years.','I have worked here for 3 years.','I working here for 3 years.'], answer:1}]
+  },
+  { id:'l5', title:'Making Small Talk', level:'Elementary', category:'Everyday English', minutes:10,
+    objective:'Start and keep a friendly casual conversation going.',
+    vocabulary:['Weather','Weekend','Plans','Chat','By the way'],
+    examples:['Nice weather today, isn\'t it?','Any plans for the weekend?','By the way, how was your trip?'],
+    listening:'Listen: "Nice weather today! Do you have any plans for the weekend?"',
+    speaking:['Comment on the weather.','Ask about someone\'s weekend plans.','Respond to a compliment.'],
+    conversation:[['A: Nice weather today, isn\'t it?','B: Yes, perfect for a walk!'],['A: Any plans for the weekend?','B: Just relaxing at home. You?']],
+    grammar:'Tag questions like "isn\'t it?" or "don\'t you think?" invite the other person to respond and keep conversation flowing.',
+    practice:[{q:'Complete the tag question: "It\'s a lovely day, ___?"', options:['isn\'t it','doesn\'t it','isn\'t she'], answer:0}]
+  },
+  { id:'l6', title:'Office Emails & Calls', level:'Advanced', category:'Business and Office', minutes:14,
+    objective:'Use professional, structured language for office communication.',
+    vocabulary:['Regarding','Kindly','Follow up','At your earliest convenience','Attached'],
+    examples:['I am writing regarding the meeting schedule.','Kindly review the attached document.','Please let me know at your earliest convenience.'],
+    listening:'Listen: "Hi, I\'m calling regarding the report you sent. Could we discuss it briefly this afternoon?"',
+    speaking:['Start a professional phone call.','Politely ask someone to follow up.','Close a call professionally.'],
+    conversation:[['A: I\'m calling regarding the budget report.','B: Sure, I have it in front of me. What would you like to discuss?']],
+    grammar:'Formal register: prefer "kindly", "regarding", "could you" over casual phrases in office communication.',
+    practice:[{q:'Most formal option:', options:['Give me the file.','Can you send the file?','Could you kindly share the file at your earliest convenience?'], answer:2}]
+  }
+];
+
+/* ====================================================================
+   DATA: VOCABULARY
+==================================================================== */
+const VOCAB_CATEGORIES = ['Everyday English','School and Education','College and Campus','Business and Office','Shopping and Travelling','Communication','Professional English'];
+const VOCABULARY = [
+  {id:'v1', word:'Breakfast', meaning:'The first meal of the day', translation:'नाश्ता (Hindi)', pronunciation:'/ˈbrek.fəst/', example:'I eat breakfast at 8 AM.', category:'Everyday English'},
+  {id:'v2', word:'Commute', meaning:'To travel regularly between home and work', translation:'आना-जाना (Hindi)', pronunciation:'/kəˈmjuːt/', example:'My commute takes 40 minutes.', category:'Everyday English'},
+  {id:'v3', word:'Neighbourhood', meaning:'The area around where you live', translation:'पड़ोस (Hindi)', pronunciation:'/ˈneɪ.bə.hʊd/', example:'It\'s a friendly neighbourhood.', category:'Everyday English'},
+  {id:'v4', word:'Timetable', meaning:'A schedule of classes or events', translation:'समय सारणी (Hindi)', pronunciation:'/ˈtaɪm.teɪ.bəl/', example:'Check today\'s timetable.', category:'School and Education'},
+  {id:'v5', word:'Syllabus', meaning:'Outline of topics in a course', translation:'पाठ्यक्रम (Hindi)', pronunciation:'/ˈsɪl.ə.bəs/', example:'The syllabus covers ten chapters.', category:'School and Education'},
+  {id:'v6', word:'Homework', meaning:'Study work done outside class', translation:'गृहकार्य (Hindi)', pronunciation:'/ˈhoʊm.wɜːrk/', example:'I finished my homework.', category:'School and Education'},
+  {id:'v7', word:'Semester', meaning:'Half of an academic year', translation:'सेमेस्टर (Hindi)', pronunciation:'/sɪˈmes.tər/', example:'This is my final semester.', category:'College and Campus'},
+  {id:'v8', word:'Assignment', meaning:'A task set as part of a course', translation:'असाइनमेंट (Hindi)', pronunciation:'/əˈsaɪn.mənt/', example:'Submit the assignment by Friday.', category:'College and Campus'},
+  {id:'v9', word:'Scholarship', meaning:'Financial award for study', translation:'छात्रवृत्ति (Hindi)', pronunciation:'/ˈskɒl.ə.ʃɪp/', example:'She won a scholarship.', category:'College and Campus'},
+  {id:'v10', word:'Deadline', meaning:'The time by which something must be finished', translation:'समय सीमा (Hindi)', pronunciation:'/ˈded.laɪn/', example:'The deadline is Monday.', category:'Business and Office'},
+  {id:'v11', word:'Colleague', meaning:'A person you work with', translation:'सहकर्मी (Hindi)', pronunciation:'/ˈkɒl.iːɡ/', example:'My colleague helped me finish the report.', category:'Business and Office'},
+  {id:'v12', word:'Agenda', meaning:'A list of items to discuss in a meeting', translation:'कार्यसूची (Hindi)', pronunciation:'/əˈdʒen.də/', example:'Let\'s review today\'s agenda.', category:'Business and Office'},
+  {id:'v13', word:'Receipt', meaning:'A printed record of payment', translation:'रसीद (Hindi)', pronunciation:'/rɪˈsiːt/', example:'Please keep your receipt.', category:'Shopping and Travelling'},
+  {id:'v14', word:'Itinerary', meaning:'A planned travel route or schedule', translation:'यात्रा कार्यक्रम (Hindi)', pronunciation:'/aɪˈtɪn.ər.ər.i/', example:'Here is our travel itinerary.', category:'Shopping and Travelling'},
+  {id:'v15', word:'Refund', meaning:'Money given back for returned goods', translation:'वापसी (Hindi)', pronunciation:'/ˈriː.fʌnd/', example:'I requested a refund.', category:'Shopping and Travelling'},
+  {id:'v16', word:'Clarify', meaning:'To make something clearer', translation:'स्पष्ट करना (Hindi)', pronunciation:'/ˈklær.ɪ.faɪ/', example:'Could you clarify your question?', category:'Communication'},
+  {id:'v17', word:'Interrupt', meaning:'To stop someone while they are speaking', translation:'बाधा डालना (Hindi)', pronunciation:'/ˌɪn.təˈrʌpt/', example:'Sorry to interrupt, may I ask something?', category:'Communication'},
+  {id:'v18', word:'Elaborate', meaning:'To explain in more detail', translation:'विस्तार से बताना (Hindi)', pronunciation:'/ɪˈlæb.ər.eɪt/', example:'Could you elaborate on that point?', category:'Communication'},
+  {id:'v19', word:'Proficient', meaning:'Skilled and competent', translation:'निपुण (Hindi)', pronunciation:'/prəˈfɪʃ.ənt/', example:'She is proficient in English.', category:'Professional English'},
+  {id:'v20', word:'Negotiate', meaning:'To discuss terms to reach agreement', translation:'बातचीत करना (Hindi)', pronunciation:'/nɪˈɡoʊ.ʃi.eɪt/', example:'We negotiated a better price.', category:'Professional English'},
+  {id:'v21', word:'Delegate', meaning:'To give a task to someone else', translation:'सौंपना (Hindi)', pronunciation:'/ˈdel.ɪ.ɡeɪt/', example:'He delegated the task to his team.', category:'Professional English'}
+];
+
+/* ====================================================================
+   DATA: GRAMMAR
+==================================================================== */
+const GRAMMAR_TOPICS = [
+  { id:'g1', title:'Parts of Speech', level:'Beginner', explanation:'Every English word plays a role: nouns name things, verbs show action, adjectives describe, adverbs modify verbs/adjectives, and pronouns replace nouns.',
+    examples:['Noun: teacher, city, happiness','Verb: run, speak, is','Adjective: beautiful, tall, happy','Adverb: quickly, very, well'],
+    quiz:[{q:'Identify the noun: "The tall boy runs fast."', options:['tall','boy','runs','fast'], answer:1}] },
+  { id:'g2', title:'Present, Past and Future Tenses', level:'Beginner', explanation:'Tense shows when an action happens. Present: I work. Past: I worked. Future: I will work.',
+    examples:['Present: She works every day.','Past: She worked yesterday.','Future: She will work tomorrow.'],
+    quiz:[{q:'Choose the past tense of "go":', options:['goed','went','gone','going'], answer:1}] },
+  { id:'g3', title:'Articles (a, an, the)', level:'Beginner', explanation:'"A/an" introduce something not specific; "the" refers to something specific already known. Use "an" before vowel sounds.',
+    examples:['I saw a dog.','I saw an elephant.','The dog I saw was brown.'],
+    quiz:[{q:'Fill the blank: I ate ___ apple.', options:['a','an','the'], answer:1}] },
+  { id:'g4', title:'Prepositions', level:'Elementary', explanation:'Prepositions show relationships of place, time, or direction: in, on, at, under, between, during.',
+    examples:['The book is on the table.','We meet at 5 PM.','She lives in Delhi.'],
+    quiz:[{q:'Choose the correct preposition: The meeting is ___ Monday.', options:['in','on','at'], answer:1}] },
+  { id:'g5', title:'Sentence Formation', level:'Elementary', explanation:'A complete sentence needs a subject and a verb, usually in Subject-Verb-Object order in English.',
+    examples:['I (subject) eat (verb) rice (object).','She reads books.'],
+    quiz:[{q:'Which is a complete sentence?', options:['Running fast.','The dog runs fast.','Fast dog running.'], answer:1}] },
+  { id:'g6', title:'Question Formation', level:'Elementary', explanation:'Yes/No questions usually start with an auxiliary verb (Do/Does/Is/Are). Wh-questions start with What/Where/When/Why/How.',
+    examples:['Do you like tea?','Where do you live?','Is she coming today?'],
+    quiz:[{q:'Correct question form:', options:['You like tea?','Do you like tea?','Like you tea?'], answer:1}] },
+  { id:'g7', title:'Subject-Verb Agreement', level:'Intermediate', explanation:'The verb must match the subject in number. Singular subjects take singular verbs, plural subjects take plural verbs.',
+    examples:['He works hard.','They work hard.','The team is ready.'],
+    quiz:[{q:'Correct sentence:', options:['She go to school.','She goes to school.','She going school.'], answer:1}] },
+  { id:'g8', title:'Common Spoken English Mistakes', level:'Intermediate', explanation:'Common slips: "He don\'t know" → "He doesn\'t know"; "I am agree" → "I agree"; "Discuss about" → "Discuss".',
+    examples:['Incorrect: He don\'t know. Correct: He doesn\'t know.','Incorrect: I am agree. Correct: I agree.'],
+    quiz:[{q:'Correct the sentence: "She don\'t like coffee."', options:['She doesn\'t like coffee.','She don\'t likes coffee.','She not like coffee.'], answer:0}] }
+];
+
+/* ====================================================================
+   DATA: STORIES
+==================================================================== */
+const STORIES = [
+  { id:'s1', title:'The Honest Woodcutter', ageGroup:'Class 1-5', level:'Beginner',
+    text:'A poor woodcutter dropped his axe into a river. A fairy appeared and offered him a golden axe, but he said it was not his. She offered a silver axe, but again he said no. Finally she showed his own iron axe, and he happily said, "Yes, that is mine!" The fairy was so pleased with his honesty that she gave him all three axes.',
+    vocab:[{w:'Woodcutter', m:'A person who cuts wood for a living'},{w:'Honesty', m:'Being truthful'}],
+    questions:[{q:'What did the fairy first offer?', options:['Iron axe','Golden axe','Silver axe'], answer:1},{q:'Why did the fairy reward him?', options:['He was strong','He was honest','He was fast'], answer:1}]
+  },
+  { id:'s2', title:'A Day at the Office', ageGroup:'Adult', level:'Intermediate',
+    text:'Riya arrived at the office at nine sharp. She checked her emails, joined the morning stand-up meeting, and updated her manager on yesterday\'s progress. By lunchtime, she had finished two reports and scheduled a call with a client for the afternoon. It was a busy but satisfying day.',
+    vocab:[{w:'Stand-up meeting', m:'A short daily team meeting'},{w:'Client', m:'A customer or business partner'}],
+    questions:[{q:'What time did Riya arrive?', options:['Eight sharp','Nine sharp','Ten sharp'], answer:1},{q:'What did she schedule for the afternoon?', options:['A holiday','A client call','A lunch break'], answer:1}]
+  },
+  { id:'s3', title:'The College Interview', ageGroup:'College', level:'Intermediate',
+    text:'Ankit was nervous before his college interview. He took a deep breath, greeted the panel politely, and answered each question clearly, giving examples from his school projects. At the end, he thanked the panel for their time. A week later, he received his admission letter.',
+    vocab:[{w:'Panel', m:'A group of people who interview or judge'},{w:'Admission', m:'Being accepted into a school or college'}],
+    questions:[{q:'How did Ankit feel before the interview?', options:['Confident','Nervous','Bored'], answer:1},{q:'What did he receive a week later?', options:['A rejection','An admission letter','A scholarship'], answer:1}]
+  },
+  { id:'s4', title:'Lost in the New City', ageGroup:'Adult', level:'Elementary',
+    text:'On his first day in a new city, Sameer got lost on his way to the market. He politely stopped a stranger and asked, "Excuse me, could you tell me the way to the market?" The stranger smiled and gave him clear directions. Sameer thanked her and reached the market just in time.',
+    vocab:[{w:'Stranger', m:'A person you do not know'},{w:'Directions', m:'Instructions on how to get somewhere'}],
+    questions:[{q:'What was Sameer looking for?', options:['The market','The station','The school'], answer:0},{q:'How did the stranger react?', options:['She ignored him','She smiled and helped','She got angry'], answer:1}]
+  }
+];
+
+/* ====================================================================
+   DATA: PRACTICE / ASSESSMENT (mixed exercise bank)
+==================================================================== */
+const PRACTICE_SETS = [
+  { id:'p1', title:'Everyday Grammar Quiz', type:'mcq', level:'Beginner', items:[
+    {q:'Choose the correct sentence:', options:['She go to work.','She goes to work.','She going to work.'], answer:1, explain:'Use "goes" with he/she/it in the present simple tense.'},
+    {q:'Choose the correct article: I saw ___ owl.', options:['a','an','the'], answer:1, explain:'"Owl" begins with a vowel sound, so use "an".'},
+    {q:'Choose the correct past tense: Yesterday I ___ to the market.', options:['go','went','goes'], answer:1, explain:'"Went" is the past tense of "go".'}
+  ]},
+  { id:'p2', title:'Fill in the Blanks — Daily Life', type:'fill', level:'Elementary', items:[
+    {q:'I usually ___ (wake) up at 7 AM.', answer:'wake', explain:'Present simple: I wake up.'},
+    {q:'She ___ (work) in a bank.', answer:'works', explain:'He/she/it takes -s in present simple.'},
+    {q:'We ___ (go) to the market yesterday.', answer:'went', explain:'Past simple of go is went.'}
+  ]},
+  { id:'p3', title:'Sentence Arrangement', type:'arrange', level:'Elementary', items:[
+    {words:['to','market','I','the','go'], answer:'I go to the market'},
+    {words:['tea','she','morning','drinks','every'], answer:'she drinks tea every morning'},
+    {words:['English','learning','are','we'], answer:'we are learning English'}
+  ]},
+  { id:'p4', title:'Listen and Choose', type:'listen', level:'Beginner', items:[
+    {audio:'Good morning! How are you today?', q:'What did you hear?', options:['Good morning! How are you today?','Good night! See you tomorrow.','Good afternoon! Have lunch?'], answer:0},
+    {audio:'Could you please close the door?', q:'What did you hear?', options:['Could you open the window?','Could you please close the door?','Can you turn on the light?'], answer:1}
+  ]},
+  { id:'p5', title:'Conversation Completion', type:'mcq', level:'Intermediate', items:[
+    {q:'A: "How was your weekend?"  B: ___', options:['I am fine, thank you.','It was great, thanks for asking!','Yes, I did.'], answer:1, explain:'This responds naturally to a question about the weekend.'},
+    {q:'A: "Could you help me with this report?"  B: ___', options:['Sure, I would be happy to help.','No problem, weather is nice.','I am from Delhi.'], answer:0, explain:'This directly and politely responds to the request.'}
+  ]}
+];
+
+/* ====================================================================
+   DATA: SPEAKING PRACTICE TOPICS
+==================================================================== */
+const SPEAKING_TOPICS = [
+  { id:'sp1', title:'Introductions', sentences:['Hello, my name is ___.','I am from ___.','Nice to meet you!'] },
+  { id:'sp2', title:'School', sentences:['I study in class ___.','My favourite subject is ___.','My teacher is very kind.'] },
+  { id:'sp3', title:'College', sentences:['I am pursuing a degree in ___.','My college is located in ___.','I enjoy campus activities.'] },
+  { id:'sp4', title:'Shopping', sentences:['How much does this cost?','Do you have this in another size?','I would like to pay by card.'] },
+  { id:'sp5', title:'Travelling', sentences:['Where is the nearest station?','How do I get to the airport?','Can you recommend a good hotel?'] },
+  { id:'sp6', title:'Interviews', sentences:['Tell me about yourself.','What are your strengths?','Why should we hire you?'] },
+  { id:'sp7', title:'Meetings', sentences:['Let\'s begin with today\'s agenda.','Could you elaborate on that point?','I agree with your suggestion.'] },
+  { id:'sp8', title:'Everyday Communication', sentences:['How is the weather today?','What are your plans for the weekend?','Could you repeat that please?'] }
+];
+
+const NAV_ITEMS = [
+  {id:'home', label:'Home', icon:'🏠'},
+  {id:'lessons', label:'Lessons', icon:'📘'},
+  {id:'speak', label:'Speak', icon:'🎙️'},
+  {id:'vocabulary', label:'Vocabulary', icon:'🧠'},
+  {id:'grammar', label:'Grammar', icon:'✏️'},
+  {id:'stories', label:'Stories', icon:'📖'},
+  {id:'practice', label:'Practice', icon:'🎯'},
+  {id:'teachers', label:'Teachers', icon:'🧑‍🏫'},
+  {id:'progress', label:'My Progress', icon:'📊'},
+  {id:'settings', label:'Settings', icon:'⚙️'}
+];
+
+/* ====================================================================
+   NAVIGATION
+==================================================================== */
+let currentView = 'home';
+
+function buildNav(){
+  const side = document.getElementById('sideNavLinks');
+  side.innerHTML = NAV_ITEMS.filter(n=>n.id!=='settings').map(n=>
+    `<button class="side-link" data-nav="${n.id}"><span class="ic">${n.icon}</span><span>${n.label}</span></button>`
+  ).join('');
+
+  // Bottom nav: 4 primary + "More" opening a quick menu via settings-like sheet.
+  const primary = ['home','lessons','speak','practice'];
+  const bn = document.getElementById('bottomNav');
+  bn.innerHTML = primary.map(id=>{
+    const n = NAV_ITEMS.find(x=>x.id===id);
+    return `<button class="bn-item" data-nav="${id}"><span class="ic">${n.icon}</span>${n.label}</button>`;
+  }).join('') + `<button class="bn-item bn-more" id="bnMoreBtn"><span class="ic">☰</span>More</button>`;
+
+  document.querySelectorAll('[data-nav]').forEach(btn=>{
+    btn.addEventListener('click', ()=> navigateTo(btn.getAttribute('data-nav')));
+  });
+  document.getElementById('bnMoreBtn').addEventListener('click', openMoreSheet);
+}
+
+function openMoreSheet(){
+  const rest = NAV_ITEMS.filter(n=>!['home','lessons','speak','practice'].includes(n.id));
+  showGenericModal(`
+    <div class="modal-head"><h3>More</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <div style="display:flex;flex-direction:column;gap:6px;margin-top:10px;">
+      ${rest.map(n=>`<button class="side-link" style="background:var(--surface-2);" data-nav="${n.id}" onclick="closeGenericModal();navigateTo('${n.id}')"><span class="ic">${n.icon}</span><span>${n.label}</span></button>`).join('')}
+    </div>
+  `);
+}
+
+function navigateTo(viewId){
+  currentView = viewId;
+  document.querySelectorAll('.section-view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+viewId).classList.add('active');
+  document.querySelectorAll('.side-link[data-nav]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-nav')===viewId));
+  document.querySelectorAll('.bn-item[data-nav]').forEach(b=>b.classList.toggle('active', b.getAttribute('data-nav')===viewId));
+  renderView(viewId);
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function renderView(id){
+  if(id==='home') renderHome();
+  else if(id==='lessons') renderLessons();
+  else if(id==='speak') renderSpeak();
+  else if(id==='vocabulary') renderVocabulary();
+  else if(id==='grammar') renderGrammar();
+  else if(id==='stories') renderStories();
+  else if(id==='practice') renderPractice();
+  else if(id==='teachers') renderTeachers();
+  else if(id==='progress') renderProgress();
+  else if(id==='settings') renderSettings();
+}
+
+/* ====================================================================
+   GENERIC MODAL HELPERS
+==================================================================== */
+function showGenericModal(html){
+  document.getElementById('genericModalBody').innerHTML = html;
+  document.getElementById('genericModal').classList.remove('hidden');
+}
+function closeGenericModal(){ document.getElementById('genericModal').classList.add('hidden'); speechSynthesis.cancel(); }
+document.getElementById('genericModal').addEventListener('click', e=>{ if(e.target.id==='genericModal') closeGenericModal(); });
+
+/* ====================================================================
+   THEME
+==================================================================== */
+function applyTheme(){
+  document.body.setAttribute('data-theme', state.theme);
+  const icon = state.theme==='dark' ? '☀️' : '🌙';
+  document.getElementById('topThemeBtn').textContent = icon;
+  const sideBtn = document.getElementById('sideThemeBtn');
+  sideBtn.innerHTML = `<span class="ic">${icon}</span><span>${state.theme==='dark'?'Light mode':'Dark mode'}</span>`;
+}
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  applyTheme(); saveState();
+}
+
+/* ====================================================================
+   SPEECH: SYNTHESIS (Teacher voice preview / audio playback)
+==================================================================== */
+let voicesCache = [];
+function loadVoices(){ voicesCache = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
+if('speechSynthesis' in window){
+  loadVoices();
+  speechSynthesis.onvoiceschanged = loadVoices;
+}
+function pickVoice(langCode){
+  if(!voicesCache || !voicesCache.length) loadVoices();
+  if(!voicesCache.length) return null;
+  let v = voicesCache.find(v=>v.lang && v.lang.toLowerCase()===langCode.toLowerCase());
+  if(!v) v = voicesCache.find(v=>v.lang && v.lang.toLowerCase().startsWith(langCode.split('-')[0].toLowerCase()));
+  if(!v) v = voicesCache.find(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
+  return v || voicesCache[0] || null;
+}
+function speak(text, langCode, onend){
+  if(!('speechSynthesis' in window)){
+    toast('Speech playback is not supported in this browser.','error');
+    if(onend) onend();
+    return false;
+  }
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  const v = pickVoice(langCode||'en-US');
+  if(v) u.voice = v;
+  u.lang = langCode || 'en-US';
+  u.rate = state.speakRate || 0.95;
+  if(onend) u.onend = onend;
+  u.onerror = ()=>{ toast('Voice for this language may not be installed on your device.','error'); if(onend) onend(); };
+  speechSynthesis.speak(u);
+  return true;
+}
+function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+
+/* ====================================================================
+   SPEECH: RECOGNITION (mic input — graceful fallback if unsupported)
+==================================================================== */
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+function startRecognition(lang, onResult, onEnd){
+  if(!SR){
+    toast('Speech recognition is not supported in this browser — please type instead.','error');
+    if(onEnd) onEnd();
+    return null;
+  }
+  const rec = new SR();
+  rec.lang = lang || 'en-US';
+  rec.interimResults = false;
+  rec.maxAlternatives = 1;
+  rec.onresult = (e)=>{ const text = e.results[0][0].transcript; onResult(text); };
+  rec.onerror = ()=>{ toast('Could not hear you clearly — please try again or type.','error'); };
+  rec.onend = ()=>{ if(onEnd) onEnd(); };
+  try{ rec.start(); }catch(e){ toast('Microphone could not be started.','error'); if(onEnd) onEnd(); return null; }
+  return rec;
+}
+
+/* ====================================================================
+   ONBOARDING
+==================================================================== */
+const AGE_GROUPS = ['Class 1-5','Class 6-10','Class 11-12','College','Working Professional','Adult'];
+const LEVELS = ['Beginner','Elementary','Intermediate','Advanced'];
+const OBJECTIVES = ['School Education','College','Interviews','Office Communication','Everyday Conversations','Professional Development'];
+const ACCENTS = ['American English','British English','Neutral Indian English'];
+const EXPLAIN_LANGS = ['English','Hindi','Spanish','Telugu','Tamil','Bengali','Marathi','French','Arabic','German'];
+const DURATIONS = [10,15,20,30];
+
+let onboardDraft = null;
+
+function openOnboarding(){
+  onboardDraft = JSON.parse(JSON.stringify(state.profile));
+  renderOnboarding();
+  document.getElementById('onboardModal').classList.remove('hidden');
+}
+function chipGroup(name, options, current){
+  return `<div class="chip-select" data-group="${name}">` + options.map(o=>
+    `<button type="button" class="chip-opt ${o===current?'selected':''}" data-value="${esc(o)}">${esc(o)}</button>`
+  ).join('') + `</div>`;
+}
+function renderOnboarding(){
+  const d = onboardDraft;
+  document.getElementById('onboardBody').innerHTML = `
+    <div style="text-align:center;margin-bottom:6px;">
+      <div style="font-size:36px;">🗣️</div>
+      <h2 style="margin-top:8px;">Welcome to SpokenEnglish</h2>
+      <p>Let's personalise your learning journey — this takes less than a minute.</p>
+    </div>
+    <label class="field-label">Your name</label>
+    <input type="text" id="ob-name" placeholder="Enter your name" value="${esc(d.name)}">
+
+    <label class="field-label">Age group / class</label>
+    ${chipGroup('ageGroup', AGE_GROUPS, d.ageGroup)}
+
+    <label class="field-label">English proficiency level</label>
+    ${chipGroup('level', LEVELS, d.level)}
+
+    <label class="field-label">Learning objective</label>
+    ${chipGroup('objective', OBJECTIVES, d.objective)}
+
+    <label class="field-label">Preferred English accent</label>
+    ${chipGroup('accent', ACCENTS, d.accent)}
+
+    <label class="field-label">Preferred explanation language</label>
+    ${chipGroup('explainLang', EXPLAIN_LANGS, d.explainLang)}
+
+    <label class="field-label">Daily practice duration</label>
+    ${chipGroup('dailyMinutes', DURATIONS.map(String), String(d.dailyMinutes))}
+
+    <button class="btn btn-primary" style="width:100%;margin-top:22px;" id="ob-start">Start Learning →</button>
+  `;
+  document.querySelectorAll('#onboardBody .chip-select').forEach(group=>{
+    group.addEventListener('click', e=>{
+      const btn = e.target.closest('.chip-opt'); if(!btn) return;
+      const g = group.getAttribute('data-group');
+      onboardDraft[g] = g==='dailyMinutes' ? parseInt(btn.getAttribute('data-value')) : btn.getAttribute('data-value');
+      group.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+  document.getElementById('ob-start').addEventListener('click', ()=>{
+    const nameVal = document.getElementById('ob-name').value.trim();
+    onboardDraft.name = nameVal || 'Learner';
+    state.profile = onboardDraft;
+    state.onboarded = true;
+    saveState();
+    document.getElementById('onboardModal').classList.add('hidden');
+    updateProfileChip();
+    navigateTo('home');
+    toast('Profile saved — happy learning!','success');
+  });
+}
+function updateProfileChip(){
+  const nm = state.profile.name || 'Learner';
+  document.getElementById('profileChipName').textContent = nm;
+  document.getElementById('avatarInitial').textContent = nm.charAt(0).toUpperCase();
+}
+
+/* ====================================================================
+   PROGRESS HELPERS
+==================================================================== */
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function markActiveToday(){
+  const today = todayStr();
+  if(state.progress.lastActiveDate === today) return;
+  const y = new Date(); y.setDate(y.getDate()-1);
+  const yesterday = y.toISOString().slice(0,10);
+  if(state.progress.lastActiveDate === yesterday){ state.progress.streak += 1; }
+  else if(state.progress.lastActiveDate !== today){ state.progress.streak = 1; }
+  state.progress.lastActiveDate = today;
+  if(!state.progress.activeDays.includes(today)) state.progress.activeDays.push(today);
+  checkBadges();
+  saveState();
+}
+function addPoints(n){ state.progress.points += n; state.progress.confidenceScore = Math.min(100, state.progress.confidenceScore + Math.round(n/4)); checkBadges(); saveState(); }
+function checkBadges(){
+  const b = state.progress;
+  const earn = (id,label)=>{ if(!state.badges.includes(id)){ state.badges.push(id); toast('New badge earned: '+label,'success'); } };
+  if(b.streak>=3) earn('streak3','3-Day Streak 🔥');
+  if(b.streak>=7) earn('streak7','7-Day Streak 🏆');
+  if(b.lessonsCompleted.length>=3) earn('lessons3','Lesson Explorer 📘');
+  if(b.vocabLearned.length>=10) earn('vocab10','Word Collector 🧠');
+  if(b.storiesRead.length>=2) earn('stories2','Story Reader 📖');
+}
+function totalLessonMinutesTarget(){ return state.profile.dailyMinutes; }
+
+function renderHome(){
+  markActiveToday();
+  const p = state.progress;
+  const nextLesson = LESSONS.find(l=>!p.lessonsCompleted.includes(l.id)) || LESSONS[0];
+  const pct = Math.round((p.lessonsCompleted.length / LESSONS.length) * 100);
+  document.getElementById('view-home').innerHTML = `
+    <div class="card" style="background:var(--grad);color:#fff;border:none;box-shadow:var(--shadow);margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
+        <div>
+          <h2 style="color:#fff;">Hello, ${esc(state.profile.name || 'Learner')}! 👋</h2>
+          <p style="color:rgba(255,255,255,0.9);max-width:420px;">Every sentence you speak today makes tomorrow's English easier. Let's keep going!</p>
+        </div>
+        <div style="text-align:right;">
+          <div class="pill" style="background:rgba(255,255,255,0.2);color:#fff;">${esc(state.profile.level)}</div>
+        </div>
+      </div>
+      <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
+        <button class="btn" style="background:#fff;color:var(--blue-deep);" onclick="openLessonDetail('${nextLesson.id}')">Continue Learning: ${esc(nextLesson.title)} →</button>
+      </div>
+    </div>
+
+    <div class="grid grid-4" style="margin-bottom:16px;">
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">🔥</div><div class="big-num" style="font-size:22px;font-weight:800;">${p.streak}</div><p style="font-size:12px;">Day streak</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">📅</div><div class="big-num" style="font-size:22px;font-weight:800;">${p.activeDays.length}</div><p style="font-size:12px;">Active days</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">💪</div><div class="big-num" style="font-size:22px;font-weight:800;">${p.confidenceScore}%</div><p style="font-size:12px;">Confidence score</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">📘</div><div class="big-num" style="font-size:22px;font-weight:800;">${p.lessonsCompleted.length}/${LESSONS.length}</div><p style="font-size:12px;">Lessons done</p></div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+        <h4 style="margin:0;">Overall lesson progress</h4><span style="font-weight:700;color:var(--blue);">${pct}%</span>
+      </div>
+      <div class="progress-track"><div class="progress-fill" style="width:${pct}%;"></div></div>
+    </div>
+
+    <h3 style="margin:20px 2px 10px 2px;">Quick access</h3>
+    <div class="grid grid-4">
+      ${quickCard('speak','🎙️','Speaking Practice','Build fluency')}
+      ${quickCard('vocabulary','🧠','Vocabulary','Learn new words')}
+      ${quickCard('grammar','✏️','Grammar','Master the rules')}
+      ${quickCard('stories','📖','Stories','Read & listen')}
+    </div>
+  `;
+}
+function quickCard(view, icon, title, sub){
+  return `<button class="card" style="text-align:left;border:none;cursor:pointer;" onclick="navigateTo('${view}')">
+    <div style="font-size:22px;">${icon}</div>
+    <h4 style="margin-top:8px;font-size:15px;">${title}</h4>
+    <p style="font-size:12.5px;">${sub}</p>
+  </button>`;
+}
+
+/* ====================================================================
+   TEACHERS SECTION
+==================================================================== */
+let previewingId = null;
+function renderTeachers(){
+  document.getElementById('view-teachers').innerHTML = `
+    <div class="page-head"><h2>Meet Your AI Teachers</h2><p>Choose a teacher by language or accent. Tap the speaker to preview their voice, or start a conversation to practise live.</p></div>
+    <div class="grid grid-3" id="teacherGrid"></div>
+  `;
+  const grid = document.getElementById('teacherGrid');
+  grid.innerHTML = TEACHERS.map(t=>`
+    <div class="card" style="text-align:center;">
+      <div style="width:64px;height:64px;border-radius:50%;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:30px;margin:0 auto 10px auto;">🧑‍🏫</div>
+      <h4 style="font-size:15px;">${t.name}</h4>
+      <div style="font-size:20px;margin:2px 0;">${t.flag}</div>
+      <div class="pill pill-blue" style="margin-bottom:6px;">${esc(t.language)}</div>
+      <p style="font-size:12px;min-height:32px;">${esc(t.accentDesc)}</p>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        <button class="btn btn-outline btn-sm" style="flex:1;" data-preview="${t.id}">🔊 Preview</button>
+        <button class="btn btn-primary btn-sm" style="flex:1;" onclick="openTeacherChat('${t.id}')">Talk</button>
+      </div>
+    </div>
+  `).join('');
+  grid.querySelectorAll('[data-preview]').forEach(btn=>{
+    btn.addEventListener('click', ()=>previewVoice(btn.getAttribute('data-preview'), btn));
+  });
+}
+function previewVoice(teacherId, btnEl){
+  const t = TEACHERS.find(x=>x.id===teacherId);
+  const greeting = TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`;
+  if(previewingId===teacherId){ stopSpeak(); previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; return; }
+  previewingId = teacherId;
+  if(btnEl) btnEl.textContent = '⏹ Stop';
+  showGenericModal(`
+    <div class="modal-head"><h3>${t.flag} ${t.name}</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <p class="pill pill-purple" style="margin:6px 0 12px 0;">${esc(t.language)} voice preview</p>
+    <div class="card" style="background:var(--surface-2);"><p style="color:var(--text);font-style:italic;">"${esc(greeting)}"</p></div>
+    <div style="display:flex;gap:8px;margin-top:14px;">
+      <button class="btn btn-primary btn-sm" onclick="speak(${JSON.stringify(greeting)}, '${t.voiceLang}')">▶ Replay</button>
+      <button class="btn btn-soft btn-sm" onclick="stopSpeak()">⏹ Stop</button>
+    </div>
+  `);
+  const ok = speak(greeting, t.voiceLang, ()=>{ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; });
+  if(!ok){ previewingId=null; if(btnEl) btnEl.textContent='🔊 Preview'; }
+}
+
+/* ---- AI Teacher conversation ---- */
+let activeChat = null; // {teacherId, messages:[{from,text}]}
+function openTeacherChat(teacherId){
+  const t = TEACHERS.find(x=>x.id===teacherId);
+  activeChat = { teacherId, messages:[{from:'teacher', text: TEACHER_GREETING[teacherId] || `Hello, I am ${t.name}.`}] };
+  renderChatModal();
+  document.getElementById('chatModal').classList.remove('hidden');
+  speak(activeChat.messages[0].text, t.voiceLang);
+}
+function closeTeacherChat(){
+  document.getElementById('chatModal').classList.add('hidden');
+  stopSpeak();
+  activeChat = null;
+}
+function renderChatModal(){
+  const t = TEACHERS.find(x=>x.id===activeChat.teacherId);
+  const body = document.getElementById('chatModalBody');
+  body.innerHTML = `
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:16px;border-bottom:1px solid var(--border);flex-shrink:0;">
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="width:40px;height:40px;border-radius:50%;background:${t.color}22;display:flex;align-items:center;justify-content:center;font-size:19px;">🧑‍🏫</div>
+        <div><h4 style="margin:0;font-size:15px;">${t.name} ${t.flag}</h4><p style="font-size:11.5px;">${esc(t.language)} · sample fallback dialogue</p></div>
+      </div>
+      <button class="icon-btn" onclick="closeTeacherChat()">✕</button>
+    </div>
+    <div id="chatMessages" style="flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;"></div>
+    <div style="padding:12px 14px;border-top:1px solid var(--border);flex-shrink:0;">
+      <p style="font-size:10.5px;margin-bottom:8px;">⚠️ No AI service is connected in this preview — replies use predefined sample dialogue, not live AI feedback.</p>
+      <div style="display:flex;gap:7px;align-items:center;">
+        <button class="icon-btn" id="chatMicBtn" title="Speak your answer">🎤</button>
+        <input type="text" id="chatInput" placeholder="Type your reply in English..." style="flex:1;">
+        <button class="btn btn-primary btn-icon-only" id="chatSendBtn">➤</button>
+      </div>
+      <div style="display:flex;gap:6px;margin-top:8px;">
+        <button class="btn btn-soft btn-sm" id="chatListenBtn">🔊 Listen again</button>
+        <button class="btn btn-soft btn-sm" id="chatClearBtn">🗑 Clear</button>
+      </div>
+    </div>
+  `;
+  renderChatMessages();
+  document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+  document.getElementById('chatInput').addEventListener('keydown', e=>{ if(e.key==='Enter') sendChatMessage(); });
+  document.getElementById('chatMicBtn').addEventListener('click', ()=>{
+    const btn = document.getElementById('chatMicBtn');
+    btn.textContent = '⏺'; btn.style.color = 'var(--danger)';
+    startRecognition('en-US', (text)=>{ document.getElementById('chatInput').value = text; sendChatMessage(); }, ()=>{ btn.textContent='🎤'; btn.style.color=''; });
+  });
+  document.getElementById('chatListenBtn').addEventListener('click', ()=>{
+    const last = [...activeChat.messages].reverse().find(m=>m.from==='teacher');
+    if(last) speak(last.text, t.voiceLang);
+  });
+  document.getElementById('chatClearBtn').addEventListener('click', ()=>{
+    activeChat.messages = [{from:'teacher', text: TEACHER_GREETING[activeChat.teacherId]}];
+    renderChatMessages();
+  });
+}
+function renderChatMessages(){
+  const box = document.getElementById('chatMessages');
+  box.innerHTML = activeChat.messages.map(m=>`
+    <div style="align-self:${m.from==='teacher'?'flex-start':'flex-end'};max-width:78%;">
+      <div style="background:${m.from==='teacher'?'var(--surface-2)':'var(--grad)'};color:${m.from==='teacher'?'var(--text)':'#fff'};padding:10px 14px;border-radius:14px;${m.from==='teacher'?'border-bottom-left-radius:4px;':'border-bottom-right-radius:4px;'}font-size:13.5px;">${esc(m.text)}</div>
+    </div>
+  `).join('');
+  box.scrollTop = box.scrollHeight;
+}
+function sendChatMessage(){
+  const input = document.getElementById('chatInput');
+  const text = input.value.trim();
+  if(!text) return;
+  activeChat.messages.push({from:'learner', text});
+  input.value='';
+  renderChatMessages();
+  addPoints(2);
+  setTimeout(()=>{
+    const t = TEACHERS.find(x=>x.id===activeChat.teacherId);
+    const reply = fallbackTeacherReply(activeChat.teacherId, state.profile.level, text);
+    activeChat.messages.push({from:'teacher', text:reply});
+    renderChatMessages();
+    speak(reply, t.voiceLang.startsWith('en')?t.voiceLang:'en-US');
+  }, 450);
+}
+document.getElementById('chatModal').addEventListener('click', e=>{ if(e.target.id==='chatModal') closeTeacherChat(); });
+
+/* ====================================================================
+   SPEAKING PRACTICE
+==================================================================== */
+let speakState = { topicId: SPEAKING_TOPICS[0].id, teacherId: 'sarah', sentenceIdx:0 };
+function renderSpeak(){
+  const topic = SPEAKING_TOPICS.find(t=>t.id===speakState.topicId);
+  const teacher = TEACHERS.find(t=>t.id===speakState.teacherId);
+  document.getElementById('view-speak').innerHTML = `
+    <div class="page-head"><h2>Speaking Practice</h2><p>Pick a topic and teacher, listen to a model sentence, then try saying it yourself.</p></div>
+    <div class="grid grid-2" style="margin-bottom:16px;">
+      <div class="card">
+        <label class="field-label" style="margin-top:0;">Topic</label>
+        <select id="speakTopicSelect">${SPEAKING_TOPICS.map(t=>`<option value="${t.id}" ${t.id===speakState.topicId?'selected':''}>${t.title}</option>`).join('')}</select>
+      </div>
+      <div class="card">
+        <label class="field-label" style="margin-top:0;">Teacher / Accent</label>
+        <select id="speakTeacherSelect">${TEACHERS.filter(t=>['sarah','david'].includes(t.id) || t.id===speakState.teacherId).map(t=>`<option value="${t.id}" ${t.id===speakState.teacherId?'selected':''}>${t.flag} ${t.name} — ${t.language}</option>`).join('')}</select>
+      </div>
+    </div>
+
+    <div class="card" style="text-align:center;">
+      <div class="pill pill-blue" style="margin-bottom:10px;">Sentence ${speakState.sentenceIdx+1} of ${topic.sentences.length}</div>
+      <h3 style="font-size:19px;">"${esc(topic.sentences[speakState.sentenceIdx])}"</h3>
+      <div style="display:flex;gap:8px;justify-content:center;margin-top:16px;flex-wrap:wrap;">
+        <button class="btn btn-outline" id="speakListenBtn">🔊 Listen to model</button>
+        <button class="btn btn-primary" id="speakRecordBtn">🎤 Practise this</button>
+        <button class="btn btn-soft" id="speakRepeatBtn">🔁 Repeat</button>
+        <button class="btn btn-soft" id="speakNextBtn">Next ▶</button>
+      </div>
+      <div id="speakFeedback" style="margin-top:16px;"></div>
+    </div>
+  `;
+  document.getElementById('speakTopicSelect').addEventListener('change', e=>{ speakState.topicId=e.target.value; speakState.sentenceIdx=0; renderSpeak(); });
+  document.getElementById('speakTeacherSelect').addEventListener('change', e=>{ speakState.teacherId=e.target.value; renderSpeak(); });
+  document.getElementById('speakListenBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], teacher.voiceLang) );
+  document.getElementById('speakRepeatBtn').addEventListener('click', ()=> speak(topic.sentences[speakState.sentenceIdx], teacher.voiceLang) );
+  document.getElementById('speakNextBtn').addEventListener('click', ()=>{
+    speakState.sentenceIdx = (speakState.sentenceIdx+1) % topic.sentences.length;
+    renderSpeak();
+  });
+  document.getElementById('speakRecordBtn').addEventListener('click', ()=>{
+    const fb = document.getElementById('speakFeedback');
+    const btn = document.getElementById('speakRecordBtn');
+    btn.textContent = '⏺ Listening...';
+    fb.innerHTML = '';
+    startRecognition('en-US', (heard)=>{
+      const target = topic.sentences[speakState.sentenceIdx].toLowerCase().replace(/[.?!,]/g,'').replace(/___/g,'').trim();
+      const said = heard.toLowerCase().replace(/[.?!,]/g,'').trim();
+      const targetWords = target.split(/\s+/).filter(Boolean);
+      const saidWords = said.split(/\s+/);
+      const matched = targetWords.filter(w=>saidWords.includes(w)).length;
+      const approxMatch = targetWords.length ? Math.round((matched/targetWords.length)*100) : 0;
+      addPoints(3);
+      fb.innerHTML = `
+        <div class="card" style="background:var(--surface-2);text-align:left;">
+          <p style="font-size:12px;">You said:</p><p style="color:var(--text);font-weight:600;">"${esc(heard)}"</p>
+          <p style="font-size:11px;margin-top:8px;">Approximate word match with the model sentence — not a certified pronunciation score.</p>
+          <div class="progress-track" style="margin-top:6px;"><div class="progress-fill" style="width:${approxMatch}%;"></div></div>
+        </div>`;
+    }, ()=>{ btn.textContent='🎤 Practise this'; });
+  });
+}
+
+/* ====================================================================
+   LESSONS
+==================================================================== */
+let lessonFilter = 'All';
+function renderLessons(){
+  const cats = ['All', ...new Set(LESSONS.map(l=>l.level))];
+  document.getElementById('view-lessons').innerHTML = `
+    <div class="page-head"><h2>Lessons</h2><p>Structured lessons from beginner to advanced — vocabulary, examples, grammar and practice in every lesson.</p></div>
+    <div class="chip-select" id="lessonFilterRow" style="margin-bottom:16px;">
+      ${cats.map(c=>`<button type="button" class="chip-opt ${c===lessonFilter?'selected':''}" data-lvl="${c}">${c}</button>`).join('')}
+    </div>
+    <div class="grid grid-3" id="lessonGrid"></div>
+  `;
+  document.querySelectorAll('#lessonFilterRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ lessonFilter=b.getAttribute('data-lvl'); renderLessons(); }));
+  const list = lessonFilter==='All' ? LESSONS : LESSONS.filter(l=>l.level===lessonFilter);
+  document.getElementById('lessonGrid').innerHTML = list.map(l=>{
+    const done = state.progress.lessonsCompleted.includes(l.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="pill pill-blue">${l.level}</span>
+        ${done?'<span class="pill pill-success">✓ Done</span>':''}
+      </div>
+      <h4 style="margin-top:10px;">${esc(l.title)}</h4>
+      <p style="font-size:12.5px;">${esc(l.category)} · ${l.minutes} min</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openLessonDetail('${l.id}')">${done?'Review':'Start'} Lesson →</button>
+    </div>`;
+  }).join('') || `<div class="empty-state"><span class="ic">📘</span>No lessons at this level yet.</div>`;
+}
+function openLessonDetail(id){
+  const l = LESSONS.find(x=>x.id===id);
+  showGenericModal(`
+    <div class="modal-head"><div><span class="pill pill-blue">${l.level}</span></div><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(l.title)}</h2>
+    <p style="margin-bottom:14px;">🎯 ${esc(l.objective)}</p>
+
+    <h4>Vocabulary</h4>
+    <div class="chip-select" style="margin-bottom:14px;">${l.vocabulary.map(v=>`<span class="pill">${esc(v)}</span>`).join('')}</div>
+
+    <h4>Example Sentences</h4>
+    <ul style="padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.8;">${l.examples.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
+
+    <h4 style="margin-top:14px;">Listening Exercise</h4>
+    <div class="card" style="background:var(--surface-2);display:flex;justify-content:space-between;align-items:center;gap:10px;">
+      <p style="font-size:13px;color:var(--text);flex:1;">${esc(l.listening)}</p>
+      <button class="btn btn-soft btn-sm" onclick="speak(${JSON.stringify(l.listening)}, 'en-US')">🔊</button>
+    </div>
+
+    <h4 style="margin-top:14px;">Speaking Exercises</h4>
+    <ul style="padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.8;">${l.speaking.map(s=>`<li>${esc(s)}</li>`).join('')}</ul>
+
+    <h4 style="margin-top:14px;">Short Conversation</h4>
+    ${l.conversation.map(pair=>`<div class="card" style="background:var(--surface-2);margin-bottom:8px;"><p style="font-size:13px;color:var(--text);">${esc(pair[0])}</p><p style="font-size:13px;color:var(--text);">${esc(pair[1])}</p></div>`).join('')}
+
+    <h4 style="margin-top:14px;">Grammar Note</h4>
+    <p style="font-size:13.5px;">${esc(l.grammar)}</p>
+
+    <h4 style="margin-top:14px;">Practice Question</h4>
+    <div id="lessonPracticeBox"></div>
+
+    <div style="display:flex;gap:8px;margin-top:18px;">
+      <button class="btn btn-primary" style="flex:1;" onclick="completeLesson('${l.id}')">${state.progress.lessonsCompleted.includes(l.id)?'✓ Completed':'Mark as Complete'}</button>
+    </div>
+  `);
+  renderInlineMCQ('lessonPracticeBox', l.practice[0], null);
+}
+function completeLesson(id){
+  if(!state.progress.lessonsCompleted.includes(id)){
+    state.progress.lessonsCompleted.push(id);
+    addPoints(10);
+    toast('Lesson completed! +10 points','success');
+  }
+  saveState();
+  closeGenericModal();
+  if(currentView==='lessons') renderLessons();
+  if(currentView==='home') renderHome();
+}
+function renderInlineMCQ(containerId, item, onAnswered){
+  const box = document.getElementById(containerId);
+  box.innerHTML = `<p style="font-size:13.5px;color:var(--text);font-weight:600;">${esc(item.q)}</p>
+    <div style="display:flex;flex-direction:column;gap:8px;margin-top:8px;">
+      ${item.options.map((o,i)=>`<button class="btn btn-outline" style="justify-content:flex-start;text-align:left;" data-opt="${i}">${esc(o)}</button>`).join('')}
+    </div>
+    <div id="${containerId}-result" style="margin-top:8px;font-size:13px;"></div>`;
+  box.querySelectorAll('[data-opt]').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const i = parseInt(btn.getAttribute('data-opt'));
+      const correct = i===item.answer;
+      box.querySelectorAll('[data-opt]').forEach(b=>b.disabled=true);
+      btn.style.borderColor = correct? 'var(--success)':'var(--danger)';
+      btn.style.color = correct? 'var(--success)':'var(--danger)';
+      document.getElementById(containerId+'-result').innerHTML = correct
+        ? `<span style="color:var(--success);font-weight:700;">✓ Correct!</span>${item.explain?' '+esc(item.explain):''}`
+        : `<span style="color:var(--danger);font-weight:700;">✕ Not quite.</span> Correct answer: <b>${esc(item.options[item.answer])}</b>. ${item.explain?esc(item.explain):''}`;
+      if(correct) addPoints(2);
+      if(onAnswered) onAnswered(correct);
+    });
+  });
+}
+
+/* ====================================================================
+   VOCABULARY
+==================================================================== */
+let vocabCatFilter = 'All';
+let vocabShowFavOnly = false;
+function renderVocabulary(){
+  document.getElementById('view-vocabulary').innerHTML = `
+    <div class="page-head"><h2>Vocabulary</h2><p>Build your word bank by category. Save favourites and revise them anytime.</p></div>
+    <div class="chip-select" id="vocabCatRow" style="margin-bottom:10px;">
+      <button type="button" class="chip-opt ${vocabCatFilter==='All'?'selected':''}" data-cat="All">All</button>
+      ${VOCAB_CATEGORIES.map(c=>`<button type="button" class="chip-opt ${c===vocabCatFilter?'selected':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:13px;font-weight:600;margin-bottom:14px;">
+      <input type="checkbox" id="vocabFavToggle" ${vocabShowFavOnly?'checked':''}> Show favourites only
+    </label>
+    <div class="grid grid-3" id="vocabGrid"></div>
+  `;
+  document.querySelectorAll('#vocabCatRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ vocabCatFilter=b.getAttribute('data-cat'); renderVocabulary(); }));
+  document.getElementById('vocabFavToggle').addEventListener('change', e=>{ vocabShowFavOnly=e.target.checked; renderVocabulary(); });
+  let list = vocabCatFilter==='All' ? VOCABULARY : VOCABULARY.filter(v=>v.category===vocabCatFilter);
+  if(vocabShowFavOnly) list = list.filter(v=>state.progress.vocabFavorites.includes(v.id));
+  document.getElementById('vocabGrid').innerHTML = list.map(v=>{
+    const fav = state.progress.vocabFavorites.includes(v.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <h4 style="margin:0;">${esc(v.word)}</h4>
+        <button class="icon-btn" style="width:32px;height:32px;font-size:15px;" data-fav="${v.id}">${fav?'⭐':'☆'}</button>
+      </div>
+      <p style="font-size:12px;margin-top:4px;">${esc(v.pronunciation)}</p>
+      <p style="font-size:13.5px;color:var(--text);margin-top:6px;">${esc(v.meaning)}</p>
+      <p style="font-size:12px;margin-top:4px;">${esc(v.translation)}</p>
+      <p style="font-size:12.5px;font-style:italic;margin-top:6px;">"${esc(v.example)}"</p>
+      <button class="btn btn-soft btn-sm" style="width:100%;margin-top:10px;" data-play="${v.id}">🔊 Listen</button>
+    </div>`;
+  }).join('') || `<div class="empty-state"><span class="ic">🧠</span>No words to show yet — try another filter.</div>`;
+  document.querySelectorAll('[data-fav]').forEach(b=>b.addEventListener('click', ()=>{
+    const id = b.getAttribute('data-fav');
+    const arr = state.progress.vocabFavorites;
+    const idx = arr.indexOf(id);
+    if(idx>-1) arr.splice(idx,1); else { arr.push(id); if(!state.progress.vocabLearned.includes(id)){ state.progress.vocabLearned.push(id); addPoints(1);} }
+    saveState(); renderVocabulary();
+  }));
+  document.querySelectorAll('[data-play]').forEach(b=>b.addEventListener('click', ()=>{
+    const v = VOCABULARY.find(x=>x.id===b.getAttribute('data-play'));
+    speak(v.word+'. '+v.example, 'en-US');
+    if(!state.progress.vocabLearned.includes(v.id)){ state.progress.vocabLearned.push(v.id); saveState(); }
+  }));
+}
+
+/* ====================================================================
+   GRAMMAR
+==================================================================== */
+function renderGrammar(){
+  document.getElementById('view-grammar').innerHTML = `
+    <div class="page-head"><h2>Grammar</h2><p>Practical grammar topics with simple explanations, examples and instant feedback.</p></div>
+    <div class="grid grid-3" id="grammarGrid"></div>
+  `;
+  document.getElementById('grammarGrid').innerHTML = GRAMMAR_TOPICS.map(g=>{
+    const done = state.progress.grammarDone.includes(g.id);
+    return `<div class="card">
+      <span class="pill pill-purple">${g.level}</span>
+      ${done?'<span class="pill pill-success" style="margin-left:6px;">✓ Done</span>':''}
+      <h4 style="margin-top:10px;">${esc(g.title)}</h4>
+      <p style="font-size:12.5px;">${esc(g.explanation)}</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openGrammarDetail('${g.id}')">Open Topic →</button>
+    </div>`;
+  }).join('');
+}
+function openGrammarDetail(id){
+  const g = GRAMMAR_TOPICS.find(x=>x.id===id);
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-purple">${g.level}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(g.title)}</h2>
+    <p style="margin-bottom:14px;">${esc(g.explanation)}</p>
+    <h4>Examples</h4>
+    <ul style="padding-left:18px;color:var(--muted);font-size:13.5px;line-height:1.8;">${g.examples.map(e=>`<li>${esc(e)}</li>`).join('')}</ul>
+    <h4 style="margin-top:14px;">Quick Check</h4>
+    <div id="grammarQuizBox"></div>
+  `);
+  renderInlineMCQ('grammarQuizBox', g.quiz[0], (correct)=>{
+    if(correct && !state.progress.grammarDone.includes(g.id)){ state.progress.grammarDone.push(g.id); addPoints(5); saveState(); }
+  });
+}
+
+/* ====================================================================
+   STORIES
+==================================================================== */
+function renderStories(){
+  document.getElementById('view-stories').innerHTML = `
+    <div class="page-head"><h2>Stories</h2><p>Short stories for every age group — with narration, vocabulary and comprehension questions.</p></div>
+    <div class="grid grid-3" id="storyGrid"></div>
+  `;
+  document.getElementById('storyGrid').innerHTML = STORIES.map(s=>{
+    const done = state.progress.storiesRead.includes(s.id);
+    return `<div class="card">
+      <span class="pill pill-blue">${esc(s.ageGroup)}</span>
+      ${done?'<span class="pill pill-success" style="margin-left:6px;">✓ Read</span>':''}
+      <h4 style="margin-top:10px;">${esc(s.title)}</h4>
+      <p style="font-size:12.5px;">${s.level}</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openStoryDetail('${s.id}')">Read Story →</button>
+    </div>`;
+  }).join('');
+}
+function openStoryDetail(id){
+  const s = STORIES.find(x=>x.id===id);
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-blue">${esc(s.ageGroup)}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(s.title)}</h2>
+    <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <button class="btn btn-soft btn-sm" onclick="speak(${JSON.stringify(s.text)}, 'en-US')">🔊 Listen to narration</button>
+      <button class="btn btn-soft btn-sm" onclick="stopSpeak()">⏹ Stop</button>
+    </div>
+    <p style="color:var(--text);font-size:14px;line-height:1.7;">${esc(s.text)}</p>
+    <h4 style="margin-top:16px;">Vocabulary</h4>
+    ${s.vocab.map(v=>`<p style="font-size:13px;"><b style="color:var(--text);">${esc(v.w)}</b> — ${esc(v.m)}</p>`).join('')}
+    <h4 style="margin-top:16px;">Comprehension</h4>
+    <div id="storyQuizBox"></div>
+  `);
+  let idx = 0;
+  const box = document.getElementById('storyQuizBox');
+  function next(){
+    if(idx >= s.questions.length){
+      box.innerHTML = `<p style="color:var(--success);font-weight:700;">✓ Story complete!</p>`;
+      if(!state.progress.storiesRead.includes(s.id)){ state.progress.storiesRead.push(s.id); addPoints(8); saveState(); }
+      return;
+    }
+    const wrap = document.createElement('div');
+    box.innerHTML=''; box.appendChild(wrap);
+    wrap.id = 'storyQ-'+idx;
+    renderInlineMCQ(wrap.id, s.questions[idx], ()=>{ idx++; setTimeout(next, 700); });
+  }
+  next();
+}
+
+/* ====================================================================
+   PRACTICE / ASSESSMENT
+==================================================================== */
+function renderPractice(){
+  document.getElementById('view-practice').innerHTML = `
+    <div class="page-head"><h2>Practice</h2><p>Mixed exercises — quizzes, fill in the blanks, sentence building and listening.</p></div>
+    <div class="grid grid-3" id="practiceGrid"></div>
+  `;
+  document.getElementById('practiceGrid').innerHTML = PRACTICE_SETS.map(p=>{
+    const result = state.progress.quizzesDone[p.id];
+    const typeIcon = {mcq:'🎯', fill:'✏️', arrange:'🔤', listen:'🎧'}[p.type];
+    return `<div class="card">
+      <span class="pill pill-purple">${p.level}</span>
+      ${result?`<span class="pill pill-success" style="margin-left:6px;">${result.score}/${result.total}</span>`:''}
+      <h4 style="margin-top:10px;">${typeIcon} ${esc(p.title)}</h4>
+      <p style="font-size:12px;">${p.items.length} questions</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openPracticeSet('${p.id}')">${result?'Retry':'Start'} →</button>
+    </div>`;
+  }).join('');
+}
+function openPracticeSet(id){
+  const p = PRACTICE_SETS.find(x=>x.id===id);
+  let idx = 0, score = 0;
+  function renderQ(){
+    if(idx >= p.items.length){
+      state.progress.quizzesDone[p.id] = {score, total:p.items.length};
+      addPoints(score*2);
+      saveState();
+      showGenericModal(`
+        <div class="modal-head"><h3>${esc(p.title)}</h3><button class="icon-btn" onclick="closeGenericModal();renderPractice();">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🎉</div>
+          <h2 style="margin-top:10px;">${score} / ${p.items.length}</h2>
+          <p>Great effort! Points added to your progress.</p>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal();renderPractice();">Done</button>
+        </div>
+      `);
+      return;
+    }
+    const item = p.items[idx];
+    let inner = '';
+    if(p.type==='mcq' || p.type==='listen'){
+      inner = `${p.type==='listen'?`<button class="btn btn-soft btn-sm" style="margin-bottom:10px;" onclick="speak(${JSON.stringify(item.audio)},'en-US')">🔊 Play audio</button><br>`:''}
+        <div id="pq-box"></div>`;
+    } else if(p.type==='fill'){
+      inner = `<p style="font-size:15px;color:var(--text);font-weight:600;">${esc(item.q)}</p>
+        <input type="text" id="pq-fill" placeholder="Type your answer" style="margin-top:10px;">
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" id="pq-fill-check">Check</button>
+        <div id="pq-fill-result" style="margin-top:8px;font-size:13px;"></div>`;
+    } else if(p.type==='arrange'){
+      inner = `<p style="font-size:13px;">Arrange the words into a correct sentence:</p>
+        <div class="chip-select" id="pq-arrange-bank" style="margin:10px 0;">${shuffle([...item.words]).map((w,i)=>`<button type="button" class="chip-opt" data-word="${esc(w)}">${esc(w)}</button>`).join('')}</div>
+        <p style="font-size:12px;">Your sentence:</p>
+        <div id="pq-arrange-built" style="min-height:38px;padding:8px;border:1.5px dashed var(--border);border-radius:10px;font-size:14px;color:var(--text);"></div>
+        <button class="btn btn-primary btn-sm" style="margin-top:10px;" id="pq-arrange-check">Check</button>
+        <button class="btn btn-soft btn-sm" style="margin-top:10px;" id="pq-arrange-reset">Reset</button>
+        <div id="pq-arrange-result" style="margin-top:8px;font-size:13px;"></div>`;
+    }
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Q${idx+1}/${p.items.length}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+      <h3 style="margin-top:10px;">${esc(p.title)}</h3>
+      ${p.type!=='fill' && p.type!=='arrange' ? `<p style="font-size:15px;color:var(--text);font-weight:600;margin-top:6px;">${esc(item.q)}</p>` : ''}
+      <div style="margin-top:10px;">${inner}</div>
+    `);
+    if(p.type==='mcq' || p.type==='listen'){
+      renderInlineMCQ('pq-box', item, (correct)=>{ if(correct) score++; setTimeout(()=>{ idx++; renderQ(); }, 900); });
+    } else if(p.type==='fill'){
+      document.getElementById('pq-fill-check').addEventListener('click', ()=>{
+        const val = document.getElementById('pq-fill').value.trim().toLowerCase();
+        const correct = val === item.answer.toLowerCase();
+        if(correct) score++;
+        document.getElementById('pq-fill-result').innerHTML = correct
+          ? `<span style="color:var(--success);font-weight:700;">✓ Correct!</span> ${esc(item.explain)}`
+          : `<span style="color:var(--danger);font-weight:700;">✕ Correct answer: ${esc(item.answer)}</span> ${esc(item.explain)}`;
+        document.getElementById('pq-fill-check').disabled = true;
+        setTimeout(()=>{ idx++; renderQ(); }, 1200);
+      });
+    } else if(p.type==='arrange'){
+      const built = [];
+      const bankRow = document.getElementById('pq-arrange-bank');
+      const builtBox = document.getElementById('pq-arrange-built');
+      bankRow.addEventListener('click', e=>{
+        const btn = e.target.closest('.chip-opt'); if(!btn || btn.disabled) return;
+        built.push(btn.getAttribute('data-word')); btn.disabled=true; btn.style.opacity='.35';
+        builtBox.textContent = built.join(' ');
+      });
+      document.getElementById('pq-arrange-reset').addEventListener('click', ()=>{ renderQ(); });
+      document.getElementById('pq-arrange-check').addEventListener('click', ()=>{
+        const said = built.join(' ').toLowerCase();
+        const correct = said === item.answer.toLowerCase();
+        if(correct) score++;
+        document.getElementById('pq-arrange-result').innerHTML = correct
+          ? `<span style="color:var(--success);font-weight:700;">✓ Correct!</span>`
+          : `<span style="color:var(--danger);font-weight:700;">✕ Correct: ${esc(item.answer)}</span>`;
+        setTimeout(()=>{ idx++; renderQ(); }, 1200);
+      });
+    }
+  }
+  renderQ();
+}
+function shuffle(arr){ for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; } return arr; }
+
+/* ====================================================================
+   PROGRESS
+==================================================================== */
+function renderProgress(){
+  const p = state.progress;
+  const badgeInfo = {
+    streak3:{icon:'🔥',label:'3-Day Streak'}, streak7:{icon:'🏆',label:'7-Day Streak'},
+    lessons3:{icon:'📘',label:'Lesson Explorer'}, vocab10:{icon:'🧠',label:'Word Collector'},
+    stories2:{icon:'📖',label:'Story Reader'}
+  };
+  document.getElementById('view-progress').innerHTML = `
+    <div class="page-head"><h2>My Progress</h2><p>Track your streak, points and learning milestones.</p></div>
+    <div class="grid grid-4" style="margin-bottom:16px;">
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">🔥</div><h3 style="font-size:22px;">${p.streak}</h3><p style="font-size:12px;">Day streak</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">⭐</div><h3 style="font-size:22px;">${p.points}</h3><p style="font-size:12px;">Points</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">💪</div><h3 style="font-size:22px;">${p.confidenceScore}%</h3><p style="font-size:12px;">Confidence</p></div>
+      <div class="card" style="text-align:center;"><div style="font-size:22px;">🧠</div><h3 style="font-size:22px;">${p.vocabLearned.length}</h3><p style="font-size:12px;">Words learned</p></div>
+    </div>
+    <div class="card" style="margin-bottom:16px;">
+      <h4>Weekly activity (last 7 days)</h4>
+      <div style="display:flex;gap:6px;margin-top:10px;">
+        ${last7Days().map(d=>`<div style="flex:1;text-align:center;">
+          <div style="height:44px;display:flex;align-items:flex-end;justify-content:center;">
+            <div style="width:70%;border-radius:6px 6px 0 0;background:${p.activeDays.includes(d.iso)?'var(--grad)':'var(--surface-2)'};height:${p.activeDays.includes(d.iso)?'44px':'8px'};"></div>
+          </div>
+          <p style="font-size:10px;margin-top:4px;">${d.label}</p>
+        </div>`).join('')}
+      </div>
+    </div>
+    <div class="card">
+      <h4>Badges</h4>
+      <div class="grid grid-4" style="margin-top:10px;">
+        ${Object.keys(badgeInfo).map(id=>{
+          const earned = p.badges ? state.badges.includes(id) : state.badges.includes(id);
+          const b = badgeInfo[id];
+          return `<div style="text-align:center;opacity:${state.badges.includes(id)?1:0.35};">
+            <div style="font-size:26px;">${b.icon}</div><p style="font-size:11px;font-weight:600;">${b.label}</p>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>
+  `;
+}
+function last7Days(){
+  const days=[];
+  for(let i=6;i>=0;i--){ const d=new Date(); d.setDate(d.getDate()-i); days.push({iso:d.toISOString().slice(0,10), label:d.toLocaleDateString('en-US',{weekday:'short'}).slice(0,2)}); }
+  return days;
+}
+
+/* ====================================================================
+   SETTINGS
+==================================================================== */
+function renderSettings(){
+  const d = state.profile;
+  document.getElementById('view-settings').innerHTML = `
+    <div class="page-head"><h2>Settings</h2><p>Update your profile, preferences and app appearance.</p></div>
+    <div class="card" style="max-width:560px;">
+      <label class="field-label" style="margin-top:0;">Your name</label>
+      <input type="text" id="set-name" value="${esc(d.name)}">
+      <label class="field-label">Age group / class</label>
+      ${chipGroup('set-ageGroup', AGE_GROUPS, d.ageGroup)}
+      <label class="field-label">English proficiency level</label>
+      ${chipGroup('set-level', LEVELS, d.level)}
+      <label class="field-label">Learning objective</label>
+      ${chipGroup('set-objective', OBJECTIVES, d.objective)}
+      <label class="field-label">Preferred English accent</label>
+      ${chipGroup('set-accent', ACCENTS, d.accent)}
+      <label class="field-label">Preferred explanation language</label>
+      ${chipGroup('set-explainLang', EXPLAIN_LANGS, d.explainLang)}
+      <label class="field-label">Daily practice duration (minutes)</label>
+      ${chipGroup('set-dailyMinutes', DURATIONS.map(String), String(d.dailyMinutes))}
+      <button class="btn btn-primary" style="width:100%;margin-top:18px;" id="settingsSaveBtn">Save Changes</button>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-top:16px;">
+      <h4>Appearance</h4>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
+        <p style="font-size:13.5px;">Theme</p>
+        <button class="btn btn-outline btn-sm" onclick="toggleTheme()">${state.theme==='dark'?'☀️ Light':'🌙 Dark'}</button>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-top:16px;">
+      <h4>Data</h4>
+      <p style="font-size:12.5px;margin-bottom:10px;">Your progress is stored only on this device, in your browser.</p>
+      <button class="btn btn-danger-soft btn-sm" id="resetProgressBtn">Reset all progress</button>
+    </div>
+  `;
+  document.querySelectorAll('#view-settings .chip-select').forEach(group=>{
+    group.addEventListener('click', e=>{
+      const btn = e.target.closest('.chip-opt'); if(!btn) return;
+      group.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+  document.getElementById('settingsSaveBtn').addEventListener('click', ()=>{
+    const get = (g)=> document.querySelector(`[data-group="${g}"] .chip-opt.selected`).getAttribute('data-value');
+    state.profile.name = document.getElementById('set-name').value.trim() || 'Learner';
+    state.profile.ageGroup = get('set-ageGroup');
+    state.profile.level = get('set-level');
+    state.profile.objective = get('set-objective');
+    state.profile.accent = get('set-accent');
+    state.profile.explainLang = get('set-explainLang');
+    state.profile.dailyMinutes = parseInt(get('set-dailyMinutes'));
+    saveState();
+    updateProfileChip();
+    toast('Settings saved','success');
+  });
+  document.getElementById('resetProgressBtn').addEventListener('click', ()=>{
+    if(confirm('This will reset your streak, points, completed lessons and favourites. Continue?')){
+      const fresh = freshState();
+      state.progress = fresh.progress;
+      state.badges = [];
+      saveState();
+      toast('Progress reset','success');
+      renderSettings();
+    }
+  });
+}
+
+/* ====================================================================
+   INIT
+==================================================================== */
+function init(){
+  applyTheme();
+  buildNav();
+  updateProfileChip();
+  document.getElementById('topThemeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('sideThemeBtn').addEventListener('click', toggleTheme);
+  document.getElementById('onboardModal').addEventListener('click', e=>{ /* prevent close-on-outside for mandatory first-run form */ });
+
+  if(!state.onboarded){
+    openOnboarding();
+    navigateTo('home');
+  } else {
+    navigateTo('home');
+  }
+}
+document.addEventListener('DOMContentLoaded', init);
+</script>
+
+
+</body>
+</html>
