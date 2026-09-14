@@ -284,7 +284,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '4.1.0';
+const APP_VERSION = '4.2.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -1622,6 +1622,60 @@ function englishVoiceFor(teacher){
 }
 
 /* ====================================================================
+   WELCOME MUSIC — a short, gentle, procedurally generated melody played
+   on the onboarding screen. Synthesised in-browser with the Web Audio
+   API (original tones only, never a real recording), so there are no
+   copyright concerns. Requires a user tap to start, per browser
+   autoplay rules.
+==================================================================== */
+let musicCtx = null, musicTimer = null, musicPlaying = false;
+const MUSIC_SCALE = [523.25, 587.33, 659.25, 783.99, 880.00, 987.77, 1046.50]; // C5 D5 E5 G5 A5 B5 C6 (pentatonic-friendly)
+const MUSIC_PATTERN = [0,2,4,2,1,3,4,2,0,4,5,4,2,1,0,0];
+function playMusicNote(freq, startTime, duration){
+  const osc = musicCtx.createOscillator();
+  const gain = musicCtx.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(0.0001, startTime);
+  gain.gain.linearRampToValueAtTime(0.05, startTime + 0.06);
+  gain.gain.exponentialRampToValueAtTime(0.0001, startTime + duration);
+  osc.connect(gain).connect(musicCtx.destination);
+  osc.start(startTime);
+  osc.stop(startTime + duration + 0.05);
+}
+function scheduleMusicLoop(){
+  if(!musicPlaying || !musicCtx) return;
+  const now = musicCtx.currentTime + 0.05;
+  let t = now;
+  MUSIC_PATTERN.forEach(i=>{
+    playMusicNote(MUSIC_SCALE[i], t, 0.55);
+    t += 0.42;
+  });
+  musicTimer = setTimeout(scheduleMusicLoop, MUSIC_PATTERN.length * 420);
+}
+function toggleWelcomeMusic(){
+  const btn = document.getElementById('musicToggleBtn');
+  if(musicPlaying){
+    musicPlaying = false;
+    if(musicTimer) clearTimeout(musicTimer);
+    if(btn) btn.textContent = '🎵 Play soft music';
+    return;
+  }
+  if(!musicCtx){
+    try{ musicCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+    catch(e){ toast('Background music is not supported in this browser.','error'); return; }
+  }
+  if(musicCtx.state === 'suspended') musicCtx.resume();
+  musicPlaying = true;
+  if(btn) btn.textContent = '🔇 Stop music';
+  scheduleMusicLoop();
+}
+function stopWelcomeMusic(){
+  musicPlaying = false;
+  if(musicTimer) clearTimeout(musicTimer);
+}
+
+/* ====================================================================
    SPEECH: RECOGNITION (mic input — graceful fallback if unsupported)
 ==================================================================== */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -1667,10 +1721,59 @@ function chipGroup(name, options, current){
 function renderOnboarding(){
   const d = onboardDraft;
   document.getElementById('onboardBody').innerHTML = `
+    <div style="background:linear-gradient(135deg,#EEF1FF 0%,#F5EAFF 100%);border-radius:20px;padding:16px 10px 10px 10px;margin-bottom:14px;">
+      <svg viewBox="0 0 400 200" style="width:100%;max-width:320px;display:block;margin:0 auto;" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="An adult and a child learning together, with an open book, sun and stars">
+        <!-- sun with rays -->
+        <g stroke="#F5A623" stroke-width="4" stroke-linecap="round">
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(0 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(45 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(90 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(135 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(180 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(225 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(270 340 40)"/>
+          <line x1="340" y1="6" x2="340" y2="16" transform="rotate(315 340 40)"/>
+        </g>
+        <circle cx="340" cy="40" r="20" fill="#F5A623"/>
+        <!-- decorative stars -->
+        <polygon points="35,110 39,120 50,120 41,127 44,138 35,131 26,138 29,127 20,120 31,120" fill="#8B5CF6"/>
+        <polygon points="365,130 368,137 376,137 369,142 372,150 365,145 358,150 361,142 354,137 362,137" fill="#F472B6"/>
+        <polygon points="200,18 203,25 211,25 204,30 207,38 200,33 193,38 196,30 189,25 197,25" fill="#1FAE6B"/>
+        <!-- speech bubble -->
+        <rect x="248" y="52" width="76" height="38" rx="12" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="2"/>
+        <polygon points="270,90 282,90 272,100" fill="#FFFFFF" stroke="#8B5CF6" stroke-width="2"/>
+        <text x="286" y="76" font-size="18" font-weight="700" fill="#8B5CF6" text-anchor="middle" font-family="Arial, sans-serif">ABC</text>
+        <!-- open book -->
+        <line x1="170" y1="160" x2="170" y2="183" stroke="#2440D6" stroke-width="3"/>
+        <polygon points="108,178 168,163 168,181 108,194" fill="#FFFFFF" stroke="#3B5BFE" stroke-width="2.5"/>
+        <polygon points="232,178 172,163 172,181 232,194" fill="#FFFFFF" stroke="#3B5BFE" stroke-width="2.5"/>
+        <line x1="118" y1="180" x2="160" y2="170" stroke="#C7D0FF" stroke-width="2"/>
+        <line x1="118" y1="187" x2="160" y2="177" stroke="#C7D0FF" stroke-width="2"/>
+        <line x1="222" y1="180" x2="180" y2="170" stroke="#C7D0FF" stroke-width="2"/>
+        <line x1="222" y1="187" x2="180" y2="177" stroke="#C7D0FF" stroke-width="2"/>
+        <!-- child figure -->
+        <ellipse cx="85" cy="196" rx="13" ry="5" fill="#F472B6"/>
+        <rect x="70" y="160" width="30" height="35" rx="11" fill="#F472B6"/>
+        <circle cx="85" cy="148" r="14" fill="#FFD3A6"/>
+        <path d="M72,142 Q85,126 98,142 L98,146 Q85,134 72,146 Z" fill="#5B3A29"/>
+        <line x1="98" y1="172" x2="128" y2="180" stroke="#FFD3A6" stroke-width="7" stroke-linecap="round"/>
+        <!-- adult figure -->
+        <ellipse cx="292" cy="198" rx="16" ry="5" fill="#2440D6"/>
+        <rect x="277" y="148" width="15" height="45" rx="6" fill="#2440D6"/>
+        <rect x="293" y="148" width="15" height="45" rx="6" fill="#2440D6"/>
+        <rect x="270" y="118" width="42" height="46" rx="14" fill="#3B5BFE"/>
+        <circle cx="291" cy="106" r="16" fill="#FFD3A6"/>
+        <path d="M275,100 Q291,84 307,100 L307,106 Q291,92 275,106 Z" fill="#3A2A1F"/>
+        <line x1="273" y1="140" x2="235" y2="163" stroke="#FFD3A6" stroke-width="7" stroke-linecap="round"/>
+        <line x1="309" y1="140" x2="317" y2="168" stroke="#FFD3A6" stroke-width="7" stroke-linecap="round"/>
+        <!-- ground -->
+        <line x1="30" y1="199" x2="370" y2="199" stroke="#D8DEFA" stroke-width="2"/>
+      </svg>
+    </div>
     <div style="text-align:center;margin-bottom:6px;">
-      <div style="font-size:36px;">🗣️</div>
-      <h2 style="margin-top:8px;">Welcome to SpokenEnglish</h2>
+      <h2>Welcome to SpokenEnglish</h2>
       <p>Let's personalise your learning journey — this takes less than a minute.</p>
+      <button class="btn btn-soft btn-sm" id="musicToggleBtn" style="margin-top:10px;" onclick="toggleWelcomeMusic()">🎵 Play soft music</button>
     </div>
     <label class="field-label">Your name</label>
     <input type="text" id="ob-name" placeholder="Enter your name" value="${esc(d.name)}">
@@ -1694,6 +1797,7 @@ function renderOnboarding(){
     ${chipGroup('dailyMinutes', DURATIONS.map(String), String(d.dailyMinutes))}
 
     <button class="btn btn-primary" style="width:100%;margin-top:22px;" id="ob-start">Start Learning →</button>
+    <p style="text-align:center;font-size:10.5px;margin-top:14px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
   `;
   document.querySelectorAll('#onboardBody .chip-select').forEach(group=>{
     group.addEventListener('click', e=>{
@@ -1710,6 +1814,7 @@ function renderOnboarding(){
     state.profile = onboardDraft;
     state.onboarded = true;
     saveState();
+    stopWelcomeMusic();
     document.getElementById('onboardModal').classList.add('hidden');
     updateProfileChip();
     navigateTo('home');
@@ -2709,6 +2814,7 @@ function renderSettings(){
     </div>
 
     <p style="text-align:center;font-size:11.5px;margin-top:18px;">SpokenEnglish · Version ${APP_VERSION}</p>
+    <p style="text-align:center;font-size:10.5px;margin-top:4px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
   `;
   document.querySelectorAll('#view-settings .chip-select').forEach(group=>{
     group.addEventListener('click', e=>{
