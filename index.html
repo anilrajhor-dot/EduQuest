@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
-<title>SpokenEnglish — Speak with Confidence</title>
+<title>EduQuest — Learn. Practise. Achieve.</title>
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Inter:wght@400;500;600;700;800&display=swap');
 
@@ -216,7 +216,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
   <nav class="sidebar" aria-label="Main navigation">
     <div class="brand-row">
       <div class="brand-mark">🗣️</div>
-      <div class="brand">SpokenEnglish<small>Speak with confidence</small></div>
+      <div class="brand">EduQuest<small>Learn. Practise. Achieve.</small></div>
     </div>
     <div id="sideNavLinks"></div>
     <div style="flex:1"></div>
@@ -228,7 +228,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
     <header class="topbar">
       <div class="topbar-mobile-brand">
         <div class="brand-mark">🗣️</div>
-        <div class="brand">SpokenEnglish</div>
+        <div class="brand">EduQuest</div>
         <span class="pill" id="mobileVersionPill" style="font-size:9.5px;padding:2px 7px;"></span>
       </div>
       <div class="topbar-actions">
@@ -244,6 +244,8 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       <!-- Section views injected/controlled via JS by toggling .active -->
       <section class="section-view" id="view-home"></section>
       <section class="section-view" id="view-lessons"></section>
+      <section class="section-view" id="view-mathematics"></section>
+      <section class="section-view" id="view-vedicmaths"></section>
       <section class="section-view" id="view-speak"></section>
       <section class="section-view" id="view-vocabulary"></section>
       <section class="section-view" id="view-grammar"></section>
@@ -303,7 +305,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '5.7.0';
+const APP_VERSION = '6.0.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -340,7 +342,9 @@ function freshState(){
       rhymesLearned:[], toddlerWordsLearned:[],
       dailyQuiz:{date:null, score:null, total:null}, gameHighScore:0,
       numbersLearned:[], alphabetLearned:[], tablesPracticed:[],
-      adventureMap:{ unlockedLocations:['whisper_village'], defeatedCreatures:[] }
+      adventureMap:{ unlockedLocations:['whisper_village'], defeatedCreatures:[] },
+      mathLessonsCompleted:[], mathQuizScores:{},
+      vedicTechniquesLearned:[], vedicCorrect:0, vedicAttempted:0, vedicBestStreak:0
     },
     badges:[]
   };
@@ -1515,46 +1519,215 @@ const ALPHABET = [
 ];
 
 /* ====================================================================
+   DATA: MATHEMATICS (Grade 1-8, conceptual lessons + practice)
+==================================================================== */
+const MATH_LESSONS = [
+  { id:'m1', title:'Addition & Subtraction', grade:'Grade 1-2', category:'Number Operations',
+    objective:'Add and subtract whole numbers confidently.',
+    concept:'Addition combines quantities; subtraction finds the difference between them. Line up numbers by place value (ones, tens, hundreds) before adding or subtracting.',
+    example:'47 + 26 = 73 (7+6=13, write 3 carry 1; 4+2+1=7) · 82 − 35 = 47 (borrow from tens: 12−5=7; 7−3=4)',
+    practice:[{q:'What is 56 + 38?', options:['84','94','104'], answer:1}] },
+  { id:'m2', title:'Multiplication & Division', grade:'Grade 2-3', category:'Number Operations',
+    objective:'Multiply and divide whole numbers using known facts.',
+    concept:'Multiplication is repeated addition; division splits a quantity into equal groups. Multiplication and division are inverse operations.',
+    example:'6 × 7 = 42 (7 added six times) · 42 ÷ 6 = 7 (42 split into 6 equal groups of 7)',
+    practice:[{q:'What is 9 × 8?', options:['63','72','81'], answer:1}] },
+  { id:'m3', title:'Understanding Fractions', grade:'Grade 3-4', category:'Fractions & Decimals',
+    objective:'Understand fractions as equal parts of a whole.',
+    concept:'A fraction a/b means the whole is divided into b equal parts, and we take a of them. The top number is the numerator, the bottom is the denominator.',
+    example:'3/4 means 3 out of 4 equal parts. 1/2 + 1/4 = 2/4 + 1/4 = 3/4 (find a common denominator first).',
+    practice:[{q:'What is 1/2 + 1/4?', options:['2/6','3/4','1/4'], answer:1}] },
+  { id:'m4', title:'Decimals', grade:'Grade 4-5', category:'Fractions & Decimals',
+    objective:'Read, write and calculate with decimal numbers.',
+    concept:'Decimals extend place value beyond the ones place using a decimal point: tenths, hundredths, thousandths.',
+    example:'3.25 = 3 ones + 2 tenths + 5 hundredths. 1.5 + 2.75 = 4.25 (line up decimal points before adding).',
+    practice:[{q:'What is 1.5 + 2.75?', options:['3.25','4.25','4.75'], answer:1}] },
+  { id:'m5', title:'Percentages', grade:'Grade 5-6', category:'Fractions & Decimals',
+    objective:'Understand and calculate percentages.',
+    concept:'Percent means "out of 100". To find a percentage of a number, convert the percent to a decimal or fraction and multiply.',
+    example:'25% of 80 = 0.25 × 80 = 20. 50% = 1/2, so 50% of 60 = 30.',
+    practice:[{q:'What is 25% of 80?', options:['15','20','25'], answer:1} ] },
+  { id:'m6', title:'Shapes & Perimeter', grade:'Grade 3-5', category:'Geometry & Measurement',
+    objective:'Identify shapes and calculate perimeter.',
+    concept:'Perimeter is the total distance around a shape — add the lengths of all sides.',
+    example:'A rectangle 6 cm by 4 cm has perimeter = 2×(6+4) = 20 cm. A square with side 5 cm has perimeter = 4×5 = 20 cm.',
+    practice:[{q:'Perimeter of a rectangle 8 cm by 3 cm?', options:['11 cm','22 cm','24 cm'], answer:1} ] },
+  { id:'m7', title:'Area', grade:'Grade 4-6', category:'Geometry & Measurement',
+    objective:'Calculate the area of basic shapes.',
+    concept:'Area measures the space inside a shape. For a rectangle: area = length × width. For a triangle: area = ½ × base × height.',
+    example:'A rectangle 6 cm by 4 cm has area = 6×4 = 24 sq cm. A triangle with base 8 cm and height 5 cm has area = ½×8×5 = 20 sq cm.',
+    practice:[{q:'Area of a rectangle 7 cm by 5 cm?', options:['12 sq cm','24 sq cm','35 sq cm'], answer:2} ] },
+  { id:'m8', title:'Units of Measurement', grade:'Grade 3-6', category:'Geometry & Measurement',
+    objective:'Convert between common units of length, weight and volume.',
+    concept:'Metric units scale by powers of 10: 1 metre = 100 centimetres, 1 kilogram = 1000 grams, 1 litre = 1000 millilitres.',
+    example:'250 cm = 2.5 m. 1.5 kg = 1500 g.',
+    practice:[{q:'How many centimetres in 3.5 metres?', options:['35 cm','350 cm','3500 cm'], answer:1} ] },
+  { id:'m9', title:'Patterns & Sequences', grade:'Grade 4-6', category:'Patterns & Algebra',
+    objective:'Identify and extend number patterns.',
+    concept:'A pattern follows a consistent rule — look at the difference or ratio between consecutive terms to find the rule.',
+    example:'2, 5, 8, 11, ... adds 3 each time → next term is 14. 3, 6, 12, 24, ... doubles each time → next term is 48.',
+    practice:[{q:'What comes next: 4, 8, 12, 16, ?', options:['18','20','24'], answer:1} ] },
+  { id:'m10', title:'Introduction to Algebra', grade:'Grade 6-8', category:'Patterns & Algebra',
+    objective:'Solve simple equations for an unknown value.',
+    concept:'Algebra uses letters (like x) to represent unknown numbers. To solve an equation, do the same operation to both sides until x is alone.',
+    example:'x + 5 = 12 → x = 12 − 5 = 7. 3x = 21 → x = 21 ÷ 3 = 7.',
+    practice:[{q:'Solve for x: x + 9 = 15', options:['x=5','x=6','x=24'], answer:1} ] },
+  { id:'m11', title:'Word Problems', grade:'Grade 3-8', category:'Problem Solving',
+    objective:'Translate real-world situations into mathematical operations.',
+    concept:'Read carefully to identify what is known, what is asked, and which operation(s) connect them. Write a simple equation before solving.',
+    example:'Riya has 45 stickers and gives away 18. How many are left? 45 − 18 = 27 stickers.',
+    practice:[{q:'A shop had 120 apples and sold 75. How many are left?', options:['35','45','55'], answer:1} ] },
+  { id:'m12', title:'Logical Reasoning', grade:'Grade 4-8', category:'Problem Solving',
+    objective:'Use logical thinking to solve puzzles and reasoning questions.',
+    concept:'Logical reasoning problems ask you to find relationships, eliminate impossible options, and reason step by step rather than calculate directly.',
+    example:'If all cats are animals, and Whiskers is a cat, then Whiskers is definitely an animal — this is a valid logical conclusion.',
+    practice:[{q:'If A is taller than B, and B is taller than C, who is shortest?', options:['A','B','C'], answer:2} ] }
+];
+const MATH_PRACTICE_SETS = [
+  { id:'mp1', title:'Number Operations Quiz', category:'Number Operations', items:[
+    {q:'What is 73 − 28?', options:['45','55','35'], answer:0, explain:'73−28: borrow from tens, 13−8=5, 6−2=4 → 45.'},
+    {q:'What is 12 × 6?', options:['62','72','82'], answer:1, explain:'12×6 = 72.'},
+    {q:'What is 96 ÷ 8?', options:['11','12','13'], answer:1, explain:'8×12=96, so 96÷8=12.'}
+  ]},
+  { id:'mp2', title:'Fractions & Decimals Quiz', category:'Fractions & Decimals', items:[
+    {q:'What is 3/4 as a decimal?', options:['0.34','0.75','0.43'], answer:1, explain:'3÷4 = 0.75.'},
+    {q:'What is 2/3 + 1/3?', options:['3/6','1','2/3'], answer:1, explain:'2/3+1/3 = 3/3 = 1.'},
+    {q:'What is 10% of 250?', options:['15','25','35'], answer:1, explain:'10% of 250 = 0.10×250 = 25.'}
+  ]},
+  { id:'mp3', title:'Geometry & Measurement Quiz', category:'Geometry & Measurement', items:[
+    {q:'How many sides does a hexagon have?', options:['5','6','7'], answer:1, explain:'A hexagon has 6 sides.'},
+    {q:'Area of a square with side 9 cm?', options:['18 sq cm','36 sq cm','81 sq cm'], answer:2, explain:'Area = side×side = 9×9 = 81 sq cm.'},
+    {q:'How many millilitres in 2 litres?', options:['200 ml','2000 ml','20000 ml'], answer:1, explain:'1 litre = 1000 ml, so 2 litres = 2000 ml.'}
+  ]},
+  { id:'mp4', title:'Patterns & Algebra Quiz', category:'Patterns & Algebra', items:[
+    {q:'What comes next: 5, 10, 20, 40, ?', options:['50','60','80'], answer:2, explain:'Each term doubles: 40×2=80.'},
+    {q:'Solve for x: 2x = 18', options:['x=6','x=9','x=16'], answer:1, explain:'x = 18÷2 = 9.'},
+    {q:'Solve for x: x − 7 = 10', options:['x=3','x=17','x=70'], answer:1, explain:'x = 10+7 = 17.'}
+  ]},
+  { id:'mp5', title:'Word Problems Quiz', category:'Problem Solving', items:[
+    {q:'A class has 32 students. 18 are girls. How many are boys?', options:['12','14','16'], answer:1, explain:'32−18 = 14 boys.'},
+    {q:'A book costs ₹85. You pay with ₹100. What is the change?', options:['₹10','₹15','₹20'], answer:1, explain:'100−85 = 15.'},
+    {q:'A train travels 60 km in 1 hour. How far in 3 hours at the same speed?', options:['120 km','180 km','240 km'], answer:1, explain:'60×3 = 180 km.'}
+  ]}
+];
+
+/* ====================================================================
+   DATA: VEDIC MATHS — accurate techniques with verified worked examples
+==================================================================== */
+const VEDIC_TECHNIQUES = [
+  { id:'vt1', name:'Ekadhikena Purvena', meaning:'One more than the previous one', level:'Beginner',
+    usedFor:'Squaring numbers that end in 5.',
+    method:'Take the digit(s) before the 5 (call it N). Multiply N by (N+1). Write that result, then write 25 after it.',
+    examples:[
+      {problem:'25²', steps:'N = 2. N×(N+1) = 2×3 = 6. Write 25 after it.', answer:'625'},
+      {problem:'65²', steps:'N = 6. N×(N+1) = 6×7 = 42. Write 25 after it.', answer:'4225'}
+    ],
+    limitation:'Only works for numbers ending in 5. For other numbers, use Urdhva-Tiryagbhyam or ordinary multiplication.' },
+  { id:'vt2', name:'Nikhilam Navatashcaramam Dashatah', meaning:'All from 9 and the last from 10', level:'Intermediate',
+    usedFor:'Multiplying two numbers that are both close to and below a base (10, 100, 1000...).',
+    method:'Find each number\'s deficiency from the base. Cross-subtract one deficiency from the other number for the left part. Multiply the two deficiencies for the right part (padded to the base\'s digit-width).',
+    examples:[
+      {problem:'97 × 96 (base 100)', steps:'Deficiencies: 100−97=3, 100−96=4. Left: 97−4=93. Right: 3×4=12.', answer:'9312'},
+      {problem:'8 × 7 (base 10)', steps:'Deficiencies: 10−8=2, 10−7=3. Left: 8−3=5. Right: 2×3=6.', answer:'56'}
+    ],
+    limitation:'Works best when both numbers are close to the same base and below it. A separate variant handles numbers above the base.' },
+  { id:'vt3', name:'Urdhva-Tiryagbhyam', meaning:'Vertically and crosswise', level:'Intermediate',
+    usedFor:'General multiplication of any two numbers, digit by digit.',
+    method:'Multiply digits vertically (same position) and crosswise (diagonal pairs), adding the crosswise products together, and carrying over between place values.',
+    examples:[
+      {problem:'23 × 46', steps:'Units: 3×6=18 (write 8, carry 1). Cross: 2×6+3×4=24, +carry=25 (write 5, carry 2). Tens: 2×4=8, +carry=10.', answer:'1058'}
+    ],
+    limitation:'Works for any numbers, but requires careful carry-tracking for larger numbers — practice with 2-digit numbers first.' },
+  { id:'vt4', name:'Anurupyena', meaning:'Proportionately', level:'Advanced',
+    usedFor:'Multiplying numbers that are close to a convenient working base which is a multiple or sub-multiple of 10, 100, etc. (not the base itself).',
+    method:'Pick a nearby convenient base (e.g. 50, which is 100÷2). Find deviations from that working base. Cross-add/subtract for the left part, then scale the left part by (working base ÷ 10ⁿ). Multiply the deviations for the right part.',
+    examples:[
+      {problem:'46 × 44 (working base 50 = 100÷2)', steps:'Deviations: 46−50=−4, 44−50=−6. Cross: 46+(−6)=40, scaled by 50/100 → 40×0.5=20. Right: (−4)×(−6)=24.', answer:'2024'}
+    ],
+    limitation:'Requires choosing a good working base and correctly scaling — best attempted after mastering Nikhilam.' },
+  { id:'vt5', name:'Yavadunam', meaning:'Whatever the deficiency', level:'Intermediate',
+    usedFor:'Squaring numbers close to a base (10, 100, 1000...).',
+    method:'Find the deficiency (or surplus) from the base. Subtract the deficiency from the number for the left part. Square the deficiency for the right part (padded to the base\'s digit-width).',
+    examples:[
+      {problem:'98²', steps:'Deficiency: 100−98=2. Left: 98−2=96. Right: 2²=04.', answer:'9604'},
+      {problem:'994²', steps:'Deficiency: 1000−994=6. Left: 994−6=988. Right: 6²=036.', answer:'988036'}
+    ],
+    limitation:'Most efficient when the number is very close to the base — for numbers far from any base, use Urdhva-Tiryagbhyam instead.' },
+  { id:'vt6', name:'Ekanyunena Purvena', meaning:'One less than the previous one', level:'Beginner',
+    usedFor:'Multiplying a number by a repdigit of 9s (9, 99, 999...) with the same digit-count as the multiplicand.',
+    method:'Left part = multiplicand − 1. Right part = (base of 9s) − left part, i.e. the complement.',
+    examples:[
+      {problem:'47 × 99', steps:'Left: 47−1=46. Right: 99−46=53.', answer:'4653'},
+      {problem:'738 × 999', steps:'Left: 738−1=737. Right: 999−737=262.', answer:'737262'}
+    ],
+    limitation:'Cleanest when the multiplicand and the count of 9s have the same number of digits.' }
+];
+const VEDIC_QUESTIONS = [
+  {id:'vq1', techniqueId:'vt1', q:'Using Ekadhikena Purvena, what is 35²?', options:['1125','1225','1325'], answer:1},
+  {id:'vq2', techniqueId:'vt1', q:'Using Ekadhikena Purvena, what is 85²?', options:['7025','7225','7425'], answer:1},
+  {id:'vq3', techniqueId:'vt1', q:'Using Ekadhikena Purvena, what is 45²?', options:['1925','2025','2125'], answer:1},
+  {id:'vq4', techniqueId:'vt2', q:'Using Nikhilam, what is 98 × 97?', options:['9406','9506','9606'], answer:1},
+  {id:'vq5', techniqueId:'vt2', q:'Using Nikhilam, what is 9 × 8?', options:['62','72','82'], answer:1},
+  {id:'vq6', techniqueId:'vt2', q:'Using Nikhilam, what is 99 × 98?', options:['9602','9702','9802'], answer:1},
+  {id:'vq7', techniqueId:'vt3', q:'Using Urdhva-Tiryagbhyam, what is 12 × 13?', options:['146','156','166'], answer:1},
+  {id:'vq8', techniqueId:'vt3', q:'Using Urdhva-Tiryagbhyam, what is 21 × 32?', options:['582','672','762'], answer:1},
+  {id:'vq9', techniqueId:'vt3', q:'Using Urdhva-Tiryagbhyam, what is 34 × 21?', options:['614','714','814'], answer:1},
+  {id:'vq10', techniqueId:'vt5', q:'Using Yavadunam, what is 97²?', options:['9309','9409','9509'], answer:1},
+  {id:'vq11', techniqueId:'vt5', q:'Using Yavadunam, what is 99²?', options:['9701','9801','9901'], answer:1},
+  {id:'vq12', techniqueId:'vt5', q:'Using Yavadunam, what is 96²?', options:['9016','9216','9416'], answer:1},
+  {id:'vq13', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 8 × 9?', options:['62','72','82'], answer:1},
+  {id:'vq14', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 56 × 99?', options:['5444','5544','5644'], answer:1},
+  {id:'vq15', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 6 × 9?', options:['44','54','64'], answer:1},
+  {id:'vq16', techniqueId:'vt4', q:'Using Anurupyena (base 50), what is 47 × 46?', options:['2062','2162','2262'], answer:1}
+];
+
+/* ====================================================================
    DATA: ADVENTURE MAP — original fantasy locations & creatures.
    Battles use real questions drawn from Lessons, Grammar and Vocabulary
    filtered by the location's level, not a separate trivia bank.
 ==================================================================== */
 const ADVENTURE_LOCATIONS = [
-  { id:'whisper_village', name:'Whisper Village', desc:'Basic greetings and everyday English', level:'Beginner', icon:'🏘️',
+  { id:'whisper_village', name:'Whisper Village', desc:'Basic greetings and everyday English', level:'Beginner', icon:'🏘️', subject:'english',
     creatures:[
       {id:'wv_c1', name:'Mumble Sprite', icon:'👻', hp:20},
       {id:'wv_c2', name:'Chatter Imp', icon:'😈', hp:25},
       {id:'wv_c3', name:'Silence Wraith', icon:'💀', hp:30}
     ]},
-  { id:'ember_market', name:'Ember Marketplace', desc:'Shopping and travel vocabulary', level:'Beginner', icon:'🏮',
+  { id:'ember_market', name:'Ember Marketplace', desc:'Shopping and travel vocabulary', level:'Beginner', icon:'🏮', subject:'english',
     creatures:[
       {id:'em_c1', name:'Haggle Goblin', icon:'👺', hp:22},
       {id:'em_c2', name:'Coin Golem', icon:'🗿', hp:28},
       {id:'em_c3', name:'Bargain Beast', icon:'🐗', hp:32}
     ]},
-  { id:'frostpeak_academy', name:'Frostpeak Academy', desc:'Grammar challenges', level:'Elementary', icon:'🏔️',
+  { id:'frostpeak_academy', name:'Frostpeak Academy', desc:'Grammar challenges', level:'Elementary', icon:'🏔️', subject:'english',
     creatures:[
       {id:'fa_c1', name:'Frost Scholar', icon:'🧊', hp:24},
       {id:'fa_c2', name:'Rune Owl', icon:'🦉', hp:28},
       {id:'fa_c3', name:'Ice Sentinel', icon:'⛄', hp:34}
     ]},
-  { id:'stormcall_harbor', name:'Stormcall Harbor', desc:'Stories and comprehension', level:'Elementary', icon:'⚓',
+  { id:'stormcall_harbor', name:'Stormcall Harbor', desc:'Stories and comprehension', level:'Elementary', icon:'⚓', subject:'english',
     creatures:[
       {id:'sh_c1', name:'Squall Serpent', icon:'🐍', hp:26},
       {id:'sh_c2', name:'Tide Kraken', icon:'🐙', hp:30},
       {id:'sh_c3', name:'Storm Herald', icon:'⚡', hp:36}
     ]},
-  { id:'skylight_spire', name:'Skylight Spire', desc:'Business and professional English', level:'Intermediate', icon:'🏯',
+  { id:'skylight_spire', name:'Skylight Spire', desc:'Business and professional English', level:'Intermediate', icon:'🏯', subject:'english',
     creatures:[
       {id:'ss_c1', name:'Cloud Sentinel', icon:'☁️', hp:28},
       {id:'ss_c2', name:'Sky Sphinx', icon:'🦅', hp:32},
       {id:'ss_c3', name:'Spire Guardian', icon:'🗼', hp:38}
     ]},
-  { id:'starfall_observatory', name:'Starfall Observatory', desc:'Mixed mastery — the final trial', level:'Advanced', icon:'🌌',
+  { id:'starfall_observatory', name:'Starfall Observatory', desc:'Mixed mastery — the final trial', level:'Advanced', icon:'🌌', subject:'english',
     creatures:[
       {id:'so_c1', name:'Comet Wyrm', icon:'☄️', hp:30},
       {id:'so_c2', name:'Eclipse Phantom', icon:'🌑', hp:35},
       {id:'so_c3', name:'Astral Sovereign', icon:'👑', hp:42}
+    ]},
+  { id:'sutra_sanctum', name:'Sutra Sanctum', desc:'Ancient mental-maths wisdom — the Vedic Maths trial', level:'Vedic', icon:'🕉️', subject:'vedic',
+    creatures:[
+      {id:'su_c1', name:'Digit Djinn', icon:'🧞', hp:26},
+      {id:'su_c2', name:'Sutra Sentinel', icon:'🗿', hp:32},
+      {id:'su_c3', name:'Calculation Colossus', icon:'⚡', hp:40}
     ]}
 ];
 
@@ -2125,6 +2298,8 @@ const LANG_CONTENT = {
 const NAV_ITEMS = [
   {id:'home', label:'Home', icon:'🏠'},
   {id:'lessons', label:'Lessons', icon:'📘'},
+  {id:'mathematics', label:'Mathematics', icon:'➗'},
+  {id:'vedicmaths', label:'Vedic Maths', icon:'🕉️'},
   {id:'speak', label:'Speak', icon:'🎙️'},
   {id:'vocabulary', label:'Vocabulary', icon:'🧠'},
   {id:'grammar', label:'Grammar', icon:'✏️'},
@@ -2190,6 +2365,8 @@ function navigateTo(viewId){
 function renderView(id){
   if(id==='home') renderHome();
   else if(id==='lessons') renderLessons();
+  else if(id==='mathematics') renderMathematics();
+  else if(id==='vedicmaths') renderVedicMaths();
   else if(id==='speak') renderSpeak();
   else if(id==='vocabulary') renderVocabulary();
   else if(id==='grammar') renderGrammar();
@@ -2480,7 +2657,7 @@ function renderOnboarding(){
       </svg>
     </div>
     <div style="text-align:center;margin-bottom:6px;">
-      <h2>Welcome to SpokenEnglish</h2>
+      <h2>Welcome to EduQuest</h2>
       <p>Let's personalise your learning journey — this takes less than a minute.</p>
       <button class="btn btn-soft btn-sm" id="musicToggleBtn" style="margin-top:10px;" onclick="toggleWelcomeMusic()">🎵 Play soft music</button>
     </div>
@@ -2572,6 +2749,9 @@ function checkBadges(){
   const totalCreatures = ADVENTURE_LOCATIONS.reduce((s,l)=>s+l.creatures.length,0);
   if(b.adventureMap.defeatedCreatures.length>=1) earn('adventure1','First Victory ⚔️');
   if(b.adventureMap.defeatedCreatures.length>=totalCreatures) earn('adventureAll','Realm Champion 🏆');
+  if(b.mathLessonsCompleted.length>=6) earn('math6','Maths Whiz ➗');
+  if(b.vedicTechniquesLearned.length>=6) earn('vedicAll','Sutra Master 🕉️');
+  if(b.vedicBestStreak>=8) earn('vedicStreak8','Mental Maths Champion ⚡');
 }
 function totalLessonMinutesTarget(){ return state.profile.dailyMinutes; }
 
@@ -2580,6 +2760,8 @@ function renderHome(){
   const p = state.progress;
   const nextLesson = LESSONS.find(l=>!p.lessonsCompleted.includes(l.id)) || LESSONS[0];
   const pct = Math.round((p.lessonsCompleted.length / LESSONS.length) * 100);
+  const mathPct = Math.round((p.mathLessonsCompleted.length / MATH_LESSONS.length) * 100);
+  const vedicPct = Math.round((p.vedicTechniquesLearned.length / VEDIC_TECHNIQUES.length) * 100);
   document.getElementById('view-home').innerHTML = `
     <div class="card" style="background:var(--grad);color:#fff;border:none;box-shadow:var(--shadow);margin-bottom:16px;">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;">
@@ -2594,6 +2776,31 @@ function renderHome(){
       <div style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;">
         <button class="btn" style="background:#fff;color:var(--blue-deep);" onclick="openLessonDetail('${nextLesson.id}')">Continue Learning: ${esc(nextLesson.title)} →</button>
       </div>
+    </div>
+
+    <h3 style="margin:4px 2px 10px 2px;">Your Learning Modules</h3>
+    <div class="grid grid-3" style="margin-bottom:16px;">
+      <button class="card" style="text-align:left;border:none;cursor:pointer;" onclick="navigateTo('lessons')">
+        <div style="font-size:24px;">🗣️</div>
+        <h4 style="margin-top:8px;">English Learning</h4>
+        <p style="font-size:12px;">Grammar, vocabulary, speaking & conversation</p>
+        <div class="progress-track" style="margin-top:8px;"><div class="progress-fill" style="width:${pct}%;"></div></div>
+        <p style="font-size:11px;margin-top:4px;">${p.lessonsCompleted.length}/${LESSONS.length} lessons · ${pct}%</p>
+      </button>
+      <button class="card" style="text-align:left;border:none;cursor:pointer;" onclick="navigateTo('mathematics')">
+        <div style="font-size:24px;">➗</div>
+        <h4 style="margin-top:8px;">Mathematics</h4>
+        <p style="font-size:12px;">Grade 1-8 number skills, geometry & algebra</p>
+        <div class="progress-track" style="margin-top:8px;"><div class="progress-fill" style="width:${mathPct}%;background:linear-gradient(135deg,#1FAE6B,#3B5BFE);"></div></div>
+        <p style="font-size:11px;margin-top:4px;">${p.mathLessonsCompleted.length}/${MATH_LESSONS.length} lessons · ${mathPct}%</p>
+      </button>
+      <button class="card" style="text-align:left;border:none;cursor:pointer;" onclick="navigateTo('vedicmaths')">
+        <div style="font-size:24px;">🕉️</div>
+        <h4 style="margin-top:8px;">Vedic Maths</h4>
+        <p style="font-size:12px;">Mental calculation techniques & speed maths</p>
+        <div class="progress-track" style="margin-top:8px;"><div class="progress-fill" style="width:${vedicPct}%;background:linear-gradient(135deg,#F5A623,#8B5CF6);"></div></div>
+        <p style="font-size:11px;margin-top:4px;">${p.vedicTechniquesLearned.length}/${VEDIC_TECHNIQUES.length} techniques · ${vedicPct}%</p>
+      </button>
     </div>
 
     ${dailyQuizCardHTML()}
@@ -3426,6 +3633,278 @@ function completeLesson(id){
   if(currentView==='lessons') renderLessons();
   if(currentView==='home') renderHome();
 }
+
+/* ====================================================================
+   MATHEMATICS MODULE (Grade 1-8)
+==================================================================== */
+let mathTab = 'lessons'; // 'lessons' | 'practice'
+let mathCatFilter = 'All';
+function renderMathematics(){
+  document.getElementById('view-mathematics').innerHTML = `
+    <div class="page-head"><h2>➗ Mathematics</h2><p>Grade 1-8 maths — number operations, fractions, geometry, algebra and word problems.</p></div>
+    <div class="chip-select" id="mathTabRow" style="margin-bottom:16px;">
+      <button type="button" class="chip-opt ${mathTab==='lessons'?'selected':''}" data-tab="lessons">📘 Lessons</button>
+      <button type="button" class="chip-opt ${mathTab==='practice'?'selected':''}" data-tab="practice">🎯 Practice</button>
+    </div>
+    <div id="mathTabBody"></div>
+  `;
+  document.querySelectorAll('#mathTabRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ mathTab=b.getAttribute('data-tab'); renderMathematics(); }));
+  if(mathTab==='lessons') renderMathLessons(); else renderMathPractice();
+}
+function renderMathLessons(){
+  const cats = ['All', ...new Set(MATH_LESSONS.map(l=>l.category))];
+  document.getElementById('mathTabBody').innerHTML = `
+    <div class="chip-select" id="mathCatRow" style="margin-bottom:16px;">
+      ${cats.map(c=>`<button type="button" class="chip-opt ${c===mathCatFilter?'selected':''}" data-cat="${esc(c)}">${esc(c)}</button>`).join('')}
+    </div>
+    <div class="grid grid-3" id="mathLessonGrid"></div>
+  `;
+  document.querySelectorAll('#mathCatRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ mathCatFilter=b.getAttribute('data-cat'); renderMathLessons(); }));
+  const list = mathCatFilter==='All' ? MATH_LESSONS : MATH_LESSONS.filter(l=>l.category===mathCatFilter);
+  document.getElementById('mathLessonGrid').innerHTML = list.map(l=>{
+    const done = state.progress.mathLessonsCompleted.includes(l.id);
+    return `<div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;">
+        <span class="pill pill-blue">${esc(l.grade)}</span>
+        ${done?'<span class="pill pill-success">✓ Done</span>':''}
+      </div>
+      <h4 style="margin-top:10px;">${esc(l.title)}</h4>
+      <p style="font-size:12.5px;">${esc(l.category)}</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openMathLessonDetail('${l.id}')">${done?'Review':'Start'} →</button>
+    </div>`;
+  }).join('');
+}
+function openMathLessonDetail(id){
+  const l = MATH_LESSONS.find(x=>x.id===id);
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-blue">${esc(l.grade)}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(l.title)}</h2>
+    <p style="margin-bottom:14px;">🎯 ${esc(l.objective)}</p>
+    <h4>Concept</h4>
+    <p style="font-size:13.5px;">${esc(l.concept)}</p>
+    <h4 style="margin-top:14px;">Worked Example</h4>
+    <div class="card" style="background:var(--surface-2);"><p style="font-size:13px;color:var(--text);">${esc(l.example)}</p></div>
+    <h4 style="margin-top:14px;">Practice Question</h4>
+    <div id="mathLessonPracticeBox"></div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="completeMathLesson('${l.id}')">${state.progress.mathLessonsCompleted.includes(l.id)?'✓ Completed':'Mark as Complete'}</button>
+  `);
+  renderInlineMCQ('mathLessonPracticeBox', l.practice[0], null);
+}
+function completeMathLesson(id){
+  if(!state.progress.mathLessonsCompleted.includes(id)){
+    state.progress.mathLessonsCompleted.push(id);
+    addPoints(10);
+    checkBadges();
+    toast('Lesson completed! +10 points','success');
+  }
+  saveState();
+  closeGenericModal();
+  if(currentView==='mathematics') renderMathematics();
+}
+function renderMathPractice(){
+  document.getElementById('mathTabBody').innerHTML = `<div class="grid grid-3" id="mathPracticeGrid"></div>`;
+  document.getElementById('mathPracticeGrid').innerHTML = MATH_PRACTICE_SETS.map(p=>{
+    const result = state.progress.mathQuizScores[p.id];
+    return `<div class="card">
+      <span class="pill pill-purple">${esc(p.category)}</span>
+      ${result?`<span class="pill pill-success" style="margin-left:6px;">${result.score}/${result.total}</span>`:''}
+      <h4 style="margin-top:10px;">🎯 ${esc(p.title)}</h4>
+      <p style="font-size:12px;">${p.items.length} questions</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openMathPracticeSet('${p.id}')">${result?'Retry':'Start'} →</button>
+    </div>`;
+  }).join('');
+}
+function openMathPracticeSet(id){
+  const p = MATH_PRACTICE_SETS.find(x=>x.id===id);
+  let idx=0, score=0;
+  function next(){
+    if(idx >= p.items.length){
+      state.progress.mathQuizScores[p.id] = {score, total:p.items.length};
+      addPoints(score*2);
+      checkBadges();
+      saveState();
+      showGenericModal(`
+        <div class="modal-head"><h3>${esc(p.title)}</h3><button class="icon-btn" onclick="closeGenericModal();renderMathematics();">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🎉</div>
+          <h2 style="margin-top:10px;">${score} / ${p.items.length}</h2>
+          <p>Points added to your Mathematics progress.</p>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal();renderMathematics();">Done</button>
+        </div>
+      `);
+      return;
+    }
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Q${idx+1}/${p.items.length}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+      <div id="mathPracticeBox" style="margin-top:10px;"></div>
+    `);
+    renderInlineMCQ('mathPracticeBox', p.items[idx], (correct)=>{ if(correct) score++; setTimeout(()=>{ idx++; next(); }, 900); });
+  }
+  next();
+}
+
+/* ====================================================================
+   VEDIC MATHS MODULE — techniques, practice, and a speed test
+==================================================================== */
+let vedicTab = 'techniques'; // 'techniques' | 'practice' | 'speedtest'
+function renderVedicMaths(){
+  document.getElementById('view-vedicmaths').innerHTML = `
+    <div class="page-head"><h2>🕉️ Vedic Maths</h2><p>Ancient mental-calculation techniques — accurate, step-by-step, and practical.</p></div>
+    <div class="chip-select" id="vedicTabRow" style="margin-bottom:16px;">
+      <button type="button" class="chip-opt ${vedicTab==='techniques'?'selected':''}" data-tab="techniques">📖 Techniques</button>
+      <button type="button" class="chip-opt ${vedicTab==='practice'?'selected':''}" data-tab="practice">🎯 Practice</button>
+      <button type="button" class="chip-opt ${vedicTab==='speedtest'?'selected':''}" data-tab="speedtest">⏱️ Speed Test</button>
+    </div>
+    <div id="vedicTabBody"></div>
+  `;
+  document.querySelectorAll('#vedicTabRow .chip-opt').forEach(b=>b.addEventListener('click', ()=>{ vedicTab=b.getAttribute('data-tab'); renderVedicMaths(); }));
+  if(vedicTab==='techniques') renderVedicTechniques();
+  else if(vedicTab==='practice') renderVedicPracticeIntro();
+  else renderVedicSpeedTestIntro();
+}
+function renderVedicTechniques(){
+  document.getElementById('vedicTabBody').innerHTML = `<div class="grid grid-3" id="vedicTechGrid"></div>`;
+  document.getElementById('vedicTechGrid').innerHTML = VEDIC_TECHNIQUES.map(t=>{
+    const learned = state.progress.vedicTechniquesLearned.includes(t.id);
+    return `<div class="card">
+      <span class="pill pill-purple">${t.level}</span>
+      ${learned?'<span class="pill pill-success" style="margin-left:6px;">✓ Learned</span>':''}
+      <h4 style="margin-top:10px;">${esc(t.name)}</h4>
+      <p style="font-size:12px;font-style:italic;">"${esc(t.meaning)}"</p>
+      <p style="font-size:12.5px;margin-top:6px;">${esc(t.usedFor)}</p>
+      <button class="btn btn-outline btn-sm" style="width:100%;margin-top:12px;" onclick="openVedicTechniqueDetail('${t.id}')">Learn →</button>
+    </div>`;
+  }).join('');
+}
+function openVedicTechniqueDetail(id){
+  const t = VEDIC_TECHNIQUES.find(x=>x.id===id);
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-purple">${t.level}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${esc(t.name)}</h2>
+    <p style="font-style:italic;margin-bottom:12px;">"${esc(t.meaning)}"</p>
+    <h4>Used For</h4>
+    <p style="font-size:13.5px;">${esc(t.usedFor)}</p>
+    <h4 style="margin-top:14px;">Method</h4>
+    <p style="font-size:13.5px;">${esc(t.method)}</p>
+    <h4 style="margin-top:14px;">Worked Examples</h4>
+    ${t.examples.map(ex=>`<div class="card" style="background:var(--surface-2);margin-bottom:8px;">
+      <p style="font-size:14px;font-weight:700;color:var(--text);">${esc(ex.problem)} = ${esc(ex.answer)}</p>
+      <p style="font-size:12.5px;margin-top:4px;">${esc(ex.steps)}</p>
+    </div>`).join('')}
+    <h4 style="margin-top:14px;">Limitations</h4>
+    <p style="font-size:13px;">${esc(t.limitation)}</p>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="markVedicTechniqueLearned('${t.id}')">${state.progress.vedicTechniquesLearned.includes(t.id)?'✓ Learned':'Mark as Learned'}</button>
+  `);
+}
+function markVedicTechniqueLearned(id){
+  if(!state.progress.vedicTechniquesLearned.includes(id)){
+    state.progress.vedicTechniquesLearned.push(id);
+    addPoints(8);
+    checkBadges();
+    toast('Technique learned! +8 points','success');
+  }
+  saveState();
+  closeGenericModal();
+  if(currentView==='vedicmaths') renderVedicMaths();
+}
+function renderVedicPracticeIntro(){
+  const acc = state.progress.vedicAttempted ? Math.round((state.progress.vedicCorrect/state.progress.vedicAttempted)*100) : 0;
+  document.getElementById('vedicTabBody').innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-size:32px;">🎯</div>
+      <h3 style="margin-top:10px;">Technique Practice</h3>
+      <p style="font-size:13px;">8 questions pulled from all six techniques, with a full step-by-step solution after each answer.</p>
+      <p style="font-size:12px;margin-top:8px;">Lifetime accuracy: ${acc}% (${state.progress.vedicCorrect}/${state.progress.vedicAttempted})</p>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="startVedicPractice()">Start Practice →</button>
+    </div>
+  `;
+}
+function startVedicPractice(){
+  const questions = shuffle([...VEDIC_QUESTIONS]).slice(0,8);
+  let idx=0, score=0;
+  function next(){
+    if(idx >= questions.length){
+      addPoints(score*2);
+      checkBadges();
+      saveState();
+      showGenericModal(`
+        <div class="modal-head"><h3>🎯 Practice Complete</h3><button class="icon-btn" onclick="closeGenericModal();renderVedicMaths();">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🎉</div>
+          <h2 style="margin-top:10px;">${score} / ${questions.length}</h2>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal();renderVedicMaths();">Done</button>
+        </div>
+      `);
+      return;
+    }
+    const q = questions[idx];
+    const tech = VEDIC_TECHNIQUES.find(t=>t.id===q.techniqueId);
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Q${idx+1}/${questions.length}</span><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+      <p style="font-size:11px;color:var(--muted);margin-top:8px;">${esc(tech.name)}</p>
+      <div id="vedicPracticeBox" style="margin-top:6px;"></div>
+    `);
+    renderInlineMCQ('vedicPracticeBox', {q:q.q, options:q.options, answer:q.answer}, (correct)=>{
+      state.progress.vedicAttempted++;
+      if(correct){ state.progress.vedicCorrect++; score++; }
+      saveState();
+      setTimeout(()=>{ idx++; next(); }, 1000);
+    });
+  }
+  next();
+}
+function renderVedicSpeedTestIntro(){
+  document.getElementById('vedicTabBody').innerHTML = `
+    <div class="card" style="text-align:center;">
+      <div style="font-size:32px;">⏱️</div>
+      <h3 style="margin-top:10px;">Speed Test</h3>
+      <p style="font-size:13px;">Answer as many of the 10 questions correctly as you can. Your personal best streak is tracked — accuracy matters more than raw speed.</p>
+      <p style="font-size:12px;margin-top:8px;">🏆 Personal best correct streak: ${state.progress.vedicBestStreak || 0}</p>
+      <button class="btn btn-primary" style="margin-top:14px;" onclick="startVedicSpeedTest()">Start Speed Test →</button>
+    </div>
+  `;
+}
+function startVedicSpeedTest(){
+  const questions = shuffle([...VEDIC_QUESTIONS]).slice(0,10);
+  let idx=0, score=0, streak=0, bestStreakThisRun=0;
+  const startTime = Date.now();
+  function next(){
+    if(idx >= questions.length){
+      const seconds = Math.round((Date.now()-startTime)/1000);
+      if(bestStreakThisRun > (state.progress.vedicBestStreak||0)){
+        state.progress.vedicBestStreak = bestStreakThisRun;
+        toast('New personal best streak!','success');
+      }
+      addPoints(score*2);
+      checkBadges();
+      saveState();
+      showGenericModal(`
+        <div class="modal-head"><h3>⏱️ Speed Test Complete</h3><button class="icon-btn" onclick="closeGenericModal();renderVedicMaths();">✕</button></div>
+        <div style="text-align:center;padding:20px 0;">
+          <div style="font-size:38px;">🏆</div>
+          <h2 style="margin-top:10px;">${score} / ${questions.length} correct</h2>
+          <p style="font-size:13px;margin-top:6px;">Completed in ${seconds}s · Best streak this run: ${bestStreakThisRun}</p>
+          <button class="btn btn-primary" style="margin-top:14px;" onclick="closeGenericModal();renderVedicMaths();">Done</button>
+        </div>
+      `);
+      return;
+    }
+    const q = questions[idx];
+    showGenericModal(`
+      <div class="modal-head"><span class="pill pill-blue">Q${idx+1}/${questions.length}</span><span class="pill pill-warn">🔥 Streak: ${streak}</span></div>
+      <div id="vedicSpeedBox" style="margin-top:10px;"></div>
+    `);
+    renderInlineMCQ('vedicSpeedBox', {q:q.q, options:q.options, answer:q.answer}, (correct)=>{
+      state.progress.vedicAttempted++;
+      if(correct){ state.progress.vedicCorrect++; score++; streak++; bestStreakThisRun=Math.max(bestStreakThisRun,streak); }
+      else { streak=0; }
+      saveState();
+      setTimeout(()=>{ idx++; next(); }, 700);
+    });
+  }
+  next();
+}
+
 function renderInlineMCQ(containerId, item, onAnswered){
   const box = document.getElementById(containerId);
   box.innerHTML = `<p style="font-size:13.5px;color:var(--text);font-weight:600;">${esc(item.q)}</p>
@@ -4196,10 +4675,13 @@ let adventureBattle = null;
 function startAdventureBattle(locId, creatureId){
   const loc = ADVENTURE_LOCATIONS.find(l=>l.id===locId);
   const creature = loc.creatures.find(c=>c.id===creatureId);
+  const questions = loc.subject==='vedic'
+    ? shuffle([...VEDIC_QUESTIONS]).slice(0,8).map(q=>({q:q.q, options:q.options, answer:q.answer}))
+    : buildAdventureQuestions(loc.level, 8);
   adventureBattle = {
     locId, creatureId, creatureName:creature.name, creatureIcon:creature.icon,
     hp: creature.hp, maxHp: creature.hp, hearts: 3,
-    questions: buildAdventureQuestions(loc.level, 8), qIdx: 0
+    questions, qIdx: 0
   };
   renderAdventureBattle();
 }
@@ -4208,7 +4690,9 @@ function renderAdventureBattle(){
   if(b.qIdx >= b.questions.length && b.hp > 0){
     // Ran out of prepared questions before defeating — refresh the question pool
     const loc = ADVENTURE_LOCATIONS.find(l=>l.id===b.locId);
-    b.questions = buildAdventureQuestions(loc.level, 8);
+    b.questions = loc.subject==='vedic'
+      ? shuffle([...VEDIC_QUESTIONS]).slice(0,8).map(q=>({q:q.q, options:q.options, answer:q.answer}))
+      : buildAdventureQuestions(loc.level, 8);
     b.qIdx = 0;
   }
   const hpPct = Math.max(0, Math.round((b.hp/b.maxHp)*100));
@@ -4361,6 +4845,9 @@ function renderParentZoneContent(){
           <p style="font-size:13px;">🔠 Alphabet learned: <b style="color:var(--text);">${p.alphabetLearned.length}/26</b></p>
           <p style="font-size:13px;">✖️ Tables practiced: <b style="color:var(--text);">${p.tablesPracticed.length}/19</b></p>
           <p style="font-size:13px;">🗺️ Adventure Map: <b style="color:var(--text);">${p.adventureMap.defeatedCreatures.length}/${totalCreatures} creatures</b></p>
+          <p style="font-size:13px;">➗ Maths lessons: <b style="color:var(--text);">${p.mathLessonsCompleted.length}/${MATH_LESSONS.length}</b></p>
+          <p style="font-size:13px;">🕉️ Vedic techniques: <b style="color:var(--text);">${p.vedicTechniquesLearned.length}/${VEDIC_TECHNIQUES.length}</b></p>
+          <p style="font-size:13px;">🕉️ Vedic accuracy: <b style="color:var(--text);">${p.vedicAttempted ? Math.round((p.vedicCorrect/p.vedicAttempted)*100) : 0}%</b></p>
         </div>
       </div>
 
@@ -4392,7 +4879,8 @@ function renderProgress(){
     rhymes5:{icon:'🎵',label:'Rhyme Time'}, words20:{icon:'⭐',label:'First Words Star'},
     lang15:{icon:'🌍',label:'Language Explorer'},
     numbers50:{icon:'🔢',label:'Number Whiz'}, alphabet26:{icon:'🔠',label:'Alphabet Star'}, tables5:{icon:'✖️',label:'Times Tables Pro'},
-    adventure1:{icon:'⚔️',label:'First Victory'}, adventureAll:{icon:'🏆',label:'Realm Champion'}
+    adventure1:{icon:'⚔️',label:'First Victory'}, adventureAll:{icon:'🏆',label:'Realm Champion'},
+    math6:{icon:'➗',label:'Maths Whiz'}, vedicAll:{icon:'🕉️',label:'Sutra Master'}, vedicStreak8:{icon:'⚡',label:'Mental Maths Champion'}
   };
   document.getElementById('view-progress').innerHTML = `
     <div class="page-head"><h2>My Progress</h2><p>Track your streak, points and learning milestones.</p></div>
@@ -4528,7 +5016,13 @@ const CERTIFICATES = [
     progressText: ()=> `${state.progress.streak}/7 day streak` },
   { id:'cert_lang', title:'Certificate of Achievement', subtitle:'Language Explorer', icon:'🌍',
     check: ()=> Object.values(state.langProgress.learnedItems).reduce((s,a)=>s+a.length,0) >= 30,
-    progressText: ()=> `${Object.values(state.langProgress.learnedItems).reduce((s,a)=>s+a.length,0)}/30 language items learned` }
+    progressText: ()=> `${Object.values(state.langProgress.learnedItems).reduce((s,a)=>s+a.length,0)}/30 language items learned` },
+  { id:'cert_math', title:'Certificate of Completion', subtitle:'Mathematics Fundamentals (Grade 1-8)', icon:'➗',
+    check: ()=> state.progress.mathLessonsCompleted.length >= MATH_LESSONS.length,
+    progressText: ()=> `${state.progress.mathLessonsCompleted.length}/${MATH_LESSONS.length} maths lessons completed` },
+  { id:'cert_vedic', title:'Certificate of Mastery', subtitle:'Vedic Maths — All Six Sutras', icon:'🕉️',
+    check: ()=> state.progress.vedicTechniquesLearned.length >= VEDIC_TECHNIQUES.length,
+    progressText: ()=> `${state.progress.vedicTechniquesLearned.length}/${VEDIC_TECHNIQUES.length} techniques learned` }
 ];
 function renderCertificates(){
   document.getElementById('view-certificates').innerHTML = `
@@ -4553,7 +5047,7 @@ function openCertificate(id){
   showGenericModal(`
     <div class="modal-head"><h3>${c.icon} Certificate</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
     <div id="certificatePrintArea" style="border:6px double var(--blue); border-radius:14px; padding:28px 20px; text-align:center; background:linear-gradient(135deg,#ffffff 0%,#F5F7FF 100%); margin-top:10px;">
-      <p style="letter-spacing:3px;font-size:11px;color:var(--muted);">SPOKENENGLISH LEARNING PORTAL</p>
+      <p style="letter-spacing:3px;font-size:11px;color:var(--muted);">EDUQUEST LEARNING PLATFORM</p>
       <h2 style="margin-top:10px;font-family:var(--font-head);font-size:24px;color:#1C2140;">${esc(c.title)}</h2>
       <p style="font-size:13px;margin-top:4px;color:#6B7195;">This certifies that</p>
       <h3 style="margin-top:8px;font-size:22px;color:#2440D6;">${esc(state.profile.name || 'Learner')}</h3>
@@ -4561,7 +5055,7 @@ function openCertificate(id){
       <h4 style="margin-top:6px;font-size:17px;color:#1C2140;">${esc(c.subtitle)}</h4>
       <p style="font-size:12px;margin-top:16px;color:#6B7195;">Issued on ${dateStr}</p>
       <div style="display:flex;justify-content:space-between;margin-top:26px;padding:0 20px;">
-        <div style="text-align:center;"><div style="border-top:1.5px solid #6B7195;width:120px;margin:0 auto;"></div><p style="font-size:10.5px;margin-top:4px;color:#6B7195;">SpokenEnglish</p></div>
+        <div style="text-align:center;"><div style="border-top:1.5px solid #6B7195;width:120px;margin:0 auto;"></div><p style="font-size:10.5px;margin-top:4px;color:#6B7195;">EduQuest</p></div>
         <div style="text-align:center;"><div style="border-top:1.5px solid #6B7195;width:120px;margin:0 auto;"></div><p style="font-size:10.5px;margin-top:4px;color:#6B7195;">Date</p></div>
       </div>
     </div>
@@ -4594,7 +5088,7 @@ function renderSettings(){
       <button class="btn btn-soft btn-sm" id="resetPinBtn" style="margin-top:8px;">${state.parentPin ? '🔓 Reset Parent Zone PIN' : 'Parent Zone PIN not set'}</button>
     </div>
 
-    <p style="text-align:center;font-size:11.5px;margin-top:18px;">SpokenEnglish · Version ${APP_VERSION}</p>
+    <p style="text-align:center;font-size:11.5px;margin-top:18px;">EduQuest · Version ${APP_VERSION}</p>
     <p style="text-align:center;font-size:10.5px;margin-top:4px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
   `;
   wireVoiceGenderToggle('settings');
