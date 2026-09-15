@@ -197,6 +197,14 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 
 .empty-state{text-align:center;padding:40px 16px;color:var(--muted);}
 .empty-state .ic{font-size:38px;display:block;margin-bottom:10px;}
+
+@media print{
+  body *{visibility:hidden;}
+  #certificatePrintArea, #certificatePrintArea *, #parentZonePrintArea, #parentZonePrintArea *{visibility:visible;}
+  #certificatePrintArea{position:fixed;top:0;left:0;width:100%;margin:0;border-radius:0;}
+  #parentZonePrintArea{position:absolute;top:0;left:0;width:100%;padding:20px;background:#fff;color:#000;}
+  #parentZonePrintArea *{color:#000 !important;background:transparent !important;border-color:#999 !important;box-shadow:none !important;}
+}
 </style>
 </head>
 <body data-theme="light">
@@ -225,7 +233,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       </div>
       <div class="topbar-actions">
         <button class="icon-btn" id="topThemeBtn" title="Toggle theme" aria-label="Toggle theme">🌙</button>
-        <button class="profile-chip" data-nav="settings" id="profileChipBtn">
+        <button class="profile-chip" data-nav="profile" id="profileChipBtn">
           <span class="avatar" id="avatarInitial">?</span>
           <span id="profileChipName">Learner</span>
         </button>
@@ -243,9 +251,12 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
       <section class="section-view" id="view-rhymes"></section>
       <section class="section-view" id="view-practice"></section>
       <section class="section-view" id="view-games"></section>
+      <section class="section-view" id="view-adventure"></section>
       <section class="section-view" id="view-teachers"></section>
       <section class="section-view" id="view-languages"></section>
       <section class="section-view" id="view-progress"></section>
+      <section class="section-view" id="view-certificates"></section>
+      <section class="section-view" id="view-profile"></section>
       <section class="section-view" id="view-parentzone"></section>
       <section class="section-view" id="view-settings"></section>
     </main>
@@ -276,6 +287,11 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
   </div>
 </div>
 
+<!-- ========================= FOCUS STUDY SESSION (dark, full-screen) ========================= -->
+<div class="modal-overlay hidden" id="studyOverlay" style="background:#0B0D1F;padding:0;">
+  <div id="studyOverlayBody" style="width:100%;max-width:560px;height:100%;max-height:100vh;overflow-y:auto;padding:22px 18px;color:#EAEDFF;background:#12142E;"></div>
+</div>
+
 <div id="toastHost" style="position:fixed;bottom:90px;left:50%;transform:translateX(-50%);z-index:200;display:flex;flex-direction:column;gap:8px;align-items:center;"></div>
 
 <script>
@@ -287,7 +303,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '5.3.0';
+const APP_VERSION = '5.7.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -304,9 +320,11 @@ function saveState(){
 function freshState(){
   return {
     onboarded:false,
+    parentPin:null,
     profile:{
       name:'', ageGroup:'Adult', level:'Beginner', objective:'Everyday Conversations',
-      accent:'American English', explainLang:'English', dailyMinutes:15
+      accent:'American English', explainLang:'English', dailyMinutes:15,
+      avatar:'🙂', joinedDate:null
     },
     theme:'light',
     speakRate:0.95,
@@ -321,7 +339,8 @@ function freshState(){
       grammarDone:[], storiesRead:[], quizzesDone:{},
       rhymesLearned:[], toddlerWordsLearned:[],
       dailyQuiz:{date:null, score:null, total:null}, gameHighScore:0,
-      numbersLearned:[], alphabetLearned:[], tablesPracticed:[]
+      numbersLearned:[], alphabetLearned:[], tablesPracticed:[],
+      adventureMap:{ unlockedLocations:['whisper_village'], defeatedCreatures:[] }
     },
     badges:[]
   };
@@ -1496,6 +1515,50 @@ const ALPHABET = [
 ];
 
 /* ====================================================================
+   DATA: ADVENTURE MAP — original fantasy locations & creatures.
+   Battles use real questions drawn from Lessons, Grammar and Vocabulary
+   filtered by the location's level, not a separate trivia bank.
+==================================================================== */
+const ADVENTURE_LOCATIONS = [
+  { id:'whisper_village', name:'Whisper Village', desc:'Basic greetings and everyday English', level:'Beginner', icon:'🏘️',
+    creatures:[
+      {id:'wv_c1', name:'Mumble Sprite', icon:'👻', hp:20},
+      {id:'wv_c2', name:'Chatter Imp', icon:'😈', hp:25},
+      {id:'wv_c3', name:'Silence Wraith', icon:'💀', hp:30}
+    ]},
+  { id:'ember_market', name:'Ember Marketplace', desc:'Shopping and travel vocabulary', level:'Beginner', icon:'🏮',
+    creatures:[
+      {id:'em_c1', name:'Haggle Goblin', icon:'👺', hp:22},
+      {id:'em_c2', name:'Coin Golem', icon:'🗿', hp:28},
+      {id:'em_c3', name:'Bargain Beast', icon:'🐗', hp:32}
+    ]},
+  { id:'frostpeak_academy', name:'Frostpeak Academy', desc:'Grammar challenges', level:'Elementary', icon:'🏔️',
+    creatures:[
+      {id:'fa_c1', name:'Frost Scholar', icon:'🧊', hp:24},
+      {id:'fa_c2', name:'Rune Owl', icon:'🦉', hp:28},
+      {id:'fa_c3', name:'Ice Sentinel', icon:'⛄', hp:34}
+    ]},
+  { id:'stormcall_harbor', name:'Stormcall Harbor', desc:'Stories and comprehension', level:'Elementary', icon:'⚓',
+    creatures:[
+      {id:'sh_c1', name:'Squall Serpent', icon:'🐍', hp:26},
+      {id:'sh_c2', name:'Tide Kraken', icon:'🐙', hp:30},
+      {id:'sh_c3', name:'Storm Herald', icon:'⚡', hp:36}
+    ]},
+  { id:'skylight_spire', name:'Skylight Spire', desc:'Business and professional English', level:'Intermediate', icon:'🏯',
+    creatures:[
+      {id:'ss_c1', name:'Cloud Sentinel', icon:'☁️', hp:28},
+      {id:'ss_c2', name:'Sky Sphinx', icon:'🦅', hp:32},
+      {id:'ss_c3', name:'Spire Guardian', icon:'🗼', hp:38}
+    ]},
+  { id:'starfall_observatory', name:'Starfall Observatory', desc:'Mixed mastery — the final trial', level:'Advanced', icon:'🌌',
+    creatures:[
+      {id:'so_c1', name:'Comet Wyrm', icon:'☄️', hp:30},
+      {id:'so_c2', name:'Eclipse Phantom', icon:'🌑', hp:35},
+      {id:'so_c3', name:'Astral Sovereign', icon:'👑', hp:42}
+    ]}
+];
+
+/* ====================================================================
    DATA: LEARN OTHER LANGUAGES (a separate mode from Spoken English —
    here the target language itself, not English, is what's being learned)
 ==================================================================== */
@@ -2069,9 +2132,12 @@ const NAV_ITEMS = [
   {id:'rhymes', label:'Kids Corner', icon:'🎵'},
   {id:'practice', label:'Practice', icon:'🎯'},
   {id:'games', label:'Games', icon:'🎮'},
+  {id:'adventure', label:'Adventure Map', icon:'🗺️'},
   {id:'teachers', label:'Teachers', icon:'🧑‍🏫'},
   {id:'languages', label:'Languages', icon:'🌍'},
   {id:'progress', label:'My Progress', icon:'📊'},
+  {id:'certificates', label:'My Certificates', icon:'🎓'},
+  {id:'profile', label:'My Profile', icon:'🙋'},
   {id:'parentzone', label:'Parent Zone', icon:'👪'},
   {id:'settings', label:'Settings', icon:'⚙️'}
 ];
@@ -2131,9 +2197,12 @@ function renderView(id){
   else if(id==='rhymes') renderRhymes();
   else if(id==='practice') renderPractice();
   else if(id==='games') renderGames();
+  else if(id==='adventure') renderAdventureMap();
   else if(id==='teachers') renderTeachers();
   else if(id==='languages') renderLanguages();
   else if(id==='progress') renderProgress();
+  else if(id==='certificates') renderCertificates();
+  else if(id==='profile') renderProfile();
   else if(id==='parentzone') renderParentZone();
   else if(id==='settings') renderSettings();
 }
@@ -2451,6 +2520,7 @@ function renderOnboarding(){
   document.getElementById('ob-start').addEventListener('click', ()=>{
     const nameVal = document.getElementById('ob-name').value.trim();
     onboardDraft.name = nameVal || 'Learner';
+    onboardDraft.joinedDate = todayStr();
     state.profile = onboardDraft;
     state.onboarded = true;
     saveState();
@@ -2464,7 +2534,7 @@ function renderOnboarding(){
 function updateProfileChip(){
   const nm = state.profile.name || 'Learner';
   document.getElementById('profileChipName').textContent = nm;
-  document.getElementById('avatarInitial').textContent = nm.charAt(0).toUpperCase();
+  document.getElementById('avatarInitial').textContent = state.profile.avatar || nm.charAt(0).toUpperCase();
 }
 
 /* ====================================================================
@@ -2499,6 +2569,9 @@ function checkBadges(){
   if(b.numbersLearned.length>=50) earn('numbers50','Number Whiz 🔢');
   if(b.alphabetLearned.length>=26) earn('alphabet26','Alphabet Star 🔠');
   if(b.tablesPracticed.length>=5) earn('tables5','Times Tables Pro ✖️');
+  const totalCreatures = ADVENTURE_LOCATIONS.reduce((s,l)=>s+l.creatures.length,0);
+  if(b.adventureMap.defeatedCreatures.length>=1) earn('adventure1','First Victory ⚔️');
+  if(b.adventureMap.defeatedCreatures.length>=totalCreatures) earn('adventureAll','Realm Champion 🏆');
 }
 function totalLessonMinutesTarget(){ return state.profile.dailyMinutes; }
 
@@ -2541,6 +2614,11 @@ function renderHome(){
 
     <h3 style="margin:20px 2px 10px 2px;">Quick access</h3>
     <div class="grid grid-4">
+      <button class="card" style="text-align:left;border:none;cursor:pointer;background:linear-gradient(135deg,#1C2140 0%,#2440D6 100%);color:#fff;" onclick="openStudySession()">
+        <div style="font-size:22px;">🌙</div>
+        <h4 style="margin-top:8px;font-size:15px;color:#fff;">Focus Session</h4>
+        <p style="font-size:12.5px;color:rgba(255,255,255,0.85);">Distraction-free study</p>
+      </button>
       ${quickCard('speak','🎙️','Speaking Practice','Build fluency')}
       ${quickCard('vocabulary','🧠','Vocabulary','Learn new words')}
       ${quickCard('grammar','✏️','Grammar','Master the rules')}
@@ -2720,6 +2798,228 @@ function sendChatMessage(){
   }, 450);
 }
 document.getElementById('chatModal').addEventListener('click', e=>{ if(e.target.id==='chatModal') closeTeacherChat(); });
+
+/* ====================================================================
+   FOCUS STUDY SESSION — dark, distraction-free practice session with
+   mic Enable/Monitor and Start/Pause/Resume/Continue controls.
+==================================================================== */
+let studySession = null; // { activities, idx, status:'landing'|'running'|'paused'|'done', micEnabled, micStream, audioCtx, rafId, startedAt, pausedMs }
+
+function buildStudyActivities(){
+  const vocabPool = VOCABULARY.filter(v=>!state.progress.vocabLearned.includes(v.id));
+  const vocabPicks = shuffle([...(vocabPool.length>=3 ? vocabPool : VOCABULARY)]).slice(0,3);
+  const topic = shuffle([...SPEAKING_TOPICS])[0];
+  const sentencePicks = shuffle([...topic.sentences]).slice(0,3);
+  const quizQ = buildDailyQuizQuestions()[0];
+  const activities = [];
+  vocabPicks.forEach(v => activities.push({type:'vocab', data:v}));
+  sentencePicks.forEach(s => activities.push({type:'speak', data:s}));
+  activities.push({type:'quiz', data:quizQ});
+  return activities;
+}
+
+function openStudySession(){
+  studySession = { activities: buildStudyActivities(), idx:0, status:'landing', micEnabled:false, micStream:null, audioCtx:null, rafId:null, startedAt:null, pausedMs:0 };
+  document.getElementById('studyOverlay').classList.remove('hidden');
+  renderStudyLanding();
+}
+function exitStudySession(){
+  stopMicMonitor();
+  stopSpeak();
+  document.getElementById('studyOverlay').classList.add('hidden');
+  studySession = null;
+  if(currentView==='home') renderHome();
+}
+const STUDY_ICONS = {vocab:'🧠', speak:'🎙️', quiz:'🎯'};
+function studyProgressHeader(){
+  const s = studySession;
+  const donePct = Math.round((s.idx/s.activities.length)*100);
+  return `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+      <button class="btn btn-soft btn-sm" onclick="exitStudySession()" style="background:#20244D;color:#EAEDFF;border:none;">🏠 Home</button>
+      <span style="font-size:12px;color:#9498C4;">Activity ${Math.min(s.idx+1,s.activities.length)}/${s.activities.length}</span>
+    </div>
+    <div style="height:8px;background:#20244D;border-radius:999px;overflow:hidden;margin-bottom:18px;">
+      <div style="height:100%;width:${donePct}%;background:linear-gradient(135deg,#3B5BFE,#8B5CF6);border-radius:999px;transition:width .4s;"></div>
+    </div>`;
+}
+function renderStudyLanding(){
+  const s = studySession;
+  document.getElementById('studyOverlayBody').innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:18px;">
+      <h2 style="color:#fff;margin:0;">🌙 Focus Session</h2>
+      <button class="btn btn-soft btn-sm" onclick="exitStudySession()" style="background:#20244D;color:#EAEDFF;border:none;">✕ Close</button>
+    </div>
+    <p style="color:#9498C4;font-size:13.5px;margin-bottom:18px;">A short, distraction-free session — ${s.activities.length} activities: vocabulary, speaking practice, and a quick quiz.</p>
+
+    <div style="background:#20244D;border-radius:16px;padding:16px;margin-bottom:16px;">
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <p style="font-size:13px;color:#fff;font-weight:700;margin:0;">🎤 Microphone</p>
+          <p style="font-size:11.5px;color:#9498C4;margin-top:2px;">Needed for speaking activities — optional, you can skip them.</p>
+        </div>
+        <button class="btn btn-sm" id="studyMicBtn" style="background:${s.micEnabled?'#1FAE6B':'#3B5BFE'};color:#fff;border:none;">${s.micEnabled?'✓ Enabled':'Enable'}</button>
+      </div>
+    </div>
+
+    <div style="display:flex;flex-direction:column;gap:8px;margin-bottom:20px;">
+      ${s.activities.map((a,i)=>`
+        <div style="display:flex;align-items:center;gap:10px;background:#181B3A;border-radius:12px;padding:10px 14px;">
+          <span style="font-size:18px;">${STUDY_ICONS[a.type]}</span>
+          <span style="font-size:13px;color:#EAEDFF;flex:1;">${a.type==='vocab'?esc(a.data.word):a.type==='speak'?esc(a.data):'Quick Quiz Question'}</span>
+          <span style="font-size:11px;color:#9498C4;">#${i+1}</span>
+        </div>
+      `).join('')}
+    </div>
+
+    <button class="btn btn-primary" style="width:100%;" onclick="startStudySession()">▶ Start Session</button>
+  `;
+  document.getElementById('studyMicBtn').addEventListener('click', enableStudyMic);
+}
+function enableStudyMic(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    toast('Microphone access is not supported in this browser.','error'); return;
+  }
+  navigator.mediaDevices.getUserMedia({audio:true}).then(stream=>{
+    studySession.micStream = stream;
+    studySession.micEnabled = true;
+    toast('Microphone enabled','success');
+    if(studySession.status==='landing') renderStudyLanding();
+  }).catch(()=>{ toast('Microphone permission denied.','error'); });
+}
+function startMicMonitor(barEl){
+  if(!studySession.micStream || !barEl) return;
+  try{
+    const audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const source = audioCtx.createMediaStreamSource(studySession.micStream);
+    const analyser = audioCtx.createAnalyser();
+    analyser.fftSize = 256;
+    source.connect(analyser);
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    studySession.audioCtx = audioCtx;
+    function tick(){
+      if(!studySession || studySession.status!=='running') return;
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a,b)=>a+b,0)/data.length;
+      const pct = Math.min(100, Math.round((avg/130)*100));
+      if(barEl.isConnected) barEl.style.width = pct+'%';
+      studySession.rafId = requestAnimationFrame(tick);
+    }
+    tick();
+  }catch(e){ /* AudioContext unavailable — monitor silently skipped */ }
+}
+function stopMicMonitor(){
+  if(!studySession) return;
+  if(studySession.rafId) cancelAnimationFrame(studySession.rafId);
+  if(studySession.audioCtx){ try{ studySession.audioCtx.close(); }catch(e){} studySession.audioCtx = null; }
+}
+function startStudySession(){
+  studySession.status = 'running';
+  studySession.idx = 0;
+  renderStudyActivity();
+}
+function pauseStudySession(){
+  studySession.status = 'paused';
+  stopMicMonitor();
+  stopSpeak();
+  document.getElementById('studyOverlayBody').innerHTML = `
+    ${studyProgressHeader()}
+    <div style="text-align:center;padding:60px 0;">
+      <div style="font-size:40px;">⏸️</div>
+      <h3 style="color:#fff;margin-top:12px;">Paused</h3>
+      <p style="color:#9498C4;font-size:13px;margin-top:6px;">Take your time — resume whenever you're ready.</p>
+      <button class="btn btn-primary" style="margin-top:18px;" onclick="resumeStudySession()">▶ Resume</button>
+    </div>
+  `;
+}
+function resumeStudySession(){
+  studySession.status = 'running';
+  renderStudyActivity();
+}
+function studyNext(){
+  studySession.idx++;
+  if(studySession.idx >= studySession.activities.length){ renderStudyComplete(); return; }
+  renderStudyActivity();
+}
+function renderStudyActivity(){
+  const s = studySession;
+  const a = s.activities[s.idx];
+  const controlsHTML = `
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:18px;">
+      <button class="btn btn-soft btn-sm" style="background:#20244D;color:#EAEDFF;border:none;" onclick="pauseStudySession()">⏸ Pause</button>
+    </div>`;
+  if(a.type==='vocab'){
+    const v = a.data;
+    document.getElementById('studyOverlayBody').innerHTML = `
+      ${studyProgressHeader()}
+      <div style="background:#20244D;border-radius:18px;padding:26px 18px;text-align:center;">
+        <span style="font-size:11px;color:#9498C4;letter-spacing:2px;">VOCABULARY</span>
+        <h2 style="color:#fff;margin-top:10px;">${esc(v.word)}</h2>
+        <p style="color:#9498C4;font-size:12.5px;margin-top:4px;">${esc(v.pronunciation)}</p>
+        <p style="color:#EAEDFF;font-size:14px;margin-top:12px;">${esc(v.meaning)}</p>
+        <p style="color:#9498C4;font-size:12.5px;font-style:italic;margin-top:8px;">"${esc(v.example)}"</p>
+        <button class="btn btn-primary" style="margin-top:16px;" onclick="speak(${JSON.stringify(v.word+'. '+v.example)}, 'en-US')">🔊 Listen</button>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="markStudyVocabAndContinue('${v.id}')">Continue →</button>
+      ${controlsHTML}
+    `;
+  } else if(a.type==='speak'){
+    const sentence = a.data;
+    document.getElementById('studyOverlayBody').innerHTML = `
+      ${studyProgressHeader()}
+      <div style="background:#20244D;border-radius:18px;padding:26px 18px;text-align:center;">
+        <span style="font-size:11px;color:#9498C4;letter-spacing:2px;">SPEAKING PRACTICE</span>
+        <h3 style="color:#fff;margin-top:10px;">"${esc(sentence)}"</h3>
+        <div style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap;">
+          <button class="btn btn-outline btn-sm" style="border-color:#3B5BFE;color:#fff;" onclick="speak(${JSON.stringify(sentence)}, 'en-US')">🔊 Listen</button>
+          <button class="btn btn-primary btn-sm" id="studyRecordBtn">🎤 Practise</button>
+        </div>
+        <div style="margin-top:16px;">
+          <p style="font-size:11px;color:#9498C4;margin-bottom:6px;">🎚️ Mic monitor</p>
+          <div style="height:10px;background:#12142E;border-radius:999px;overflow:hidden;">
+            <div id="studyMicBar" style="height:100%;width:0%;background:linear-gradient(90deg,#1FAE6B,#F5A623,#EF4444);transition:width .1s;"></div>
+          </div>
+          ${!s.micEnabled ? `<p style="font-size:10.5px;color:#9498C4;margin-top:6px;">Enable the microphone on the start screen to see live levels.</p>` : ''}
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;margin-top:18px;" onclick="studyNext()">Continue →</button>
+      ${controlsHTML}
+    `;
+    document.getElementById('studyRecordBtn').addEventListener('click', ()=>{
+      if(!s.micEnabled){ toast('Enable the microphone on the start screen first.','error'); return; }
+      startMicMonitor(document.getElementById('studyMicBar'));
+      startRecognition('en-US', ()=>{ toast('Nice practice!','success'); }, ()=>{});
+    });
+  } else if(a.type==='quiz'){
+    document.getElementById('studyOverlayBody').innerHTML = `
+      ${studyProgressHeader()}
+      <div style="background:#20244D;border-radius:18px;padding:20px 18px;">
+        <span style="font-size:11px;color:#9498C4;letter-spacing:2px;">QUICK QUIZ</span>
+        <div id="studyQuizBox" style="margin-top:12px;"></div>
+      </div>
+      ${controlsHTML}
+    `;
+    renderInlineMCQ('studyQuizBox', a.data, ()=>{ setTimeout(()=>studyNext(), 900); });
+  }
+}
+function markStudyVocabAndContinue(vocabId){
+  if(!state.progress.vocabLearned.includes(vocabId)){ state.progress.vocabLearned.push(vocabId); saveState(); }
+  studyNext();
+}
+function renderStudyComplete(){
+  stopMicMonitor();
+  addPoints(10);
+  checkBadges();
+  saveState();
+  document.getElementById('studyOverlayBody').innerHTML = `
+    <div style="text-align:center;padding:60px 0;">
+      <div style="font-size:48px;">🎉</div>
+      <h2 style="color:#fff;margin-top:14px;">Session Complete!</h2>
+      <p style="color:#9498C4;font-size:13.5px;margin-top:8px;">You finished all ${studySession.activities.length} activities. +10 points added.</p>
+      <button class="btn btn-primary" style="margin-top:20px;" onclick="exitStudySession()">Done</button>
+    </div>
+  `;
+}
 
 /* ====================================================================
    LEARN OTHER LANGUAGES (a separate mode — here the target language
@@ -3740,6 +4040,8 @@ function openDailyQuiz(){
    GAMES — Word Scramble (more games can be added to this hub later)
 ==================================================================== */
 function renderGames(){
+  const totalCreatures = ADVENTURE_LOCATIONS.reduce((s,l)=>s+l.creatures.length,0);
+  const defeated = state.progress.adventureMap.defeatedCreatures.length;
   document.getElementById('view-games').innerHTML = `
     <div class="page-head"><h2>Games</h2><p>Fun mini-games to sharpen your English vocabulary.</p></div>
     <div class="grid grid-3">
@@ -3749,6 +4051,13 @@ function renderGames(){
         <p style="font-size:12.5px;">Unscramble the letters to spell 8 words correctly.</p>
         <p style="font-size:12px;margin-top:8px;">🏆 High score: ${state.progress.gameHighScore || 0}/8</p>
         <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;" onclick="startWordScramble()">Play →</button>
+      </div>
+      <div class="card" style="text-align:center;">
+        <div style="font-size:32px;">🗺️</div>
+        <h3 style="margin-top:10px;font-size:16px;">Adventure Map</h3>
+        <p style="font-size:12.5px;">Explore 6 fantasy locations and battle creatures using real English questions.</p>
+        <p style="font-size:12px;margin-top:8px;">⚔️ ${defeated}/${totalCreatures} creatures defeated</p>
+        <button class="btn btn-primary btn-sm" style="width:100%;margin-top:12px;" onclick="navigateTo('adventure')">Explore →</button>
       </div>
     </div>
   `;
@@ -3817,50 +4126,257 @@ function startWordScramble(){
 }
 
 /* ====================================================================
+   ADVENTURE MAP — original fantasy locations, unlocked by defeating all
+   creatures in the previous location. Battles use real questions pulled
+   from Lessons/Grammar (filtered by the location's level) and Vocabulary.
+==================================================================== */
+function isLocationUnlocked(idx){
+  if(idx===0) return true;
+  const prev = ADVENTURE_LOCATIONS[idx-1];
+  return prev.creatures.every(c=>state.progress.adventureMap.defeatedCreatures.includes(c.id));
+}
+function renderAdventureMap(){
+  document.getElementById('view-adventure').innerHTML = `
+    <div class="page-head"><h2>🗺️ Adventure Map</h2><p>Explore six fantasy locations and battle creatures using your real English skills. Defeat every creature in a location to unlock the next.</p></div>
+    <div class="grid grid-3" id="adventureGrid"></div>
+  `;
+  document.getElementById('adventureGrid').innerHTML = ADVENTURE_LOCATIONS.map((loc,idx)=>{
+    const unlocked = isLocationUnlocked(idx);
+    const defeated = loc.creatures.filter(c=>state.progress.adventureMap.defeatedCreatures.includes(c.id)).length;
+    const cleared = defeated === loc.creatures.length;
+    const starCount = defeated; // 1 star per creature defeated, out of loc.creatures.length (3)
+    const starsHTML = '⭐'.repeat(starCount) + '☆'.repeat(loc.creatures.length - starCount);
+    return `<div class="card" style="text-align:center;${unlocked?'':'opacity:.55;'}">
+      <div style="font-size:34px;">${unlocked?loc.icon:'🔒'}</div>
+      <h4 style="margin-top:8px;font-size:15px;">${esc(loc.name)}</h4>
+      <p style="font-size:12px;">${esc(loc.desc)}</p>
+      <span class="pill pill-blue" style="margin-top:6px;">${loc.level}</span>
+      <p style="font-size:15px;margin-top:8px;letter-spacing:2px;">${unlocked?starsHTML:'🔒🔒🔒'}</p>
+      <p style="font-size:12px;">${cleared?'<span class="pill pill-success">✓ Cleared</span>':`⚔️ ${defeated}/${loc.creatures.length} defeated`}</p>
+      <button class="btn ${unlocked?'btn-primary':'btn-soft'} btn-sm" style="width:100%;margin-top:10px;" ${unlocked?'':'disabled'} onclick="openLocationDetail('${loc.id}')">${unlocked?'Enter →':'🔒 Locked'}</button>
+    </div>`;
+  }).join('');
+}
+function openLocationDetail(locId){
+  const loc = ADVENTURE_LOCATIONS.find(l=>l.id===locId);
+  showGenericModal(`
+    <div class="modal-head"><div><span class="pill pill-blue">${loc.level}</span></div><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <h2 style="margin-top:10px;">${loc.icon} ${esc(loc.name)}</h2>
+    <p style="margin-bottom:12px;">${esc(loc.desc)}</p>
+    <div style="display:flex;flex-direction:column;gap:8px;">
+      ${loc.creatures.map(c=>{
+        const defeated = state.progress.adventureMap.defeatedCreatures.includes(c.id);
+        return `<div class="card" style="display:flex;align-items:center;gap:12px;text-align:left;">
+          <span style="font-size:26px;">${c.icon}</span>
+          <div style="flex:1;">
+            <h4 style="margin:0;font-size:14px;">${esc(c.name)}</h4>
+            <p style="font-size:11.5px;">${c.hp} HP</p>
+          </div>
+          ${defeated ? '<span class="pill pill-success">✓ Defeated</span>' : `<button class="btn btn-primary btn-sm" onclick="closeGenericModal();startAdventureBattle('${loc.id}','${c.id}')">Battle</button>`}
+        </div>`;
+      }).join('')}
+    </div>
+  `);
+}
+function buildAdventureQuestions(level, count){
+  const lessonQs = LESSONS.filter(l=>l.level===level).flatMap(l=>l.practice);
+  const grammarQs = GRAMMAR_TOPICS.filter(g=>g.level===level).flatMap(g=>g.quiz);
+  let pool = shuffle([...lessonQs, ...grammarQs]);
+  if(pool.length < count){
+    const vocabExtra = shuffle([...VOCABULARY]).slice(0, count-pool.length).map(v=>{
+      const distractors = shuffle(VOCABULARY.filter(x=>x.id!==v.id)).slice(0,2).map(x=>x.meaning);
+      const options = shuffle([v.meaning, ...distractors]);
+      return {q:`What does "${v.word}" mean?`, options, answer: options.indexOf(v.meaning)};
+    });
+    pool = [...pool, ...vocabExtra];
+  }
+  return shuffle(pool).slice(0,count);
+}
+let adventureBattle = null;
+function startAdventureBattle(locId, creatureId){
+  const loc = ADVENTURE_LOCATIONS.find(l=>l.id===locId);
+  const creature = loc.creatures.find(c=>c.id===creatureId);
+  adventureBattle = {
+    locId, creatureId, creatureName:creature.name, creatureIcon:creature.icon,
+    hp: creature.hp, maxHp: creature.hp, hearts: 3,
+    questions: buildAdventureQuestions(loc.level, 8), qIdx: 0
+  };
+  renderAdventureBattle();
+}
+function renderAdventureBattle(){
+  const b = adventureBattle;
+  if(b.qIdx >= b.questions.length && b.hp > 0){
+    // Ran out of prepared questions before defeating — refresh the question pool
+    const loc = ADVENTURE_LOCATIONS.find(l=>l.id===b.locId);
+    b.questions = buildAdventureQuestions(loc.level, 8);
+    b.qIdx = 0;
+  }
+  const hpPct = Math.max(0, Math.round((b.hp/b.maxHp)*100));
+  showGenericModal(`
+    <div class="modal-head"><span class="pill pill-purple">⚔️ Battle</span><button class="icon-btn" onclick="closeGenericModal();adventureBattle=null;">✕</button></div>
+    <div style="text-align:center;margin-top:8px;">
+      <div style="font-size:44px;">${b.creatureIcon}</div>
+      <h3 style="margin-top:6px;">${esc(b.creatureName)}</h3>
+      <div class="progress-track" style="margin-top:8px;"><div class="progress-fill" style="width:${hpPct}%;background:linear-gradient(135deg,#EF4444,#F5A623);"></div></div>
+      <p style="font-size:11.5px;margin-top:4px;">${Math.max(0,b.hp)}/${b.maxHp} HP</p>
+      <p style="font-size:16px;margin-top:8px;">${'❤️'.repeat(b.hearts)}${'🖤'.repeat(3-b.hearts)}</p>
+    </div>
+    <div id="battleQuizBox" style="margin-top:14px;"></div>
+  `);
+  const q = b.questions[b.qIdx];
+  renderInlineMCQ('battleQuizBox', q, (correct)=>{
+    if(correct){
+      b.hp -= 10;
+      b.qIdx++;
+      if(b.hp <= 0){ setTimeout(()=>battleVictory(), 700); return; }
+      setTimeout(()=>renderAdventureBattle(), 700);
+    } else {
+      b.hearts--;
+      b.qIdx++;
+      if(b.hearts <= 0){ setTimeout(()=>battleDefeat(), 700); return; }
+      setTimeout(()=>renderAdventureBattle(), 900);
+    }
+  });
+}
+function battleVictory(){
+  const b = adventureBattle;
+  if(!state.progress.adventureMap.defeatedCreatures.includes(b.creatureId)){
+    state.progress.adventureMap.defeatedCreatures.push(b.creatureId);
+    addPoints(8);
+    checkBadges();
+    saveState();
+  }
+  const loc = ADVENTURE_LOCATIONS.find(l=>l.id===b.locId);
+  const locCleared = loc.creatures.every(c=>state.progress.adventureMap.defeatedCreatures.includes(c.id));
+  showGenericModal(`
+    <div class="modal-head"><h3>🎉 Victory!</h3><button class="icon-btn" onclick="closeGenericModal();adventureBattle=null;renderAdventureMap();">✕</button></div>
+    <div style="text-align:center;padding:16px 0;">
+      <div style="font-size:44px;">🏆</div>
+      <h3 style="margin-top:10px;">${esc(b.creatureName)} defeated!</h3>
+      <p style="font-size:13px;margin-top:6px;">+8 points added to your progress.</p>
+      ${locCleared ? `<p style="font-size:13px;margin-top:10px;color:var(--success);font-weight:700;">✓ ${esc(loc.name)} cleared — next location unlocked!</p>` : ''}
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="closeGenericModal();adventureBattle=null;renderAdventureMap();">Continue</button>
+    </div>
+  `);
+}
+function battleDefeat(){
+  const b = adventureBattle;
+  showGenericModal(`
+    <div class="modal-head"><h3>💫 Not This Time</h3><button class="icon-btn" onclick="closeGenericModal();adventureBattle=null;renderAdventureMap();">✕</button></div>
+    <div style="text-align:center;padding:16px 0;">
+      <div style="font-size:44px;">🛡️</div>
+      <h3 style="margin-top:10px;">${esc(b.creatureName)} held its ground</h3>
+      <p style="font-size:13px;margin-top:6px;">No points lost — review the topic and try again whenever you're ready!</p>
+      <button class="btn btn-primary" style="margin-top:16px;" onclick="closeGenericModal();startAdventureBattle('${b.locId}','${b.creatureId}')">Try Again</button>
+      <button class="btn btn-soft" style="margin-top:8px;" onclick="closeGenericModal();adventureBattle=null;renderAdventureMap();">Back to Map</button>
+    </div>
+  `);
+}
+
+/* ====================================================================
    PARENT ZONE — read-only progress summary for parents/guardians
 ==================================================================== */
+let parentZoneUnlocked = false; // resets each session — must re-enter PIN after reload
 function renderParentZone(){
+  if(!state.parentPin){ renderParentZoneSetup(); return; }
+  if(!parentZoneUnlocked){ renderParentZoneLock(); return; }
+  renderParentZoneContent();
+}
+function renderParentZoneSetup(){
+  document.getElementById('view-parentzone').innerHTML = `
+    <div class="page-head"><h2>👪 Parent Zone</h2><p>Protect this area with a 4-digit PIN so only a parent or guardian can view it.</p></div>
+    <div class="card" style="max-width:420px;">
+      <label class="field-label" style="margin-top:0;">Set a 4-digit PIN</label>
+      <input type="text" inputmode="numeric" maxlength="4" id="pzSetupPin" placeholder="e.g. 1234">
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" id="pzSetupBtn">Set PIN & Continue</button>
+      <button class="btn btn-soft" style="width:100%;margin-top:8px;" id="pzSkipBtn">Skip for now</button>
+    </div>
+  `;
+  document.getElementById('pzSetupBtn').addEventListener('click', ()=>{
+    const val = document.getElementById('pzSetupPin').value.trim();
+    if(!/^\d{4}$/.test(val)){ toast('Enter a 4-digit PIN.','error'); return; }
+    state.parentPin = val;
+    parentZoneUnlocked = true;
+    saveState();
+    toast('PIN set','success');
+    renderParentZone();
+  });
+  document.getElementById('pzSkipBtn').addEventListener('click', ()=>{
+    parentZoneUnlocked = true;
+    renderParentZone();
+  });
+}
+function renderParentZoneLock(){
+  document.getElementById('view-parentzone').innerHTML = `
+    <div class="page-head"><h2>👪 Parent Zone</h2><p>Enter your PIN to continue.</p></div>
+    <div class="card" style="max-width:420px;">
+      <label class="field-label" style="margin-top:0;">PIN</label>
+      <input type="text" inputmode="numeric" maxlength="4" id="pzEnterPin" placeholder="••••">
+      <button class="btn btn-primary" style="width:100%;margin-top:14px;" id="pzUnlockBtn">Unlock</button>
+      <p style="font-size:11.5px;margin-top:10px;">Forgot your PIN? Reset it from Settings → Data.</p>
+    </div>
+  `;
+  const tryUnlock = ()=>{
+    const val = document.getElementById('pzEnterPin').value.trim();
+    if(val === state.parentPin){ parentZoneUnlocked = true; renderParentZone(); }
+    else toast('Incorrect PIN.','error');
+  };
+  document.getElementById('pzUnlockBtn').addEventListener('click', tryUnlock);
+  document.getElementById('pzEnterPin').addEventListener('keydown', e=>{ if(e.key==='Enter') tryUnlock(); });
+}
+function renderParentZoneContent(){
   const p = state.progress;
   const totalLangItems = Object.values(state.langProgress.learnedItems).reduce((sum,arr)=>sum+arr.length, 0);
+  const totalCreatures = ADVENTURE_LOCATIONS.reduce((s,l)=>s+l.creatures.length,0);
   document.getElementById('view-parentzone').innerHTML = `
-    <div class="page-head"><h2>👪 Parent Zone</h2><p>A read-only summary of ${esc(state.profile.name || 'your learner')}'s progress — nothing here can be edited.</p></div>
-
-    <div class="grid grid-4" style="margin-bottom:16px;">
-      <div class="card" style="text-align:center;"><div style="font-size:22px;">🔥</div><h3 style="font-size:20px;">${p.streak}</h3><p style="font-size:12px;">Day streak</p></div>
-      <div class="card" style="text-align:center;"><div style="font-size:22px;">⭐</div><h3 style="font-size:20px;">${p.points}</h3><p style="font-size:12px;">Points</p></div>
-      <div class="card" style="text-align:center;"><div style="font-size:22px;">💪</div><h3 style="font-size:20px;">${p.confidenceScore}%</h3><p style="font-size:12px;">Confidence</p></div>
-      <div class="card" style="text-align:center;"><div style="font-size:22px;">🏅</div><h3 style="font-size:20px;">${state.badges.length}</h3><p style="font-size:12px;">Badges earned</p></div>
-    </div>
-
-    <div class="card" style="margin-bottom:16px;">
-      <h4>Learning activity</h4>
-      <div class="grid grid-2" style="margin-top:10px;">
-        <p style="font-size:13px;">📘 Lessons: <b style="color:var(--text);">${p.lessonsCompleted.length}/${LESSONS.length}</b></p>
-        <p style="font-size:13px;">🧠 Vocabulary: <b style="color:var(--text);">${p.vocabLearned.length}/${VOCABULARY.length}</b></p>
-        <p style="font-size:13px;">✏️ Grammar: <b style="color:var(--text);">${p.grammarDone.length}/${GRAMMAR_TOPICS.length}</b></p>
-        <p style="font-size:13px;">📖 Stories: <b style="color:var(--text);">${p.storiesRead.length}/${STORIES.length}</b></p>
-        <p style="font-size:13px;">🎵 Rhymes: <b style="color:var(--text);">${p.rhymesLearned.length}/${RHYMES.length}</b></p>
-        <p style="font-size:13px;">🔤 First words: <b style="color:var(--text);">${p.toddlerWordsLearned.length}/${TODDLER_WORDS.length}</b></p>
-        <p style="font-size:13px;">🌍 Other languages: <b style="color:var(--text);">${totalLangItems} items</b></p>
-        <p style="font-size:13px;">🎮 Word Scramble best: <b style="color:var(--text);">${p.gameHighScore || 0}/8</b></p>
-        <p style="font-size:13px;">🔢 Numbers explored: <b style="color:var(--text);">${p.numbersLearned.length}/100</b></p>
-        <p style="font-size:13px;">🔠 Alphabet learned: <b style="color:var(--text);">${p.alphabetLearned.length}/26</b></p>
-        <p style="font-size:13px;">✖️ Tables practiced: <b style="color:var(--text);">${p.tablesPracticed.length}/19</b></p>
+    <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
+      <div><h2>👪 Parent Zone</h2><p>A read-only summary of ${esc(state.profile.name || 'your learner')}'s progress — nothing here can be edited.</p></div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-outline btn-sm" onclick="window.print()">🖨️ Print Report</button>
+        <button class="btn btn-soft btn-sm" onclick="parentZoneUnlocked=false;renderParentZone();">🔒 Lock</button>
       </div>
     </div>
 
-    <div class="card">
-      <h4>Weekly activity</h4>
-      <div style="display:flex;gap:6px;margin-top:10px;">
-        ${last7Days().map(d=>`<div style="flex:1;text-align:center;">
-          <div style="height:44px;display:flex;align-items:flex-end;justify-content:center;">
-            <div style="width:70%;border-radius:6px 6px 0 0;background:${p.activeDays.includes(d.iso)?'var(--grad)':'var(--surface-2)'};height:${p.activeDays.includes(d.iso)?'44px':'8px'};"></div>
-          </div>
-          <p style="font-size:10px;margin-top:4px;">${d.label}</p>
-        </div>`).join('')}
+    <div id="parentZonePrintArea">
+      <p style="font-size:11px;color:var(--muted);margin-bottom:10px;">Report generated ${new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})} for ${esc(state.profile.name || 'Learner')}</p>
+      <div class="grid grid-4" style="margin-bottom:16px;">
+        <div class="card" style="text-align:center;"><div style="font-size:22px;">🔥</div><h3 style="font-size:20px;">${p.streak}</h3><p style="font-size:12px;">Day streak</p></div>
+        <div class="card" style="text-align:center;"><div style="font-size:22px;">⭐</div><h3 style="font-size:20px;">${p.points}</h3><p style="font-size:12px;">Points</p></div>
+        <div class="card" style="text-align:center;"><div style="font-size:22px;">💪</div><h3 style="font-size:20px;">${p.confidenceScore}%</h3><p style="font-size:12px;">Confidence</p></div>
+        <div class="card" style="text-align:center;"><div style="font-size:22px;">🏅</div><h3 style="font-size:20px;">${state.badges.length}</h3><p style="font-size:12px;">Badges earned</p></div>
       </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Learning activity</h4>
+        <div class="grid grid-2" style="margin-top:10px;">
+          <p style="font-size:13px;">📘 Lessons: <b style="color:var(--text);">${p.lessonsCompleted.length}/${LESSONS.length}</b></p>
+          <p style="font-size:13px;">🧠 Vocabulary: <b style="color:var(--text);">${p.vocabLearned.length}/${VOCABULARY.length}</b></p>
+          <p style="font-size:13px;">✏️ Grammar: <b style="color:var(--text);">${p.grammarDone.length}/${GRAMMAR_TOPICS.length}</b></p>
+          <p style="font-size:13px;">📖 Stories: <b style="color:var(--text);">${p.storiesRead.length}/${STORIES.length}</b></p>
+          <p style="font-size:13px;">🎵 Rhymes: <b style="color:var(--text);">${p.rhymesLearned.length}/${RHYMES.length}</b></p>
+          <p style="font-size:13px;">🔤 First words: <b style="color:var(--text);">${p.toddlerWordsLearned.length}/${TODDLER_WORDS.length}</b></p>
+          <p style="font-size:13px;">🌍 Other languages: <b style="color:var(--text);">${totalLangItems} items</b></p>
+          <p style="font-size:13px;">🎮 Word Scramble best: <b style="color:var(--text);">${p.gameHighScore || 0}/8</b></p>
+          <p style="font-size:13px;">🔢 Numbers explored: <b style="color:var(--text);">${p.numbersLearned.length}/100</b></p>
+          <p style="font-size:13px;">🔠 Alphabet learned: <b style="color:var(--text);">${p.alphabetLearned.length}/26</b></p>
+          <p style="font-size:13px;">✖️ Tables practiced: <b style="color:var(--text);">${p.tablesPracticed.length}/19</b></p>
+          <p style="font-size:13px;">🗺️ Adventure Map: <b style="color:var(--text);">${p.adventureMap.defeatedCreatures.length}/${totalCreatures} creatures</b></p>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px;">
+        <h4>Weekly activity</h4>
+        <div style="display:flex;gap:6px;margin-top:10px;">
+          ${last7Days().map(d=>`<div style="flex:1;text-align:center;">
+            <div style="height:44px;display:flex;align-items:flex-end;justify-content:center;">
+              <div style="width:70%;border-radius:6px 6px 0 0;background:${p.activeDays.includes(d.iso)?'var(--grad)':'var(--surface-2)'};height:${p.activeDays.includes(d.iso)?'44px':'8px'};"></div>
+            </div>
+            <p style="font-size:10px;margin-top:4px;">${d.label}</p>
+          </div>`).join('')}
+        </div>
+      </div>
+      <p style="text-align:center;font-size:11px;margin-top:14px;">All data stays on this device only — nothing is uploaded or shared.</p>
     </div>
-    <p style="text-align:center;font-size:11px;margin-top:14px;">All data stays on this device only — nothing is uploaded or shared.</p>
   `;
 }
 
@@ -3875,7 +4391,8 @@ function renderProgress(){
     stories2:{icon:'📖',label:'Story Reader'},
     rhymes5:{icon:'🎵',label:'Rhyme Time'}, words20:{icon:'⭐',label:'First Words Star'},
     lang15:{icon:'🌍',label:'Language Explorer'},
-    numbers50:{icon:'🔢',label:'Number Whiz'}, alphabet26:{icon:'🔠',label:'Alphabet Star'}, tables5:{icon:'✖️',label:'Times Tables Pro'}
+    numbers50:{icon:'🔢',label:'Number Whiz'}, alphabet26:{icon:'🔠',label:'Alphabet Star'}, tables5:{icon:'✖️',label:'Times Tables Pro'},
+    adventure1:{icon:'⚔️',label:'First Victory'}, adventureAll:{icon:'🏆',label:'Realm Champion'}
   };
   document.getElementById('view-progress').innerHTML = `
     <div class="page-head"><h2>My Progress</h2><p>Track your streak, points and learning milestones.</p></div>
@@ -3919,12 +4436,32 @@ function last7Days(){
 /* ====================================================================
    SETTINGS
 ==================================================================== */
-function renderSettings(){
+const AVATAR_OPTIONS = ['🙂','😀','🧑','👧','👦','👩','👨','🧒','🐱','🦁','🌟','📚'];
+function renderProfile(){
   const d = state.profile;
-  document.getElementById('view-settings').innerHTML = `
-    <div class="page-head"><h2>Settings</h2><p>Update your profile, preferences and app appearance.</p></div>
-    <div class="card" style="max-width:560px;">
-      <label class="field-label" style="margin-top:0;">Your name</label>
+  const joinedText = d.joinedDate ? new Date(d.joinedDate).toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'}) : '—';
+  document.getElementById('view-profile').innerHTML = `
+    <div class="page-head"><h2>🙋 My Profile</h2><p>Your personal details and learning preferences.</p></div>
+
+    <div class="card" style="max-width:560px;text-align:center;">
+      <div style="width:72px;height:72px;border-radius:50%;background:var(--grad);display:flex;align-items:center;justify-content:center;font-size:34px;margin:0 auto 10px auto;">${d.avatar || '🙂'}</div>
+      <h3 style="margin:0;">${esc(d.name || 'Learner')}</h3>
+      <p style="font-size:12.5px;">${esc(d.level)} · ${esc(d.objective)}</p>
+      <p style="font-size:11.5px;margin-top:4px;">Learning since ${joinedText}</p>
+      <div class="grid grid-3" style="margin-top:14px;">
+        <div><h4 style="font-size:18px;margin:0;">${state.progress.streak}</h4><p style="font-size:11px;">Day streak</p></div>
+        <div><h4 style="font-size:18px;margin:0;">${state.progress.points}</h4><p style="font-size:11px;">Points</p></div>
+        <div><h4 style="font-size:18px;margin:0;">${state.badges.length}</h4><p style="font-size:11px;">Badges</p></div>
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-top:16px;">
+      <label class="field-label" style="margin-top:0;">Choose an avatar</label>
+      <div class="chip-select" id="avatarPickRow">
+        ${AVATAR_OPTIONS.map(a=>`<button type="button" class="chip-opt ${a===d.avatar?'selected':''}" data-avatar="${a}" style="font-size:20px;padding:8px 12px;">${a}</button>`).join('')}
+      </div>
+
+      <label class="field-label">Your name</label>
       <input type="text" id="set-name" value="${esc(d.name)}">
       <label class="field-label">Age group / class</label>
       ${chipGroup('set-ageGroup', AGE_GROUPS, d.ageGroup)}
@@ -3938,10 +4475,105 @@ function renderSettings(){
       ${chipGroup('set-explainLang', EXPLAIN_LANGS, d.explainLang)}
       <label class="field-label">Daily practice duration (minutes)</label>
       ${chipGroup('set-dailyMinutes', DURATIONS.map(String), String(d.dailyMinutes))}
-      <button class="btn btn-primary" style="width:100%;margin-top:18px;" id="settingsSaveBtn">Save Changes</button>
+      <button class="btn btn-primary" style="width:100%;margin-top:18px;" id="profileSaveBtn">Save Changes</button>
     </div>
+  `;
+  let selectedAvatar = d.avatar;
+  document.getElementById('avatarPickRow').addEventListener('click', e=>{
+    const btn = e.target.closest('[data-avatar]'); if(!btn) return;
+    selectedAvatar = btn.getAttribute('data-avatar');
+    document.querySelectorAll('#avatarPickRow .chip-opt').forEach(c=>c.classList.remove('selected'));
+    btn.classList.add('selected');
+  });
+  document.querySelectorAll('#view-profile .chip-select').forEach(group=>{
+    if(group.id==='avatarPickRow') return;
+    group.addEventListener('click', e=>{
+      const btn = e.target.closest('.chip-opt'); if(!btn) return;
+      group.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('selected'));
+      btn.classList.add('selected');
+    });
+  });
+  document.getElementById('profileSaveBtn').addEventListener('click', ()=>{
+    const get = (g)=> document.querySelector(`[data-group="${g}"] .chip-opt.selected`).getAttribute('data-value');
+    state.profile.name = document.getElementById('set-name').value.trim() || 'Learner';
+    state.profile.avatar = selectedAvatar;
+    state.profile.ageGroup = get('set-ageGroup');
+    state.profile.level = get('set-level');
+    state.profile.objective = get('set-objective');
+    state.profile.accent = get('set-accent');
+    state.profile.explainLang = get('set-explainLang');
+    state.profile.dailyMinutes = parseInt(get('set-dailyMinutes'));
+    saveState();
+    updateProfileChip();
+    toast('Profile saved','success');
+    renderProfile();
+  });
+}
 
-    <div class="card" style="max-width:560px;margin-top:16px;">
+/* ====================================================================
+   MY CERTIFICATES
+==================================================================== */
+const CERTIFICATES = [
+  { id:'cert_lessons', title:'Certificate of Completion', subtitle:'Spoken English Fundamentals', icon:'📘',
+    check: ()=> state.progress.lessonsCompleted.length >= 10,
+    progressText: ()=> `${state.progress.lessonsCompleted.length}/10 lessons completed` },
+  { id:'cert_vocab', title:'Certificate of Achievement', subtitle:'Vocabulary Master', icon:'🧠',
+    check: ()=> state.progress.vocabLearned.length >= 50,
+    progressText: ()=> `${state.progress.vocabLearned.length}/50 words learned` },
+  { id:'cert_grammar', title:'Certificate of Achievement', subtitle:'Grammar Expert', icon:'✏️',
+    check: ()=> state.progress.grammarDone.length >= 15,
+    progressText: ()=> `${state.progress.grammarDone.length}/15 grammar topics completed` },
+  { id:'cert_streak', title:'Certificate of Achievement', subtitle:'Consistent Learner (7-Day Streak)', icon:'🔥',
+    check: ()=> state.progress.streak >= 7,
+    progressText: ()=> `${state.progress.streak}/7 day streak` },
+  { id:'cert_lang', title:'Certificate of Achievement', subtitle:'Language Explorer', icon:'🌍',
+    check: ()=> Object.values(state.langProgress.learnedItems).reduce((s,a)=>s+a.length,0) >= 30,
+    progressText: ()=> `${Object.values(state.langProgress.learnedItems).reduce((s,a)=>s+a.length,0)}/30 language items learned` }
+];
+function renderCertificates(){
+  document.getElementById('view-certificates').innerHTML = `
+    <div class="page-head"><h2>🎓 My Certificates</h2><p>Earn certificates as you reach learning milestones — view, download, or print them.</p></div>
+    <div class="grid grid-3" id="certGrid"></div>
+  `;
+  document.getElementById('certGrid').innerHTML = CERTIFICATES.map(c=>{
+    const earned = c.check();
+    return `<div class="card" style="text-align:center;${earned?'':'opacity:.65;'}">
+      <div style="font-size:32px;">${c.icon}</div>
+      <h4 style="margin-top:8px;font-size:15px;">${esc(c.subtitle)}</h4>
+      <p style="font-size:11.5px;">${esc(c.title)}</p>
+      <p style="font-size:11.5px;margin-top:6px;">${earned?'<span class="pill pill-success">✓ Earned</span>':esc(c.progressText())}</p>
+      <button class="btn ${earned?'btn-primary':'btn-soft'} btn-sm" style="width:100%;margin-top:10px;" ${earned?'':'disabled'} onclick="openCertificate('${c.id}')">${earned?'View & Print':'🔒 Locked'}</button>
+    </div>`;
+  }).join('');
+}
+function openCertificate(id){
+  const c = CERTIFICATES.find(x=>x.id===id);
+  if(!c || !c.check()) return;
+  const dateStr = new Date().toLocaleDateString('en-US', {year:'numeric', month:'long', day:'numeric'});
+  showGenericModal(`
+    <div class="modal-head"><h3>${c.icon} Certificate</h3><button class="icon-btn" onclick="closeGenericModal()">✕</button></div>
+    <div id="certificatePrintArea" style="border:6px double var(--blue); border-radius:14px; padding:28px 20px; text-align:center; background:linear-gradient(135deg,#ffffff 0%,#F5F7FF 100%); margin-top:10px;">
+      <p style="letter-spacing:3px;font-size:11px;color:var(--muted);">SPOKENENGLISH LEARNING PORTAL</p>
+      <h2 style="margin-top:10px;font-family:var(--font-head);font-size:24px;color:#1C2140;">${esc(c.title)}</h2>
+      <p style="font-size:13px;margin-top:4px;color:#6B7195;">This certifies that</p>
+      <h3 style="margin-top:8px;font-size:22px;color:#2440D6;">${esc(state.profile.name || 'Learner')}</h3>
+      <p style="font-size:13px;margin-top:8px;color:#6B7195;">has successfully achieved</p>
+      <h4 style="margin-top:6px;font-size:17px;color:#1C2140;">${esc(c.subtitle)}</h4>
+      <p style="font-size:12px;margin-top:16px;color:#6B7195;">Issued on ${dateStr}</p>
+      <div style="display:flex;justify-content:space-between;margin-top:26px;padding:0 20px;">
+        <div style="text-align:center;"><div style="border-top:1.5px solid #6B7195;width:120px;margin:0 auto;"></div><p style="font-size:10.5px;margin-top:4px;color:#6B7195;">SpokenEnglish</p></div>
+        <div style="text-align:center;"><div style="border-top:1.5px solid #6B7195;width:120px;margin:0 auto;"></div><p style="font-size:10.5px;margin-top:4px;color:#6B7195;">Date</p></div>
+      </div>
+    </div>
+    <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="window.print()">🖨️ Print / Save as PDF</button>
+  `);
+}
+
+function renderSettings(){
+  document.getElementById('view-settings').innerHTML = `
+    <div class="page-head"><h2>Settings</h2><p>App appearance, voice, and data.</p></div>
+
+    <div class="card" style="max-width:560px;">
       <h4>Appearance</h4>
       <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">
         <p style="font-size:13.5px;">Theme</p>
@@ -3959,32 +4591,13 @@ function renderSettings(){
       <h4>Data</h4>
       <p style="font-size:12.5px;margin-bottom:10px;">Your progress is stored only on this device, in your browser.</p>
       <button class="btn btn-danger-soft btn-sm" id="resetProgressBtn">Reset all progress</button>
+      <button class="btn btn-soft btn-sm" id="resetPinBtn" style="margin-top:8px;">${state.parentPin ? '🔓 Reset Parent Zone PIN' : 'Parent Zone PIN not set'}</button>
     </div>
 
     <p style="text-align:center;font-size:11.5px;margin-top:18px;">SpokenEnglish · Version ${APP_VERSION}</p>
     <p style="text-align:center;font-size:10.5px;margin-top:4px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
   `;
-  document.querySelectorAll('#view-settings .chip-select').forEach(group=>{
-    group.addEventListener('click', e=>{
-      const btn = e.target.closest('.chip-opt'); if(!btn) return;
-      group.querySelectorAll('.chip-opt').forEach(c=>c.classList.remove('selected'));
-      btn.classList.add('selected');
-    });
-  });
   wireVoiceGenderToggle('settings');
-  document.getElementById('settingsSaveBtn').addEventListener('click', ()=>{
-    const get = (g)=> document.querySelector(`[data-group="${g}"] .chip-opt.selected`).getAttribute('data-value');
-    state.profile.name = document.getElementById('set-name').value.trim() || 'Learner';
-    state.profile.ageGroup = get('set-ageGroup');
-    state.profile.level = get('set-level');
-    state.profile.objective = get('set-objective');
-    state.profile.accent = get('set-accent');
-    state.profile.explainLang = get('set-explainLang');
-    state.profile.dailyMinutes = parseInt(get('set-dailyMinutes'));
-    saveState();
-    updateProfileChip();
-    toast('Settings saved','success');
-  });
   document.getElementById('resetProgressBtn').addEventListener('click', ()=>{
     if(confirm('This will reset your streak, points, completed lessons and favourites. Continue?')){
       const fresh = freshState();
@@ -3992,6 +4605,16 @@ function renderSettings(){
       state.badges = [];
       saveState();
       toast('Progress reset','success');
+      renderSettings();
+    }
+  });
+  document.getElementById('resetPinBtn').addEventListener('click', ()=>{
+    if(!state.parentPin){ toast('No PIN has been set yet.','error'); return; }
+    if(confirm('This will remove the current Parent Zone PIN. You can set a new one next time you open Parent Zone. Continue?')){
+      state.parentPin = null;
+      parentZoneUnlocked = false;
+      saveState();
+      toast('Parent Zone PIN reset','success');
       renderSettings();
     }
   });
