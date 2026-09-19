@@ -305,7 +305,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '6.0.0';
+const APP_VERSION = '6.2.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -951,100 +951,100 @@ const VOCABULARY = [
 ==================================================================== */
 const GRAMMAR_TOPICS = [
   { id:'g1', title:'Parts of Speech', level:'Beginner', explanation:'Every English word plays a role: nouns name things, verbs show action, adjectives describe, adverbs modify verbs/adjectives, and pronouns replace nouns.',
-    examples:['Noun: teacher, city, happiness','Verb: run, speak, is','Adjective: beautiful, tall, happy','Adverb: quickly, very, well'],
+    examples:['Noun: teacher, city, happiness','Verb: run, speak, is','Adjective: beautiful, tall, happy','Adverb: quickly, very, well','Advanced: In \'She elegantly wrote an insightful report,\' elegantly=adverb, wrote=verb, insightful=adjective, report=noun.'],
     quiz:[{q:'Identify the noun: "The tall boy runs fast."', options:['tall','boy','runs','fast'], answer:1}] },
   { id:'g2', title:'Present, Past and Future Tenses', level:'Beginner', explanation:'Tense shows when an action happens. Present: I work. Past: I worked. Future: I will work.',
-    examples:['Present: She works every day.','Past: She worked yesterday.','Future: She will work tomorrow.'],
+    examples:['Present: She works every day.','Past: She worked yesterday.','Future: She will work tomorrow.','Advanced: By next year, she will have completed her degree (future perfect).'],
     quiz:[{q:'Choose the past tense of "go":', options:['goed','went','gone','going'], answer:1}] },
   { id:'g3', title:'Articles (a, an, the)', level:'Beginner', explanation:'"A/an" introduce something not specific; "the" refers to something specific already known. Use "an" before vowel sounds.',
-    examples:['I saw a dog.','I saw an elephant.','The dog I saw was brown.'],
+    examples:['I saw a dog.','I saw an elephant.','The dog I saw was brown.','Advanced: She is an honest, hard-working employee who was promoted within a year.'],
     quiz:[{q:'Fill the blank: I ate ___ apple.', options:['a','an','the'], answer:1}] },
   { id:'g4', title:'Prepositions', level:'Elementary', explanation:'Prepositions show relationships of place, time, or direction: in, on, at, under, between, during.',
-    examples:['The book is on the table.','We meet at 5 PM.','She lives in Delhi.'],
+    examples:['The book is on the table.','We meet at 5 PM.','She lives in Delhi.','Advanced: Despite the rain, we walked through the park under one umbrella.'],
     quiz:[{q:'Choose the correct preposition: The meeting is ___ Monday.', options:['in','on','at'], answer:1}] },
   { id:'g5', title:'Sentence Formation', level:'Elementary', explanation:'A complete sentence needs a subject and a verb, usually in Subject-Verb-Object order in English.',
-    examples:['I (subject) eat (verb) rice (object).','She reads books.'],
+    examples:['I (subject) eat (verb) rice (object).','She reads books.','Advanced: Although she was tired, she finished the report before the deadline (a complex sentence with a subordinate clause).'],
     quiz:[{q:'Which is a complete sentence?', options:['Running fast.','The dog runs fast.','Fast dog running.'], answer:1}] },
   { id:'g6', title:'Question Formation', level:'Elementary', explanation:'Yes/No questions usually start with an auxiliary verb (Do/Does/Is/Are). Wh-questions start with What/Where/When/Why/How.',
-    examples:['Do you like tea?','Where do you live?','Is she coming today?'],
+    examples:['Do you like tea?','Where do you live?','Is she coming today?','Advanced: Could you tell me why the meeting was postponed? (an indirect question — no inversion)'],
     quiz:[{q:'Correct question form:', options:['You like tea?','Do you like tea?','Like you tea?'], answer:1}] },
   { id:'g7', title:'Subject-Verb Agreement', level:'Intermediate', explanation:'The verb must match the subject in number. Singular subjects take singular verbs, plural subjects take plural verbs.',
-    examples:['He works hard.','They work hard.','The team is ready.'],
+    examples:['He works hard.','They work hard.','The team is ready.','Advanced: Neither the manager nor the employees were informed about the change (with \'neither...nor\', the verb agrees with the nearer subject).'],
     quiz:[{q:'Correct sentence:', options:['She go to school.','She goes to school.','She going school.'], answer:1}] },
   { id:'g8', title:'Common Spoken English Mistakes', level:'Intermediate', explanation:'Common slips: "He don\'t know" → "He doesn\'t know"; "I am agree" → "I agree"; "Discuss about" → "Discuss".',
-    examples:['Incorrect: He don\'t know. Correct: He doesn\'t know.','Incorrect: I am agree. Correct: I agree.'],
+    examples:['Incorrect: He don\'t know. Correct: He doesn\'t know.','Incorrect: I am agree. Correct: I agree.','Advanced: Incorrect: \'I am having a car.\' Correct: \'I have a car.\' (avoid the continuous form with stative verbs like have, know, want).'],
     quiz:[{q:'Correct the sentence: "She don\'t like coffee."', options:['She doesn\'t like coffee.','She don\'t likes coffee.','She not like coffee.'], answer:0}] },
   { id:'g9', title:'Modal Verbs (can, could, should, must)', level:'Intermediate', explanation:'Modal verbs add meaning like ability, possibility, advice or obligation. "Can" shows ability, "could" is polite/past ability, "should" gives advice, "must" shows strong obligation.',
-    examples:['I can swim.','Could you help me, please?','You should drink more water.','You must submit the form today.'],
+    examples:['I can swim.','Could you help me, please?','You should drink more water.','You must submit the form today.','Advanced: You must have worked very hard to achieve this (modal + have + past participle, for a confident guess about the past).'],
     quiz:[{q:'Which modal verb best fits: "You ___ see a doctor if the fever continues."', options:['can','should','must not'], answer:1}] },
   { id:'g10', title:'Conjunctions (and, but, because, although)', level:'Elementary', explanation:'Conjunctions join ideas. "And" adds, "but" contrasts, "because" gives a reason, "although" shows an unexpected contrast.',
-    examples:['I like tea and coffee.','She is tired but happy.','I stayed home because it was raining.','Although it was late, we finished the work.'],
+    examples:['I like tea and coffee.','She is tired but happy.','I stayed home because it was raining.','Although it was late, we finished the work.','Advanced: Although he studied hard, he did not pass, because the exam was unexpectedly difficult.'],
     quiz:[{q:'Choose the correct conjunction: "I was hungry, ___ I had no food at home."', options:['and','but','because'], answer:1} ] },
   { id:'g11', title:'Comparatives and Superlatives', level:'Elementary', explanation:'Use comparatives to compare two things (bigger, more interesting) and superlatives for the extreme in a group (biggest, most interesting).',
-    examples:['This bag is bigger than that one.','She is the tallest in her class.','This book is more interesting than the last one.'],
+    examples:['This bag is bigger than that one.','She is the tallest in her class.','This book is more interesting than the last one.','Advanced: This is by far the most challenging project I have worked on this year.'],
     quiz:[{q:'Choose the correct form: "Delhi is ___ than Gurugram."', options:['big','bigger','biggest'], answer:1}] },
   { id:'g12', title:'Passive Voice', level:'Advanced', explanation:'Passive voice focuses on the action rather than who did it: Subject + is/was + past participle. Common in formal and office English.',
-    examples:['The report was submitted yesterday.','English is spoken in many countries.','The decision will be announced tomorrow.'],
+    examples:['The report was submitted yesterday.','English is spoken in many countries.','The decision will be announced tomorrow.','Advanced: By the time we arrived, the decision had already been made by the board.'],
     quiz:[{q:'Which sentence is in the passive voice?', options:['She wrote the report.','The report was written by her.','She is writing the report.'], answer:1}] },
   { id:'g13', title:'Reported (Indirect) Speech', level:'Advanced', explanation:'Reported speech tells what someone said without quoting them exactly. Tenses usually shift back one step: "I am tired" becomes "She said she was tired."',
-    examples:['He said, "I am busy." → He said he was busy.','She said, "I will call you." → She said she would call me.'],
+    examples:['He said, "I am busy." → He said he was busy.','She said, "I will call you." → She said she would call me.','Advanced: She asked me if I had finished the report, and I told her I would send it by evening.'],
     quiz:[{q:'Report this correctly: He said, "I am hungry."', options:['He said he is hungry.','He said he was hungry.','He says he was hungry.'], answer:1}] },
   { id:'g14', title:'Relative Clauses (who, which, that)', level:'Intermediate', explanation:'Relative clauses add extra information about a noun. Use "who" for people, "which" for things, and "that" for either in informal speech.',
-    examples:['The man who called is my uncle.','The book which I bought is interesting.','This is the phone that I lost.'],
+    examples:['The man who called is my uncle.','The book which I bought is interesting.','This is the phone that I lost.','Advanced: The company, which was founded in 1990, has grown into a leading exporter, whose products are sold in over 40 countries.'],
     quiz:[{q:'Choose the correct relative pronoun: "The teacher ___ helped me is very kind."', options:['which','who','that (for objects only)'], answer:1}] },
   { id:'g15', title:'Conditionals (If Clauses)', level:'Advanced', explanation:'First conditional talks about real future possibilities: "If it rains, I will stay home." Second conditional talks about unreal or hypothetical situations: "If I had money, I would travel."',
-    examples:['If it rains, I will take an umbrella.','If I won the lottery, I would buy a house.','If you study hard, you will pass.'],
+    examples:['If it rains, I will take an umbrella.','If I won the lottery, I would buy a house.','If you study hard, you will pass.','Advanced: If I had known about the traffic, I would have left earlier (third conditional — an unreal past situation).'],
     quiz:[{q:'Choose the correct form: "If I ___ more time, I would learn painting."', options:['have','had','will have'], answer:1}] },
   { id:'g16', title:'Gerunds and Infinitives', level:'Intermediate', explanation:'A gerund is a verb+ing used as a noun ("Swimming is fun"). An infinitive is "to" + verb ("I want to swim"). Some verbs prefer one form over the other.',
-    examples:['I enjoy reading books.','She wants to travel abroad.','He avoids eating junk food.'],
+    examples:['I enjoy reading books.','She wants to travel abroad.','He avoids eating junk food.','Advanced: She admitted having forgotten the appointment, and promised to arrive on time next week.'],
     quiz:[{q:'Choose the correct form: "I want ___ English fluently."', options:['speaking','to speak','speak'], answer:1}] },
   { id:'g17', title:'Common Phrasal Verbs', level:'Intermediate', explanation:'Phrasal verbs combine a verb with a preposition/adverb to create new meanings: "give up" (quit), "look after" (take care of), "find out" (discover).',
-    examples:['Please look after my bag.','I need to find out the train timings.','She gave up smoking last year.'],
+    examples:['Please look after my bag.','I need to find out the train timings.','She gave up smoking last year.','Advanced: We need to look into the complaint before we can come up with a solution.'],
     quiz:[{q:'What does "give up" mean?', options:['To start something','To quit or stop something','To raise something'], answer:1}] },
   { id:'g18', title:'Countable and Uncountable Nouns', level:'Elementary', explanation:'Countable nouns can be counted (one apple, two apples). Uncountable nouns cannot (water, information, advice) and use "much" instead of "many".',
-    examples:['I have two apples.','I need some information.','How much water do you drink daily?'],
+    examples:['I have two apples.','I need some information.','How much water do you drink daily?','Advanced: I need a few pieces of advice and a little information before making the decision.'],
     quiz:[{q:'Choose the correct sentence:', options:['I have many information.','I have much information.','I have many informations.'], answer:1}] },
   { id:'g19', title:'Word Order in Sentences', level:'Beginner', explanation:'Standard English word order is Subject + Verb + Object + Time/Place: "I eat rice every day." Getting this order right makes spoken sentences sound natural.',
-    examples:['I watch movies every weekend.','She reads the newspaper every morning.','We play cricket in the park on Sundays.'],
+    examples:['I watch movies every weekend.','She reads the newspaper every morning.','We play cricket in the park on Sundays.','Advanced: Yesterday evening, she quietly finished her assignment at the library before dinner (multiple time/place phrases, correctly ordered).'],
     quiz:[{q:'Choose the correctly ordered sentence:', options:['Every day I school go to.','I go to school every day.','Go I every day to school.'], answer:1}] },
   { id:'g20', title:'Commonly Confused Words', level:'Intermediate', explanation:'Some words are frequently confused: its (possessive) vs it\'s (it is); their (possessive) vs there (place) vs they\'re (they are); your (possessive) vs you\'re (you are).',
-    examples:['The dog wagged its tail.','It\'s raining outside.','Their house is near the park. / The keys are there. / They\'re coming soon.'],
+    examples:['The dog wagged its tail.','It\'s raining outside.','Their house is near the park. / The keys are there. / They\'re coming soon.','Advanced: They\'re bringing their laptops to the office; the chargers are over there.'],
     quiz:[{q:'Choose the correct word: "___ going to be late for the meeting."', options:['Your','You\'re','Youre'], answer:1}] },
   { id:'g21', title:'Adjectives vs Adverbs', level:'Elementary', explanation:'Adjectives describe nouns ("a quick runner"). Adverbs describe verbs, often ending in -ly ("She runs quickly").',
-    examples:['He is a careful driver.','He drives carefully.','She gave a quick reply.','She replied quickly.'],
+    examples:['He is a careful driver.','He drives carefully.','She gave a quick reply.','She replied quickly.','Advanced: Despite performing exceptionally well, she remained remarkably humble about her success.'],
     quiz:[{q:'Choose the correct word: "She sings ___."', options:['beautiful','beautifully','beauty'], answer:1}] },
   { id:'g22', title:'Prepositions of Time (in, on, at)', level:'Elementary', explanation:'Use "in" for months/years ("in June"), "on" for days/dates ("on Monday"), and "at" for exact times ("at 5 PM").',
-    examples:['I was born in 1998.','The meeting is on Friday.','We start at 9 AM.'],
+    examples:['I was born in 1998.','The meeting is on Friday.','We start at 9 AM.','Advanced: The conference will be held in December, on the 15th, at 10 AM sharp.'],
     quiz:[{q:'Choose the correct preposition: "The exam is ___ March."', options:['in','on','at'], answer:0}] },
   { id:'g23', title:'Question Tags', level:'Intermediate', explanation:'Question tags turn a statement into a question, often to confirm something: "It\'s hot, isn\'t it?" "You don\'t smoke, do you?"',
-    examples:['You like coffee, don\'t you?','She isn\'t coming, is she?','They finished the project, didn\'t they?'],
+    examples:['You like coffee, don\'t you?','She isn\'t coming, is she?','They finished the project, didn\'t they?','Advanced: You haven\'t submitted the report yet, have you? (a negative statement takes a positive tag)'],
     quiz:[{q:'Complete the tag: "You are coming, ___?"', options:['aren\'t you','don\'t you','isn\'t it'], answer:0}] },
   { id:'g24', title:'Direct and Indirect Questions', level:'Advanced', explanation:'Indirect (embedded) questions sound more polite: "Where is the station?" becomes "Could you tell me where the station is?" Note the word order changes — no inversion in the embedded part.',
-    examples:['Direct: Where is the bathroom? Indirect: Could you tell me where the bathroom is?','Direct: What time is it? Indirect: Do you know what time it is?'],
+    examples:['Direct: Where is the bathroom? Indirect: Could you tell me where the bathroom is?','Direct: What time is it? Indirect: Do you know what time it is?','Advanced: Could you let me know whether the flight has been delayed?'],
     quiz:[{q:'Choose the correct indirect question:', options:['Could you tell me where is the station?','Could you tell me where the station is?','Could you tell me where station is?'], answer:1}] },
   { id:'g25', title:'Expressing Opinions', level:'Intermediate', explanation:'Useful phrases for giving opinions: "In my opinion...", "I think that...", "From my point of view...", "I believe..."',
-    examples:['In my opinion, this plan will work.','I think we should wait a little longer.','From my point of view, honesty matters most.'],
+    examples:['In my opinion, this plan will work.','I think we should wait a little longer.','From my point of view, honesty matters most.','Advanced: As far as I\'m concerned, the new policy will improve efficiency, although some colleagues disagree.'],
     quiz:[{q:'Which phrase introduces an opinion?', options:['According to the report...','In my opinion...','The weather today is...'], answer:1}] },
   { id:'g26', title:'Making Suggestions', level:'Elementary', explanation:'Common ways to suggest something: "Why don\'t we...", "How about...", "Let\'s...", "Maybe we could..."',
-    examples:['Why don\'t we go for a walk?','How about trying the new restaurant?','Let\'s finish this before lunch.'],
+    examples:['Why don\'t we go for a walk?','How about trying the new restaurant?','Let\'s finish this before lunch.','Advanced: Perhaps it would be worth considering a shorter deadline instead of postponing the entire project.'],
     quiz:[{q:'Choose the correct suggestion:', options:['How about to go for a walk?','How about going for a walk?','How about go for a walk?'], answer:1}] },
   { id:'g27', title:'Giving Advice (should, ought to, had better)', level:'Intermediate', explanation:'"Should" and "ought to" give general advice; "had better" is stronger, often with a warning of consequence.',
-    examples:['You should drink more water.','You ought to see a doctor.','You had better leave now or you\'ll miss the bus.'],
+    examples:['You should drink more water.','You ought to see a doctor.','You had better leave now or you\'ll miss the bus.','Advanced: You\'d better double-check the figures, or the client might question the report\'s accuracy.'],
     quiz:[{q:'Choose the correct sentence:', options:['You should to rest.','You should rest.','You should resting.'], answer:1}] },
   { id:'g28', title:'Expressing Certainty and Uncertainty', level:'Intermediate', explanation:'Use "definitely / certainly" for certainty and "might / may / perhaps" for uncertainty.',
-    examples:['She will definitely come to the party.','It might rain later.','Perhaps we should leave earlier.'],
+    examples:['She will definitely come to the party.','It might rain later.','Perhaps we should leave earlier.','Advanced: She is bound to succeed, though there\'s a slight chance the funding could fall through.'],
     quiz:[{q:'Choose the word showing more uncertainty:', options:['definitely','certainly','might'], answer:2}] },
   { id:'g29', title:'Causative Verbs (have/get something done)', level:'Advanced', explanation:'Use "have/get something done" when someone else does an action for you: "I had my hair cut" means someone else cut it, not you.',
-    examples:['I had my car repaired.','She is getting her house painted.','We had the documents printed.'],
+    examples:['I had my car repaired.','She is getting her house painted.','We had the documents printed.','Advanced: We are having the entire office renovated while having the old furniture donated to charity.'],
     quiz:[{q:'Choose the correct causative form:', options:['I cut my hair yesterday (by a barber).','I had my hair cut yesterday.','I having my hair cut yesterday.'], answer:1}] },
   { id:'g30', title:'Used to / Would for Past Habits', level:'Intermediate', explanation:'"Used to" describes past habits or states that are no longer true: "I used to live in Delhi." "Would" also describes repeated past actions but not states.',
-    examples:['I used to play cricket every day.','We would visit our grandparents every summer.','She used to be shy, but not anymore.'],
+    examples:['I used to play cricket every day.','We would visit our grandparents every summer.','She used to be shy, but not anymore.','Advanced: When I was younger, I used to dread public speaking, though I would always volunteer anyway.'],
     quiz:[{q:'Choose the correct sentence about a past habit:', options:['I use to wake up early.','I used to wake up early.','I am used to wake up early.'], answer:1}] },
   { id:'g31', title:'Too / Enough', level:'Elementary', explanation:'"Too" means more than necessary (too hot). "Enough" means a sufficient amount, and comes after adjectives but before nouns: "old enough", "enough time".',
-    examples:['This tea is too hot to drink.','Are you old enough to vote?','We don\'t have enough time.'],
+    examples:['This tea is too hot to drink.','Are you old enough to vote?','We don\'t have enough time.','Advanced: The proposal was too ambitious to be approved without enough supporting data.'],
     quiz:[{q:'Choose the correct sentence:', options:['I have enough money time.','I don\'t have enough time.','I have time enough.'], answer:1}] },
   { id:'g32', title:'Already, Yet, Still', level:'Intermediate', explanation:'"Already" shows something happened sooner than expected (used in positive sentences). "Yet" is used in questions/negatives for something expected but not done. "Still" shows something ongoing.',
-    examples:['I have already finished my homework.','Have you finished yet?','She is still waiting for the bus.'],
+    examples:['I have already finished my homework.','Have you finished yet?','She is still waiting for the bus.','Advanced: She has already submitted the report, but the client still hasn\'t responded, and we haven\'t received payment yet.'],
     quiz:[{q:'Choose the correct word: "I haven\'t received the parcel ___."', options:['already','yet','still'], answer:1}] }
 ];
 
@@ -1312,37 +1312,37 @@ const PRACTICE_SETS = [
    DATA: SPEAKING PRACTICE TOPICS
 ==================================================================== */
 const SPEAKING_TOPICS = [
-  { id:'sp1', title:'Introductions', sentences:['Hello, my name is ___.','I am from ___.','Nice to meet you!'] },
-  { id:'sp2', title:'School', sentences:['I study in class ___.','My favourite subject is ___.','My teacher is very kind.'] },
-  { id:'sp3', title:'College', sentences:['I am pursuing a degree in ___.','My college is located in ___.','I enjoy campus activities.'] },
-  { id:'sp4', title:'Shopping', sentences:['How much does this cost?','Do you have this in another size?','I would like to pay by card.'] },
-  { id:'sp5', title:'Travelling', sentences:['Where is the nearest station?','How do I get to the airport?','Can you recommend a good hotel?'] },
-  { id:'sp6', title:'Interviews', sentences:['Tell me about yourself.','What are your strengths?','Why should we hire you?'] },
-  { id:'sp7', title:'Meetings', sentences:['Let\'s begin with today\'s agenda.','Could you elaborate on that point?','I agree with your suggestion.'] },
-  { id:'sp8', title:'Everyday Communication', sentences:['How is the weather today?','What are your plans for the weekend?','Could you repeat that please?'] },
-  { id:'sp9', title:'Health', sentences:['I have a headache today.','I would like to book a doctor\'s appointment.','Please take rest and drink water.'] },
-  { id:'sp10', title:'Technology & Internet', sentences:['Could you help me reset my password?','My internet connection is very slow.','Can you share the file over email?'] },
-  { id:'sp11', title:'Family & Relationships', sentences:['I have two siblings.','My parents live in Delhi.','We have dinner together every evening.'] },
-  { id:'sp12', title:'Hobbies & Free Time', sentences:['My hobby is painting.','I enjoy reading on weekends.','I love going for long walks.'] },
-  { id:'sp13', title:'Banking', sentences:['I would like to open a savings account.','Could you check my account balance?','I need to report a lost card.'] },
-  { id:'sp14', title:'Weather & Seasons', sentences:['It is very hot today.','I love the rainy season.','The forecast says it will snow tomorrow.'] },
-  { id:'sp15', title:'Directions', sentences:['How do I get to the station?','Turn left at the next signal.','Is it within walking distance?'] },
-  { id:'sp16', title:'Phone Calls', sentences:['May I speak to Mr. Sharma, please?','Could you hold on for a moment?','I\'ll call you back in five minutes.'] },
-  { id:'sp17', title:'Renting a House', sentences:['What is the monthly rent?','Is the security deposit refundable?','Are utilities included in the rent?'] },
-  { id:'sp18', title:'Festivals & Culture', sentences:['We celebrate this festival every year.','It is a family tradition.','How do you celebrate this occasion?'] },
-  { id:'sp19', title:'Negotiation', sentences:['Could we find a middle ground?','I\'d like to propose a different timeline.','We are flexible on the terms.'] },
-  { id:'sp20', title:'Handling Complaints', sentences:['I apologise for the inconvenience.','We will resolve this as soon as possible.','Thank you for your patience.'] },
-  { id:'sp21', title:'Public Speaking', sentences:['Good afternoon, everyone.','Thank you all for being here today.','Let\'s begin with a quick overview.'] },
-  { id:'sp22', title:'Emails & Messages', sentences:['Could you please send me the file?','I\'ll get back to you by tomorrow.','Thank you for your quick reply.'] },
-  { id:'sp23', title:'At the Pharmacy', sentences:['Do you have anything for a headache?','What is the correct dosage?','Is a prescription needed for this?'] },
-  { id:'sp24', title:'At the Salon', sentences:['I would like a haircut, please.','Just a light trim, please.','Could I book an appointment for Saturday?'] },
-  { id:'sp25', title:'Describing People', sentences:['She has curly hair and a friendly smile.','He is quite tall and outgoing.','My friend is a bit reserved at first.'] },
-  { id:'sp26', title:'Describing Places', sentences:['My hometown is peaceful and green.','The market street is always bustling.','This city has a rich history.'] },
-  { id:'sp27', title:'Sports & Fitness', sentences:['I do a workout every morning.','My favourite sport is football.','Who won the match yesterday?'] },
-  { id:'sp28', title:'Cooking & Food', sentences:['First, chop the onions finely.','This recipe needs five ingredients.','I love the flavour of this dish.'] },
-  { id:'sp29', title:'Pets & Animals', sentences:['I have a pet dog named Leo.','I walk my dog every evening.','We take him to the vet regularly.'] },
-  { id:'sp30', title:'Online Meetings', sentences:['Could you mute yourself, please?','Can you share your screen?','Let\'s stick to today\'s agenda.'] },
-  { id:'sp31', title:'Environment & Nature', sentences:['We should recycle more at home.','Pollution is a serious problem in cities.','Renewable energy is better for the planet.'] }
+  { id:'sp1', title:'Introductions', sentences:['Hello, my name is ___.','I am from ___.','Nice to meet you!','It\'s a pleasure to finally meet you in person after all our email exchanges.'] },
+  { id:'sp2', title:'School', sentences:['I study in class ___.','My favourite subject is ___.','My teacher is very kind.','I\'ve been struggling a bit with algebra this term, so I\'ve started attending extra classes after school.'] },
+  { id:'sp3', title:'College', sentences:['I am pursuing a degree in ___.','My college is located in ___.','I enjoy campus activities.','I\'m considering switching my major, but I want to talk to my academic advisor before making a final decision.'] },
+  { id:'sp4', title:'Shopping', sentences:['How much does this cost?','Do you have this in another size?','I would like to pay by card.','Could you tell me if this is the final sale price, or is there room for a discount if I buy two?'] },
+  { id:'sp5', title:'Travelling', sentences:['Where is the nearest station?','How do I get to the airport?','Can you recommend a good hotel?','Could you suggest an alternate route, since the highway seems to be congested at this hour?'] },
+  { id:'sp6', title:'Interviews', sentences:['Tell me about yourself.','What are your strengths?','Why should we hire you?','Could you walk me through a challenging situation you handled and what you learned from it?'] },
+  { id:'sp7', title:'Meetings', sentences:['Let\'s begin with today\'s agenda.','Could you elaborate on that point?','I agree with your suggestion.','Before we move on, I\'d like to flag a concern about the revised timeline.'] },
+  { id:'sp8', title:'Everyday Communication', sentences:['How is the weather today?','What are your plans for the weekend?','Could you repeat that please?','I completely understand your frustration, but let\'s see if we can find a workaround together.'] },
+  { id:'sp9', title:'Health', sentences:['I have a headache today.','I would like to book a doctor\'s appointment.','Please take rest and drink water.','I\'ve been feeling unusually fatigued for the past few days, so I\'d like to get a check-up.'] },
+  { id:'sp10', title:'Technology & Internet', sentences:['Could you help me reset my password?','My internet connection is very slow.','Can you share the file over email?','I think the issue might be with the server, since the app crashes every time I try to sync my files.'] },
+  { id:'sp11', title:'Family & Relationships', sentences:['I have two siblings.','My parents live in Delhi.','We have dinner together every evening.','Balancing time between my career and my family has been challenging, but we make it work.'] },
+  { id:'sp12', title:'Hobbies & Free Time', sentences:['My hobby is painting.','I enjoy reading on weekends.','I love going for long walks.','Photography has become more than a hobby for me; I\'m now considering freelancing on weekends.'] },
+  { id:'sp13', title:'Banking', sentences:['I would like to open a savings account.','Could you check my account balance?','I need to report a lost card.','I\'d like to understand the terms of this fixed deposit before committing my savings to it.'] },
+  { id:'sp14', title:'Weather & Seasons', sentences:['It is very hot today.','I love the rainy season.','The forecast says it will snow tomorrow.','The weather has been quite unpredictable lately, so I\'d recommend carrying an umbrella just in case.'] },
+  { id:'sp15', title:'Directions', sentences:['How do I get to the station?','Turn left at the next signal.','Is it within walking distance?','If you miss the second turn, just continue straight until you reach the roundabout, and it\'s the second exit.'] },
+  { id:'sp16', title:'Phone Calls', sentences:['May I speak to Mr. Sharma, please?','Could you hold on for a moment?','I\'ll call you back in five minutes.','I\'m sorry, the line isn\'t very clear — could you move somewhere with better reception?'] },
+  { id:'sp17', title:'Renting a House', sentences:['What is the monthly rent?','Is the security deposit refundable?','Are utilities included in the rent?','Would it be possible to negotiate a longer lease in exchange for a lower monthly rent?'] },
+  { id:'sp18', title:'Festivals & Culture', sentences:['We celebrate this festival every year.','It is a family tradition.','How do you celebrate this occasion?','Every region celebrates this festival a little differently, which I find fascinating.'] },
+  { id:'sp19', title:'Negotiation', sentences:['Could we find a middle ground?','I\'d like to propose a different timeline.','We are flexible on the terms.','If you can offer better payment terms, we\'d be willing to commit to a longer contract.'] },
+  { id:'sp20', title:'Handling Complaints', sentences:['I apologise for the inconvenience.','We will resolve this as soon as possible.','Thank you for your patience.','I completely understand why you\'re upset, and I want to assure you we\'re taking this seriously.'] },
+  { id:'sp21', title:'Public Speaking', sentences:['Good afternoon, everyone.','Thank you all for being here today.','Let\'s begin with a quick overview.','I know this topic might seem complex at first, but by the end of this talk, it will feel much clearer.'] },
+  { id:'sp22', title:'Emails & Messages', sentences:['Could you please send me the file?','I\'ll get back to you by tomorrow.','Thank you for your quick reply.','I wanted to follow up on my previous email, as I haven\'t received a response yet.'] },
+  { id:'sp23', title:'At the Pharmacy', sentences:['Do you have anything for a headache?','What is the correct dosage?','Is a prescription needed for this?','I\'m currently taking another medication — will this interact with it in any way?'] },
+  { id:'sp24', title:'At the Salon', sentences:['I would like a haircut, please.','Just a light trim, please.','Could I book an appointment for Saturday?','I\'d like something low-maintenance that still looks professional for work.'] },
+  { id:'sp25', title:'Describing People', sentences:['She has curly hair and a friendly smile.','He is quite tall and outgoing.','My friend is a bit reserved at first.','Despite being quite reserved at first, she becomes incredibly warm once you get to know her.'] },
+  { id:'sp26', title:'Describing Places', sentences:['My hometown is peaceful and green.','The market street is always bustling.','This city has a rich history.','What makes this city unique is how it blends historic architecture with a modern skyline.'] },
+  { id:'sp27', title:'Sports & Fitness', sentences:['I do a workout every morning.','My favourite sport is football.','Who won the match yesterday?','I\'ve been gradually increasing my running distance to prepare for next month\'s half marathon.'] },
+  { id:'sp28', title:'Cooking & Food', sentences:['First, chop the onions finely.','This recipe needs five ingredients.','I love the flavour of this dish.','The secret to this dish is letting the sauce simmer slowly so the flavours fully develop.'] },
+  { id:'sp29', title:'Pets & Animals', sentences:['I have a pet dog named Leo.','I walk my dog every evening.','We take him to the vet regularly.','We adopted him from a shelter, and it took a few weeks before he fully settled in.'] },
+  { id:'sp30', title:'Online Meetings', sentences:['Could you mute yourself, please?','Can you share your screen?','Let\'s stick to today\'s agenda.','Let\'s park that discussion for now and revisit it once we have the updated figures.'] },
+  { id:'sp31', title:'Environment & Nature', sentences:['We should recycle more at home.','Pollution is a serious problem in cities.','Renewable energy is better for the planet.','Switching to renewable energy sources could significantly reduce our city\'s carbon footprint over the next decade.'] }
 ];
 
 /* ====================================================================
@@ -1526,61 +1526,73 @@ const MATH_LESSONS = [
     objective:'Add and subtract whole numbers confidently.',
     concept:'Addition combines quantities; subtraction finds the difference between them. Line up numbers by place value (ones, tens, hundreds) before adding or subtracting.',
     example:'47 + 26 = 73 (7+6=13, write 3 carry 1; 4+2+1=7) · 82 − 35 = 47 (borrow from tens: 12−5=7; 7−3=4)',
+    advanced:'Advanced: 813 − 456 = 357 (3-digit subtraction with regrouping twice: borrow in tens and hundreds places).',
     practice:[{q:'What is 56 + 38?', options:['84','94','104'], answer:1}] },
   { id:'m2', title:'Multiplication & Division', grade:'Grade 2-3', category:'Number Operations',
     objective:'Multiply and divide whole numbers using known facts.',
     concept:'Multiplication is repeated addition; division splits a quantity into equal groups. Multiplication and division are inverse operations.',
     example:'6 × 7 = 42 (7 added six times) · 42 ÷ 6 = 7 (42 split into 6 equal groups of 7)',
+    advanced:'Advanced: 34 × 27 = 918 (2-digit × 2-digit) · 144 ÷ 12 = 12 (dividing a 3-digit number by a 2-digit number).',
     practice:[{q:'What is 9 × 8?', options:['63','72','81'], answer:1}] },
   { id:'m3', title:'Understanding Fractions', grade:'Grade 3-4', category:'Fractions & Decimals',
     objective:'Understand fractions as equal parts of a whole.',
     concept:'A fraction a/b means the whole is divided into b equal parts, and we take a of them. The top number is the numerator, the bottom is the denominator.',
     example:'3/4 means 3 out of 4 equal parts. 1/2 + 1/4 = 2/4 + 1/4 = 3/4 (find a common denominator first).',
+    advanced:'Advanced: 2/3 + 3/4 = 8/12 + 9/12 = 17/12 = 1 5/12 (find the LCM of the denominators, 12, then convert both fractions before adding).',
     practice:[{q:'What is 1/2 + 1/4?', options:['2/6','3/4','1/4'], answer:1}] },
   { id:'m4', title:'Decimals', grade:'Grade 4-5', category:'Fractions & Decimals',
     objective:'Read, write and calculate with decimal numbers.',
     concept:'Decimals extend place value beyond the ones place using a decimal point: tenths, hundredths, thousandths.',
     example:'3.25 = 3 ones + 2 tenths + 5 hundredths. 1.5 + 2.75 = 4.25 (line up decimal points before adding).',
+    advanced:'Advanced: 2.5 × 1.4 = 3.5 (multiply as whole numbers, 25×14=350, then place the decimal point: 2 total decimal places → 3.50).',
     practice:[{q:'What is 1.5 + 2.75?', options:['3.25','4.25','4.75'], answer:1}] },
   { id:'m5', title:'Percentages', grade:'Grade 5-6', category:'Fractions & Decimals',
     objective:'Understand and calculate percentages.',
     concept:'Percent means "out of 100". To find a percentage of a number, convert the percent to a decimal or fraction and multiply.',
     example:'25% of 80 = 0.25 × 80 = 20. 50% = 1/2, so 50% of 60 = 30.',
+    advanced:'Advanced: A ₹250 item increases in price by 20%. New price = 250 + (0.20×250) = 250+50 = ₹300 (percentage increase).',
     practice:[{q:'What is 25% of 80?', options:['15','20','25'], answer:1} ] },
   { id:'m6', title:'Shapes & Perimeter', grade:'Grade 3-5', category:'Geometry & Measurement',
     objective:'Identify shapes and calculate perimeter.',
     concept:'Perimeter is the total distance around a shape — add the lengths of all sides.',
     example:'A rectangle 6 cm by 4 cm has perimeter = 2×(6+4) = 20 cm. A square with side 5 cm has perimeter = 4×5 = 20 cm.',
+    advanced:'Advanced: A regular pentagon with every side 7 cm has perimeter = 5×7 = 35 cm (perimeter of any regular polygon = number of sides × side length).',
     practice:[{q:'Perimeter of a rectangle 8 cm by 3 cm?', options:['11 cm','22 cm','24 cm'], answer:1} ] },
   { id:'m7', title:'Area', grade:'Grade 4-6', category:'Geometry & Measurement',
     objective:'Calculate the area of basic shapes.',
     concept:'Area measures the space inside a shape. For a rectangle: area = length × width. For a triangle: area = ½ × base × height.',
     example:'A rectangle 6 cm by 4 cm has area = 6×4 = 24 sq cm. A triangle with base 8 cm and height 5 cm has area = ½×8×5 = 20 sq cm.',
+    advanced:'Advanced: A trapezium with parallel sides 6 cm and 10 cm, height 4 cm, has area = ½×(6+10)×4 = ½×16×4 = 32 sq cm.',
     practice:[{q:'Area of a rectangle 7 cm by 5 cm?', options:['12 sq cm','24 sq cm','35 sq cm'], answer:2} ] },
   { id:'m8', title:'Units of Measurement', grade:'Grade 3-6', category:'Geometry & Measurement',
     objective:'Convert between common units of length, weight and volume.',
     concept:'Metric units scale by powers of 10: 1 metre = 100 centimetres, 1 kilogram = 1000 grams, 1 litre = 1000 millilitres.',
     example:'250 cm = 2.5 m. 1.5 kg = 1500 g.',
+    advanced:'Advanced: 2.5 km = 2500 m = 250,000 cm (chained conversion: multiply by 1000 to get metres, then by 100 to get centimetres).',
     practice:[{q:'How many centimetres in 3.5 metres?', options:['35 cm','350 cm','3500 cm'], answer:1} ] },
   { id:'m9', title:'Patterns & Sequences', grade:'Grade 4-6', category:'Patterns & Algebra',
     objective:'Identify and extend number patterns.',
     concept:'A pattern follows a consistent rule — look at the difference or ratio between consecutive terms to find the rule.',
     example:'2, 5, 8, 11, ... adds 3 each time → next term is 14. 3, 6, 12, 24, ... doubles each time → next term is 48.',
+    advanced:'Advanced: 1, 4, 9, 16, 25, ? — these are square numbers (1², 2², 3², 4², 5²), so the next term is 6² = 36.',
     practice:[{q:'What comes next: 4, 8, 12, 16, ?', options:['18','20','24'], answer:1} ] },
   { id:'m10', title:'Introduction to Algebra', grade:'Grade 6-8', category:'Patterns & Algebra',
     objective:'Solve simple equations for an unknown value.',
     concept:'Algebra uses letters (like x) to represent unknown numbers. To solve an equation, do the same operation to both sides until x is alone.',
     example:'x + 5 = 12 → x = 12 − 5 = 7. 3x = 21 → x = 21 ÷ 3 = 7.',
+    advanced:'Advanced: Solve 2x + 5 = 17 (a two-step equation): subtract 5 from both sides → 2x = 12, then divide by 2 → x = 6.',
     practice:[{q:'Solve for x: x + 9 = 15', options:['x=5','x=6','x=24'], answer:1} ] },
   { id:'m11', title:'Word Problems', grade:'Grade 3-8', category:'Problem Solving',
     objective:'Translate real-world situations into mathematical operations.',
     concept:'Read carefully to identify what is known, what is asked, and which operation(s) connect them. Write a simple equation before solving.',
     example:'Riya has 45 stickers and gives away 18. How many are left? 45 − 18 = 27 stickers.',
+    advanced:'Advanced: A farmer has 3 fields, each with 45 rows of 12 plants. Total plants = 3 × 45 × 12 = 1620 (a multi-step word problem combining three quantities).',
     practice:[{q:'A shop had 120 apples and sold 75. How many are left?', options:['35','45','55'], answer:1} ] },
   { id:'m12', title:'Logical Reasoning', grade:'Grade 4-8', category:'Problem Solving',
     objective:'Use logical thinking to solve puzzles and reasoning questions.',
     concept:'Logical reasoning problems ask you to find relationships, eliminate impossible options, and reason step by step rather than calculate directly.',
     example:'If all cats are animals, and Whiskers is a cat, then Whiskers is definitely an animal — this is a valid logical conclusion.',
+    advanced:'Advanced: If today is Wednesday, what day will it be after 100 days? 100 ÷ 7 leaves a remainder of 2, so count 2 days from Wednesday → Friday (using remainders to solve day-of-week puzzles).',
     practice:[{q:'If A is taller than B, and B is taller than C, who is shortest?', options:['A','B','C'], answer:2} ] }
 ];
 const MATH_PRACTICE_SETS = [
@@ -1620,7 +1632,8 @@ const VEDIC_TECHNIQUES = [
     method:'Take the digit(s) before the 5 (call it N). Multiply N by (N+1). Write that result, then write 25 after it.',
     examples:[
       {problem:'25²', steps:'N = 2. N×(N+1) = 2×3 = 6. Write 25 after it.', answer:'625'},
-      {problem:'65²', steps:'N = 6. N×(N+1) = 6×7 = 42. Write 25 after it.', answer:'4225'}
+      {problem:'65²', steps:'N = 6. N×(N+1) = 6×7 = 42. Write 25 after it.', answer:'4225'},
+      {problem:'125² (advanced — 3-digit N)', steps:'N = 12. N×(N+1) = 12×13 = 156. Write 25 after it.', answer:'15625'}
     ],
     limitation:'Only works for numbers ending in 5. For other numbers, use Urdhva-Tiryagbhyam or ordinary multiplication.' },
   { id:'vt2', name:'Nikhilam Navatashcaramam Dashatah', meaning:'All from 9 and the last from 10', level:'Intermediate',
@@ -1628,21 +1641,24 @@ const VEDIC_TECHNIQUES = [
     method:'Find each number\'s deficiency from the base. Cross-subtract one deficiency from the other number for the left part. Multiply the two deficiencies for the right part (padded to the base\'s digit-width).',
     examples:[
       {problem:'97 × 96 (base 100)', steps:'Deficiencies: 100−97=3, 100−96=4. Left: 97−4=93. Right: 3×4=12.', answer:'9312'},
-      {problem:'8 × 7 (base 10)', steps:'Deficiencies: 10−8=2, 10−7=3. Left: 8−3=5. Right: 2×3=6.', answer:'56'}
+      {problem:'8 × 7 (base 10)', steps:'Deficiencies: 10−8=2, 10−7=3. Left: 8−3=5. Right: 2×3=6.', answer:'56'},
+      {problem:'988 × 996 (advanced — base 1000)', steps:'Deficiencies: 1000−988=12, 1000−996=4. Left: 988−4=984. Right: 12×4=48, padded to 3 digits: 048.', answer:'984048'}
     ],
     limitation:'Works best when both numbers are close to the same base and below it. A separate variant handles numbers above the base.' },
   { id:'vt3', name:'Urdhva-Tiryagbhyam', meaning:'Vertically and crosswise', level:'Intermediate',
     usedFor:'General multiplication of any two numbers, digit by digit.',
     method:'Multiply digits vertically (same position) and crosswise (diagonal pairs), adding the crosswise products together, and carrying over between place values.',
     examples:[
-      {problem:'23 × 46', steps:'Units: 3×6=18 (write 8, carry 1). Cross: 2×6+3×4=24, +carry=25 (write 5, carry 2). Tens: 2×4=8, +carry=10.', answer:'1058'}
+      {problem:'23 × 46', steps:'Units: 3×6=18 (write 8, carry 1). Cross: 2×6+3×4=24, +carry=25 (write 5, carry 2). Tens: 2×4=8, +carry=10.', answer:'1058'},
+      {problem:'123 × 456 (advanced — 3-digit × 3-digit)', steps:'Units: 3×6=18 (8, carry1). Next: 2×6+3×5=27+1=28 (8, carry2). Next: 1×6+2×5+3×4=28+2=30 (0, carry3). Next: 1×5+2×4=13+3=16 (6, carry1). Last: 1×4+1=5.', answer:'56088'}
     ],
     limitation:'Works for any numbers, but requires careful carry-tracking for larger numbers — practice with 2-digit numbers first.' },
   { id:'vt4', name:'Anurupyena', meaning:'Proportionately', level:'Advanced',
     usedFor:'Multiplying numbers that are close to a convenient working base which is a multiple or sub-multiple of 10, 100, etc. (not the base itself).',
     method:'Pick a nearby convenient base (e.g. 50, which is 100÷2). Find deviations from that working base. Cross-add/subtract for the left part, then scale the left part by (working base ÷ 10ⁿ). Multiply the deviations for the right part.',
     examples:[
-      {problem:'46 × 44 (working base 50 = 100÷2)', steps:'Deviations: 46−50=−4, 44−50=−6. Cross: 46+(−6)=40, scaled by 50/100 → 40×0.5=20. Right: (−4)×(−6)=24.', answer:'2024'}
+      {problem:'46 × 44 (working base 50 = 100÷2)', steps:'Deviations: 46−50=−4, 44−50=−6. Cross: 46+(−6)=40, scaled by 50/100 → 40×0.5=20. Right: (−4)×(−6)=24.', answer:'2024'},
+      {problem:'198 × 197 (advanced — working base 200 = 100×2)', steps:'Deviations: 198−200=−2, 197−200=−3. Cross: 198+(−3)=195, scaled by 200/100=2 → 195×2=390. Right: (−2)×(−3)=6, padded to 2 digits: 06.', answer:'39006'}
     ],
     limitation:'Requires choosing a good working base and correctly scaling — best attempted after mastering Nikhilam.' },
   { id:'vt5', name:'Yavadunam', meaning:'Whatever the deficiency', level:'Intermediate',
@@ -1650,7 +1666,8 @@ const VEDIC_TECHNIQUES = [
     method:'Find the deficiency (or surplus) from the base. Subtract the deficiency from the number for the left part. Square the deficiency for the right part (padded to the base\'s digit-width).',
     examples:[
       {problem:'98²', steps:'Deficiency: 100−98=2. Left: 98−2=96. Right: 2²=04.', answer:'9604'},
-      {problem:'994²', steps:'Deficiency: 1000−994=6. Left: 994−6=988. Right: 6²=036.', answer:'988036'}
+      {problem:'994²', steps:'Deficiency: 1000−994=6. Left: 994−6=988. Right: 6²=036.', answer:'988036'},
+      {problem:'9996² (advanced — base 10000)', steps:'Deficiency: 10000−9996=4. Left: 9996−4=9992. Right: 4²=16, padded to 4 digits: 0016.', answer:'99920016'}
     ],
     limitation:'Most efficient when the number is very close to the base — for numbers far from any base, use Urdhva-Tiryagbhyam instead.' },
   { id:'vt6', name:'Ekanyunena Purvena', meaning:'One less than the previous one', level:'Beginner',
@@ -1658,7 +1675,8 @@ const VEDIC_TECHNIQUES = [
     method:'Left part = multiplicand − 1. Right part = (base of 9s) − left part, i.e. the complement.',
     examples:[
       {problem:'47 × 99', steps:'Left: 47−1=46. Right: 99−46=53.', answer:'4653'},
-      {problem:'738 × 999', steps:'Left: 738−1=737. Right: 999−737=262.', answer:'737262'}
+      {problem:'738 × 999', steps:'Left: 738−1=737. Right: 999−737=262.', answer:'737262'},
+      {problem:'4321 × 9999 (advanced — 4-digit)', steps:'Left: 4321−1=4320. Right: 9999−4320=5679.', answer:'43205679'}
     ],
     limitation:'Cleanest when the multiplicand and the count of 9s have the same number of digits.' }
 ];
@@ -1764,7 +1782,12 @@ const LANG_CONTENT = {
       {id:'hindi_p7', en:'No', target:'नहीं', translit:'Nahin'},
       {id:'hindi_p8', en:'Good morning', target:'सुप्रभात', translit:'Suprabhat'},
       {id:'hindi_p9', en:'What is your name?', target:'आपका नाम क्या है?', translit:'Aapka naam kya hai?'},
-      {id:'hindi_p10', en:'My name is...', target:'मेरा नाम ... है', translit:'Mera naam ... hai'}
+      {id:'hindi_p10', en:'My name is...', target:'मेरा नाम ... है', translit:'Mera naam ... hai'},
+      {id:'hindi_p11', en:'Could you help me, please?', target:'क्या आप मेरी मदद कर सकते हैं?', translit:'Kya aap meri madad kar sakte hain?', advanced:true},
+      {id:'hindi_p12', en:'I would like to order food.', target:'मुझे खाना ऑर्डर करना है।', translit:'Mujhe khana order karna hai.', advanced:true},
+      {id:'hindi_p13', en:'Where is the nearest hospital?', target:'सबसे नज़दीकी अस्पताल कहाँ है?', translit:'Sabse nazdeeki aspatal kahan hai?', advanced:true},
+      {id:'hindi_p14', en:'How much does this cost?', target:'यह कितने का है?', translit:'Yeh kitne ka hai?', advanced:true},
+      {id:'hindi_p15', en:'I don\'t understand, could you repeat that?', target:'मुझे समझ नहीं आया, क्या आप दोबारा कह सकते हैं?', translit:'Mujhe samajh nahin aaya, kya aap dobara kah sakte hain?', advanced:true}
     ],
     vocab: [
       {id:'hindi_v1', en:'One', target:'एक', translit:'Ek', category:'Numbers'},
@@ -1800,7 +1823,12 @@ const LANG_CONTENT = {
       {id:'tamil_p7', en:'No', target:'இல்லை', translit:'Illai'},
       {id:'tamil_p8', en:'Good morning', target:'காலை வணக்கம்', translit:'Kaalai vanakkam'},
       {id:'tamil_p9', en:'What is your name?', target:'உங்கள் பெயர் என்ன?', translit:'Ungal peyar enna?'},
-      {id:'tamil_p10', en:'My name is...', target:'என் பெயர் ...', translit:'En peyar ...'}
+      {id:'tamil_p10', en:'My name is...', target:'என் பெயர் ...', translit:'En peyar ...'},
+      {id:'tamil_p11', en:'Could you help me, please?', target:'தயவுசெய்து எனக்கு உதவி செய்ய முடியுமா?', translit:'Thayavu seydhu enakku udhavi seyya mudiyuma?', advanced:true},
+      {id:'tamil_p12', en:'I would like to order food.', target:'எனக்கு உணவு ஆர்டர் செய்ய வேண்டும்.', translit:'Enakku unavu order seyya vendum.', advanced:true},
+      {id:'tamil_p13', en:'Where is the nearest hospital?', target:'அருகிலுள்ள மருத்துவமனை எங்கே?', translit:'Arugilulla maruthuvamanai enge?', advanced:true},
+      {id:'tamil_p14', en:'How much does this cost?', target:'இதன் விலை என்ன?', translit:'Idhan vilai enna?', advanced:true},
+      {id:'tamil_p15', en:'I don\'t understand, could you repeat that?', target:'எனக்கு புரியவில்லை, மீண்டும் சொல்ல முடியுமா?', translit:'Enakku puriyavillai, meendum solla mudiyuma?', advanced:true}
     ],
     vocab: [
       {id:'tamil_v1', en:'One', target:'ஒன்று', translit:'Ondru', category:'Numbers'},
@@ -1836,7 +1864,12 @@ const LANG_CONTENT = {
       {id:'telugu_p7', en:'No', target:'కాదు', translit:'Kaadu'},
       {id:'telugu_p8', en:'Good morning', target:'శుభోదయం', translit:'Shubhodayam'},
       {id:'telugu_p9', en:'What is your name?', target:'మీ పేరు ఏమిటి?', translit:'Mee peru emiti?'},
-      {id:'telugu_p10', en:'My name is...', target:'నా పేరు ...', translit:'Naa peru ...'}
+      {id:'telugu_p10', en:'My name is...', target:'నా పేరు ...', translit:'Naa peru ...'},
+      {id:'telugu_p11', en:'Could you help me, please?', target:'దయచేసి నాకు సహాయం చేయగలరా?', translit:'Dayachesi naaku sahayam cheyagalara?', advanced:true},
+      {id:'telugu_p12', en:'I would like to order food.', target:'నాకు ఆహారం ఆర్డర్ చేయాలి.', translit:'Naaku aaharam order cheyaali.', advanced:true},
+      {id:'telugu_p13', en:'Where is the nearest hospital?', target:'సమీప ఆసుపత్రి ఎక్కడ ఉంది?', translit:'Sameepa aasupatri ekkada undi?', advanced:true},
+      {id:'telugu_p14', en:'How much does this cost?', target:'దీని ధర ఎంత?', translit:'Deeni dhara entha?', advanced:true},
+      {id:'telugu_p15', en:'I don\'t understand, could you repeat that?', target:'నాకు అర్థం కాలేదు, మళ్ళీ చెప్పగలరా?', translit:'Naaku artham kaaledu, malli cheppagalara?', advanced:true}
     ],
     vocab: [
       {id:'telugu_v1', en:'One', target:'ఒకటి', translit:'Okati', category:'Numbers'},
@@ -1872,7 +1905,12 @@ const LANG_CONTENT = {
       {id:'spanish_p7', en:'No', target:'No', translit:'No'},
       {id:'spanish_p8', en:'Good morning', target:'Buenos días', translit:'Bwenos deeas'},
       {id:'spanish_p9', en:'What is your name?', target:'¿Cómo te llamas?', translit:'Komo te yamas'},
-      {id:'spanish_p10', en:'My name is...', target:'Me llamo ...', translit:'Me yamo ...'}
+      {id:'spanish_p10', en:'My name is...', target:'Me llamo ...', translit:'Me yamo ...'},
+      {id:'spanish_p11', en:'Could you help me, please?', target:'¿Podría ayudarme, por favor?', translit:'Podria ayudarme, por favor', advanced:true},
+      {id:'spanish_p12', en:'I would like to order food.', target:'Me gustaría pedir comida.', translit:'Me gustaria pedir comida', advanced:true},
+      {id:'spanish_p13', en:'Where is the nearest hospital?', target:'¿Dónde está el hospital más cercano?', translit:'Donde esta el hospital mas cercano', advanced:true},
+      {id:'spanish_p14', en:'How much does this cost?', target:'¿Cuánto cuesta esto?', translit:'Cuanto cuesta esto', advanced:true},
+      {id:'spanish_p15', en:'I don\'t understand, could you repeat that?', target:'No entiendo, ¿podría repetirlo?', translit:'No entiendo, podria repetirlo', advanced:true}
     ],
     vocab: [
       {id:'spanish_v1', en:'One', target:'Uno', translit:'Oo-no', category:'Numbers'},
@@ -1908,7 +1946,12 @@ const LANG_CONTENT = {
       {id:'french_p7', en:'No', target:'Non', translit:'Noh'},
       {id:'french_p8', en:'Good evening', target:'Bonsoir', translit:'Bon-swahr'},
       {id:'french_p9', en:'What is your name?', target:'Comment tu t\'appelles ?', translit:'Koman tu tapel'},
-      {id:'french_p10', en:'My name is...', target:'Je m\'appelle ...', translit:'Zhuh mapel ...'}
+      {id:'french_p10', en:'My name is...', target:'Je m\'appelle ...', translit:'Zhuh mapel ...'},
+      {id:'french_p11', en:'Could you help me, please?', target:'Pourriez-vous m\'aider, s\'il vous plaît ?', translit:'Pooryay-voo meday, seel voo pleh', advanced:true},
+      {id:'french_p12', en:'I would like to order food.', target:'Je voudrais commander à manger.', translit:'Zhuh voodray komonday ah monzhay', advanced:true},
+      {id:'french_p13', en:'Where is the nearest hospital?', target:'Où est l\'hôpital le plus proche ?', translit:'Oo eh lopeetal luh ploo prosh', advanced:true},
+      {id:'french_p14', en:'How much does this cost?', target:'Combien ça coûte ?', translit:'Combyan sa koot', advanced:true},
+      {id:'french_p15', en:'I don\'t understand, could you repeat that?', target:'Je ne comprends pas, pourriez-vous répéter ?', translit:'Zhuh nuh comprond pah, pooryay-voo raypaytay', advanced:true}
     ],
     vocab: [
       {id:'french_v1', en:'One', target:'Un', translit:'Uh(n)', category:'Numbers'},
@@ -1944,7 +1987,12 @@ const LANG_CONTENT = {
       {id:'bengali_p7', en:'No', target:'না', translit:'Na'},
       {id:'bengali_p8', en:'Good morning', target:'শুভ সকাল', translit:'Shubho sokal'},
       {id:'bengali_p9', en:'What is your name?', target:'আপনার নাম কি?', translit:'Apnar naam ki?'},
-      {id:'bengali_p10', en:'My name is...', target:'আমার নাম ...', translit:'Amar naam ...'}
+      {id:'bengali_p10', en:'My name is...', target:'আমার নাম ...', translit:'Amar naam ...'},
+      {id:'bengali_p11', en:'Could you help me, please?', target:'আপনি কি আমাকে সাহায্য করতে পারবেন?', translit:'Apni ki amake shahajyo korte parben?', advanced:true},
+      {id:'bengali_p12', en:'I would like to order food.', target:'আমি খাবার অর্ডার করতে চাই।', translit:'Ami khabar order korte chai.', advanced:true},
+      {id:'bengali_p13', en:'Where is the nearest hospital?', target:'নিকটতম হাসপাতাল কোথায়?', translit:'Nikottomo hashpatal kothay?', advanced:true},
+      {id:'bengali_p14', en:'How much does this cost?', target:'এটার দাম কত?', translit:'Etar daam koto?', advanced:true},
+      {id:'bengali_p15', en:'I don\'t understand, could you repeat that?', target:'আমি বুঝতে পারিনি, আবার বলতে পারবেন?', translit:'Ami bujhte parini, abar bolte parben?', advanced:true}
     ],
     vocab: [
       {id:'bengali_v1', en:'One', target:'এক', translit:'Ek', category:'Numbers'},
@@ -1980,7 +2028,12 @@ const LANG_CONTENT = {
       {id:'marathi_p7', en:'No', target:'नाही', translit:'Nahi'},
       {id:'marathi_p8', en:'Good morning', target:'सुप्रभात', translit:'Suprabhat'},
       {id:'marathi_p9', en:'What is your name?', target:'तुमचं नाव काय आहे?', translit:'Tumcha naav kay aahe?'},
-      {id:'marathi_p10', en:'My name is...', target:'माझं नाव ... आहे', translit:'Majhe naav ... aahe'}
+      {id:'marathi_p10', en:'My name is...', target:'माझं नाव ... आहे', translit:'Majhe naav ... aahe'},
+      {id:'marathi_p11', en:'Could you help me, please?', target:'कृपया तुम्ही मला मदत करू शकाल का?', translit:'Kripaya tumhi mala madat karu shakal ka?', advanced:true},
+      {id:'marathi_p12', en:'I would like to order food.', target:'मला जेवण मागवायचे आहे.', translit:'Mala jevan magavaychay aahe.', advanced:true},
+      {id:'marathi_p13', en:'Where is the nearest hospital?', target:'सर्वात जवळचे रुग्णालय कुठे आहे?', translit:'Sarvaat javalche rugnalay kuthe aahe?', advanced:true},
+      {id:'marathi_p14', en:'How much does this cost?', target:'याची किंमत किती आहे?', translit:'Yachi kimmat kiti aahe?', advanced:true},
+      {id:'marathi_p15', en:'I don\'t understand, could you repeat that?', target:'मला समजले नाही, कृपया पुन्हा सांगाल का?', translit:'Mala samajle nahi, kripaya punha sangaal ka?', advanced:true}
     ],
     vocab: [
       {id:'marathi_v1', en:'One', target:'एक', translit:'Ek', category:'Numbers'},
@@ -2016,7 +2069,12 @@ const LANG_CONTENT = {
       {id:'kannada_p7', en:'No', target:'ಇಲ್ಲ', translit:'Illa'},
       {id:'kannada_p8', en:'Good morning', target:'ಶುಭೋದಯ', translit:'Shubhodaya'},
       {id:'kannada_p9', en:'What is your name?', target:'ನಿಮ್ಮ ಹೆಸರೇನು?', translit:'Nimma hesarenu?'},
-      {id:'kannada_p10', en:'My name is...', target:'ನನ್ನ ಹೆಸರು ...', translit:'Nanna hesaru ...'}
+      {id:'kannada_p10', en:'My name is...', target:'ನನ್ನ ಹೆಸರು ...', translit:'Nanna hesaru ...'},
+      {id:'kannada_p11', en:'Could you help me, please?', target:'ದಯವಿಟ್ಟು ನನಗೆ ಸಹಾಯ ಮಾಡುವಿರಾ?', translit:'Dayavittu nanage sahaya maaduvira?', advanced:true},
+      {id:'kannada_p12', en:'I would like to order food.', target:'ನನಗೆ ಆಹಾರ ಆರ್ಡರ್ ಮಾಡಬೇಕು.', translit:'Nanage aahaara order maadabeku.', advanced:true},
+      {id:'kannada_p13', en:'Where is the nearest hospital?', target:'ಹತ್ತಿರದ ಆಸ್ಪತ್ರೆ ಎಲ್ಲಿದೆ?', translit:'Hattirada aaspatre ellide?', advanced:true},
+      {id:'kannada_p14', en:'How much does this cost?', target:'ಇದರ ಬೆಲೆ ಎಷ್ಟು?', translit:'Idara bele eshtu?', advanced:true},
+      {id:'kannada_p15', en:'I don\'t understand, could you repeat that?', target:'ನನಗೆ ಅರ್ಥವಾಗಲಿಲ್ಲ, ಮತ್ತೆ ಹೇಳುವಿರಾ?', translit:'Nanage arthavaagalilla, matte heluvira?', advanced:true}
     ],
     vocab: [
       {id:'kannada_v1', en:'One', target:'ಒಂದು', translit:'Ondu', category:'Numbers'},
@@ -2052,7 +2110,12 @@ const LANG_CONTENT = {
       {id:'malayalam_p7', en:'No', target:'ഇല്ല', translit:'Illa'},
       {id:'malayalam_p8', en:'Good morning', target:'സുപ്രഭാതം', translit:'Suprabhaatham'},
       {id:'malayalam_p9', en:'What is your name?', target:'നിങ്ങളുടെ പേര് എന്താണ്?', translit:'Ningalude peru enthaanu?'},
-      {id:'malayalam_p10', en:'My name is...', target:'എന്റെ പേര് ...', translit:'Ente peru ...'}
+      {id:'malayalam_p10', en:'My name is...', target:'എന്റെ പേര് ...', translit:'Ente peru ...'},
+      {id:'malayalam_p11', en:'Could you help me, please?', target:'ദയവായി എന്നെ സഹായിക്കാമോ?', translit:'Dayavaayi enne sahayikkaamo?', advanced:true},
+      {id:'malayalam_p12', en:'I would like to order food.', target:'എനിക്ക് ഭക്ഷണം ഓർഡർ ചെയ്യണം.', translit:'Enikku bhakshanam order cheyyanam.', advanced:true},
+      {id:'malayalam_p13', en:'Where is the nearest hospital?', target:'അടുത്തുള്ള ആശുപത്രി എവിടെയാണ്?', translit:'Adutulla aashupathri evideyaanu?', advanced:true},
+      {id:'malayalam_p14', en:'How much does this cost?', target:'ഇതിന്റെ വില എത്രയാണ്?', translit:'Ithinte vila ethrayaanu?', advanced:true},
+      {id:'malayalam_p15', en:'I don\'t understand, could you repeat that?', target:'എനിക്ക് മനസ്സിലായില്ല, വീണ്ടും പറയാമോ?', translit:'Enikku manassilaayilla, veendum parayaamo?', advanced:true}
     ],
     vocab: [
       {id:'malayalam_v1', en:'One', target:'ഒന്ന്', translit:'Onnu', category:'Numbers'},
@@ -2088,7 +2151,12 @@ const LANG_CONTENT = {
       {id:'punjabi_p7', en:'No', target:'ਨਹੀਂ', translit:'Nahin'},
       {id:'punjabi_p8', en:'Good morning', target:'ਸ਼ੁਭ ਸਵੇਰ', translit:'Shubh sawer'},
       {id:'punjabi_p9', en:'What is your name?', target:'ਤੁਹਾਡਾ ਨਾਮ ਕੀ ਹੈ?', translit:'Tuhada naam ki hai?'},
-      {id:'punjabi_p10', en:'My name is...', target:'ਮੇਰਾ ਨਾਮ ... ਹੈ', translit:'Mera naam ... hai'}
+      {id:'punjabi_p10', en:'My name is...', target:'ਮੇਰਾ ਨਾਮ ... ਹੈ', translit:'Mera naam ... hai'},
+      {id:'punjabi_p11', en:'Could you help me, please?', target:'ਕੀ ਤੁਸੀਂ ਮੇਰੀ ਮਦਦ ਕਰ ਸਕਦੇ ਹੋ?', translit:'Ki tusi meri madad kar sakde ho?', advanced:true},
+      {id:'punjabi_p12', en:'I would like to order food.', target:'ਮੈਂ ਖਾਣਾ ਆਰਡਰ ਕਰਨਾ ਚਾਹੁੰਦਾ ਹਾਂ।', translit:'Main khana order karna chahunda haan.', advanced:true},
+      {id:'punjabi_p13', en:'Where is the nearest hospital?', target:'ਸਭ ਤੋਂ ਨੇੜੇ ਦਾ ਹਸਪਤਾਲ ਕਿੱਥੇ ਹੈ?', translit:'Sab ton nede da haspatal kitthe hai?', advanced:true},
+      {id:'punjabi_p14', en:'How much does this cost?', target:'ਇਸਦੀ ਕੀਮਤ ਕੀ ਹੈ?', translit:'Isdi keemat ki hai?', advanced:true},
+      {id:'punjabi_p15', en:'I don\'t understand, could you repeat that?', target:'ਮੈਨੂੰ ਸਮਝ ਨਹੀਂ ਆਇਆ, ਕੀ ਤੁਸੀਂ ਦੁਬਾਰਾ ਕਹਿ ਸਕਦੇ ਹੋ?', translit:'Mainu samajh nahi aya, ki tusi dubara keh sakde ho?', advanced:true}
     ],
     vocab: [
       {id:'punjabi_v1', en:'One', target:'ਇੱਕ', translit:'Ikk', category:'Numbers'},
@@ -2124,7 +2192,12 @@ const LANG_CONTENT = {
       {id:'gujarati_p7', en:'No', target:'ના', translit:'Naa'},
       {id:'gujarati_p8', en:'Good morning', target:'સુપ્રભાત', translit:'Suprabhat'},
       {id:'gujarati_p9', en:'What is your name?', target:'તમારું નામ શું છે?', translit:'Tamaru naam shu chhe?'},
-      {id:'gujarati_p10', en:'My name is...', target:'મારું નામ ... છે', translit:'Maru naam ... chhe'}
+      {id:'gujarati_p10', en:'My name is...', target:'મારું નામ ... છે', translit:'Maru naam ... chhe'},
+      {id:'gujarati_p11', en:'Could you help me, please?', target:'શું તમે મને મદદ કરી શકો છો?', translit:'Shu tame mane madad kari shako chho?', advanced:true},
+      {id:'gujarati_p12', en:'I would like to order food.', target:'મારે ખોરાક ઓર્ડર કરવો છે.', translit:'Mare khorak order karvo chhe.', advanced:true},
+      {id:'gujarati_p13', en:'Where is the nearest hospital?', target:'સૌથી નજીકની હોસ્પિટલ ક્યાં છે?', translit:'Sauthi najikni hospital kya chhe?', advanced:true},
+      {id:'gujarati_p14', en:'How much does this cost?', target:'આની કિંમત શું છે?', translit:'Aani kimmat shu chhe?', advanced:true},
+      {id:'gujarati_p15', en:'I don\'t understand, could you repeat that?', target:'મને સમજાયું નહીં, શું તમે ફરીથી કહી શકો છો?', translit:'Mane samjayu nahi, shu tame farithi kahi shako chho?', advanced:true}
     ],
     vocab: [
       {id:'gujarati_v1', en:'One', target:'એક', translit:'Ek', category:'Numbers'},
@@ -2160,7 +2233,12 @@ const LANG_CONTENT = {
       {id:'german_p7', en:'No', target:'Nein', translit:'Nine'},
       {id:'german_p8', en:'Good morning', target:'Guten Morgen', translit:'Goo-ten Mor-gen'},
       {id:'german_p9', en:'What is your name?', target:'Wie heißt du?', translit:'Vee hyst doo'},
-      {id:'german_p10', en:'My name is...', target:'Ich heiße ...', translit:'Ikh hy-seh ...'}
+      {id:'german_p10', en:'My name is...', target:'Ich heiße ...', translit:'Ikh hy-seh ...'},
+      {id:'german_p11', en:'Could you help me, please?', target:'Könnten Sie mir bitte helfen?', translit:'Kurn-ten zee meer bit-teh hel-fen', advanced:true},
+      {id:'german_p12', en:'I would like to order food.', target:'Ich möchte etwas zu essen bestellen.', translit:'Ikh murkh-teh et-vas tsoo es-sen beh-shtel-len', advanced:true},
+      {id:'german_p13', en:'Where is the nearest hospital?', target:'Wo ist das nächste Krankenhaus?', translit:'Vo ist das nex-teh kran-ken-hows', advanced:true},
+      {id:'german_p14', en:'How much does this cost?', target:'Wie viel kostet das?', translit:'Vee feel kos-tet das', advanced:true},
+      {id:'german_p15', en:'I don\'t understand, could you repeat that?', target:'Ich verstehe nicht, könnten Sie das wiederholen?', translit:'Ikh fer-shtay-eh nikht, kurn-ten zee das vee-der-ho-len', advanced:true}
     ],
     vocab: [
       {id:'german_v1', en:'One', target:'eins', translit:'Ines', category:'Numbers'},
@@ -2196,7 +2274,12 @@ const LANG_CONTENT = {
       {id:'arabic_p7', en:'No', target:'لا', translit:'La'},
       {id:'arabic_p8', en:'Good morning', target:'صباح الخير', translit:'Sabah al-khayr'},
       {id:'arabic_p9', en:'What is your name?', target:'ما اسمك؟', translit:'Ma ismuka?'},
-      {id:'arabic_p10', en:'My name is...', target:'اسمي ...', translit:'Ismi ...'}
+      {id:'arabic_p10', en:'My name is...', target:'اسمي ...', translit:'Ismi ...'},
+      {id:'arabic_p11', en:'Could you help me, please?', target:'هل يمكنك مساعدتي من فضلك؟', translit:'Hal yumkinuka musa\'adati min fadlik?', advanced:true},
+      {id:'arabic_p12', en:'I would like to order food.', target:'أريد أن أطلب طعامًا.', translit:'Ureedu an atluba ta\'aaman.', advanced:true},
+      {id:'arabic_p13', en:'Where is the nearest hospital?', target:'أين أقرب مستشفى؟', translit:'Ayna aqrab mustashfa?', advanced:true},
+      {id:'arabic_p14', en:'How much does this cost?', target:'كم يكلف هذا؟', translit:'Kam yukallifu hatha?', advanced:true},
+      {id:'arabic_p15', en:'I don\'t understand, could you repeat that?', target:'لا أفهم، هل يمكنك أن تكرر ذلك؟', translit:'La afham, hal yumkinuka an tukarrira dhalik?', advanced:true}
     ],
     vocab: [
       {id:'arabic_v1', en:'One', target:'واحد', translit:'Wahid', category:'Numbers'},
@@ -2232,7 +2315,12 @@ const LANG_CONTENT = {
       {id:'portuguese_p7', en:'No', target:'Não', translit:'Now(ng)'},
       {id:'portuguese_p8', en:'Good morning', target:'Bom dia', translit:'Bong dee-ah'},
       {id:'portuguese_p9', en:'What is your name?', target:'Qual é o seu nome?', translit:'Kwal eh oo seh-oo no-me'},
-      {id:'portuguese_p10', en:'My name is...', target:'Meu nome é ...', translit:'Meh-oo no-me eh ...'}
+      {id:'portuguese_p10', en:'My name is...', target:'Meu nome é ...', translit:'Meh-oo no-me eh ...'},
+      {id:'portuguese_p11', en:'Could you help me, please?', target:'Você poderia me ajudar, por favor?', translit:'Voseh podereea mee azhoodar, por favor', advanced:true},
+      {id:'portuguese_p12', en:'I would like to order food.', target:'Eu gostaria de pedir comida.', translit:'Eh-oo gostareea djee pedeer komeeda', advanced:true},
+      {id:'portuguese_p13', en:'Where is the nearest hospital?', target:'Onde fica o hospital mais próximo?', translit:'Ondjee feeka oo ospeetal ma-ees proseemo', advanced:true},
+      {id:'portuguese_p14', en:'How much does this cost?', target:'Quanto custa isso?', translit:'Kwanto koosta eesso', advanced:true},
+      {id:'portuguese_p15', en:'I don\'t understand, could you repeat that?', target:'Eu não entendo, você poderia repetir?', translit:'Eh-oo now entendo, voseh podereea repeteer', advanced:true}
     ],
     vocab: [
       {id:'portuguese_v1', en:'One', target:'um', translit:'Oong', category:'Numbers'},
@@ -2268,7 +2356,12 @@ const LANG_CONTENT = {
       {id:'japanese_p7', en:'No', target:'いいえ', translit:'Iie'},
       {id:'japanese_p8', en:'Good morning', target:'おはようございます', translit:'Ohayou gozaimasu'},
       {id:'japanese_p9', en:'What is your name?', target:'お名前は何ですか?', translit:'Onamae wa nan desu ka?'},
-      {id:'japanese_p10', en:'My name is...', target:'私の名前は...です', translit:'Watashi no namae wa ... desu'}
+      {id:'japanese_p10', en:'My name is...', target:'私の名前は...です', translit:'Watashi no namae wa ... desu'},
+      {id:'japanese_p11', en:'Could you help me, please?', target:'手伝っていただけますか?', translit:'Tetsudatte itadakemasu ka?', advanced:true},
+      {id:'japanese_p12', en:'I would like to order food.', target:'食べ物を注文したいです。', translit:'Tabemono o chumon shitai desu.', advanced:true},
+      {id:'japanese_p13', en:'Where is the nearest hospital?', target:'一番近い病院はどこですか?', translit:'Ichiban chikai byoin wa doko desu ka?', advanced:true},
+      {id:'japanese_p14', en:'How much does this cost?', target:'これはいくらですか?', translit:'Kore wa ikura desu ka?', advanced:true},
+      {id:'japanese_p15', en:'I don\'t understand, could you repeat that?', target:'わかりません、もう一度言っていただけますか?', translit:'Wakarimasen, mo ichido itte itadakemasu ka?', advanced:true}
     ],
     vocab: [
       {id:'japanese_v1', en:'One', target:'一', translit:'Ichi', category:'Numbers'},
@@ -3311,7 +3404,10 @@ function renderLangPhrases(langId){
   document.getElementById('langPhrasesGrid').innerHTML = content.phrases.map(p=>{
     const done = learnedArr.includes(p.id);
     return `<button class="card" style="text-align:left;cursor:pointer;border:${done?'2px solid var(--success)':'1px solid var(--border)'};" data-phrase="${p.id}">
-      <p style="font-size:12px;">${esc(p.en)}</p>
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:6px;">
+        <p style="font-size:12px;">${esc(p.en)}</p>
+        ${p.advanced?'<span class="pill pill-purple" style="flex-shrink:0;font-size:9.5px;">Advanced</span>':''}
+      </div>
       <h4 style="margin-top:6px;font-size:18px;">${esc(p.target)}</h4>
       <p style="font-size:12px;font-style:italic;margin-top:2px;">${esc(p.translit)}</p>
     </button>`;
@@ -3684,6 +3780,8 @@ function openMathLessonDetail(id){
     <p style="font-size:13.5px;">${esc(l.concept)}</p>
     <h4 style="margin-top:14px;">Worked Example</h4>
     <div class="card" style="background:var(--surface-2);"><p style="font-size:13px;color:var(--text);">${esc(l.example)}</p></div>
+    ${l.advanced ? `<h4 style="margin-top:14px;">Advanced Example</h4>
+    <div class="card" style="background:var(--surface-2);border:1px solid var(--purple);"><p style="font-size:13px;color:var(--text);">${esc(l.advanced)}</p></div>` : ''}
     <h4 style="margin-top:14px;">Practice Question</h4>
     <div id="mathLessonPracticeBox"></div>
     <button class="btn btn-primary" style="width:100%;margin-top:16px;" onclick="completeMathLesson('${l.id}')">${state.progress.mathLessonsCompleted.includes(l.id)?'✓ Completed':'Mark as Complete'}</button>
