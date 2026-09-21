@@ -305,7 +305,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '6.2.0';
+const APP_VERSION = '6.3.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -2509,16 +2509,24 @@ let voicesCache = [];
 function loadVoices(){ voicesCache = speechSynthesis.getVoices ? speechSynthesis.getVoices() : []; }
 if('speechSynthesis' in window){
   loadVoices();
-  speechSynthesis.onvoiceschanged = loadVoices;
+  speechSynthesis.onvoiceschanged = ()=>{
+    loadVoices();
+    // Voice list loads asynchronously in many browsers — refresh the availability
+    // warning if the user is already looking at the Languages section.
+    if(currentView==='languages') renderLanguages();
+  };
 }
 /* Common TTS voice names are not reliably tagged with gender by the Web Speech API,
    so we match on well-known voice names shipped by major browsers/OSes as a heuristic.
-   "Baby" reuses the female hint list as its closest available base voice — the childlike
-   effect itself comes from the pitch/rate shift applied in speak(), not voice selection. */
+   For "baby" we first look for an actual child-labelled voice (rare, but some
+   platforms ship one); if none exists, we fall back to a female-leaning voice and
+   rely on the pitch/rate shift in speak() to create the childlike effect. */
 const FEMALE_VOICE_HINTS = ['female','woman','zira','samantha','karen','susan','victoria','moira','tessa','fiona','veena','lekha','heera','kalpana','amelie','anna','helena','katja','paulina','ava','allison','ioana'];
 const MALE_VOICE_HINTS = ['male','man','david','daniel','mark','alex','fred','aaron','ravi','hemant','rishi','thomas','yannick','stefan','diego','jorge','xander'];
+const KID_VOICE_HINTS = ['child','kid','junior','young','boy','girl'];
 function voiceGenderScore(voiceName, wantGender){
   const n = (voiceName||'').toLowerCase();
+  if(wantGender==='baby' && KID_VOICE_HINTS.some(h=>n.includes(h))) return 3;
   const wantsFemaleLike = wantGender!=='male';
   const hints = wantsFemaleLike ? FEMALE_VOICE_HINTS : MALE_VOICE_HINTS;
   const oppositeHints = wantsFemaleLike ? MALE_VOICE_HINTS : FEMALE_VOICE_HINTS;
@@ -2545,10 +2553,12 @@ function pickVoice(langCode, gender){
 }
 /* Pitch/rate shift applied on top of whatever voice is found — this is what actually makes
    male / female / baby sound distinct and consistent, since many devices only have one
-   voice per language anyway. */
+   voice per language anyway. Values are pushed close to the Web Speech API's 0–2 pitch
+   ceiling for baby so the effect is clearly audible; how much a given browser/voice engine
+   actually honours pitch shifting is outside what this API can control. */
 function pitchForVoiceGender(g){
   if(g==='male') return 0.78;
-  if(g==='baby') return 1.55;
+  if(g==='baby') return 1.9;
   return 1.05; // female (default)
 }
 function speak(text, langCode, onend, genderOverride){
@@ -2562,13 +2572,25 @@ function speak(text, langCode, onend, genderOverride){
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(langCode||'en-US', gender);
   if(v) u.voice = v;
-  u.lang = langCode || 'en-US';
-  u.rate = (state.speakRate || 0.95) * (gender==='baby' ? 1.08 : 1);
+  // Use the ACTUAL selected voice's language, not just the requested one — if no voice
+  // exists for the requested language, v falls back (e.g. to English) and setting u.lang
+  // to that fallback's real language keeps voice/lang consistent and avoids odd behaviour
+  // in browsers that second-guess a mismatched voice/lang pair.
+  u.lang = (v && v.lang) ? v.lang : (langCode || 'en-US');
+  u.rate = (state.speakRate || 0.95) * (gender==='baby' ? 1.15 : 1);
   u.pitch = pitchForVoiceGender(gender);
   if(onend) u.onend = onend;
   u.onerror = ()=>{ toast('Voice for this language may not be installed on your device.','error'); if(onend) onend(); };
   speechSynthesis.speak(u);
   return true;
+}
+/* Whether any installed voice actually matches the requested language's base code
+   (e.g. 'pa' for 'pa-IN') — used to warn the user instead of silently substituting
+   a different language's voice, which the Web Speech API does with no signal of its own. */
+function hasVoiceFor(langCode){
+  if(!voicesCache || !voicesCache.length) loadVoices();
+  const base = (langCode||'').toLowerCase().split('-')[0];
+  return voicesCache.some(v=>v.lang && v.lang.toLowerCase().startsWith(base));
 }
 function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
 
@@ -3340,10 +3362,12 @@ function renderLanguagePicker(){
   document.getElementById('langPickerGrid').innerHTML = OTHER_LANGUAGES.map(l=>{
     const learned = (state.langProgress.learnedItems[l.id] || []).length;
     const total = LANG_CONTENT[l.id].phrases.length + LANG_CONTENT[l.id].vocab.length;
+    const voiceOk = hasVoiceFor(l.voiceLang);
     return `<button class="card" style="text-align:center;cursor:pointer;border:none;" data-lang="${l.id}">
       <div style="font-size:34px;">${l.flag}</div>
       <h4 style="margin-top:10px;">${esc(l.name)}</h4>
       <p style="font-size:12px;">${learned}/${total} items learned</p>
+      ${voiceOk ? '' : `<p style="font-size:10px;margin-top:4px;color:var(--warn);">🔇 voice not installed</p>`}
     </button>`;
   }).join('');
   document.querySelectorAll('[data-lang]').forEach(btn=>{
@@ -3360,11 +3384,15 @@ function renderLanguageHub(langId){
   const content = LANG_CONTENT[langId];
   const learnedArr = state.langProgress.learnedItems[langId] || [];
   const totalItems = content.phrases.length + content.vocab.length;
+  const voiceMissing = !hasVoiceFor(lang.voiceLang);
   document.getElementById('view-languages').innerHTML = `
     <div class="page-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:10px;">
       <div><h2>${lang.flag} Learning ${esc(lang.name)}</h2><p>${learnedArr.length}/${totalItems} items learned</p></div>
       <button class="btn btn-soft btn-sm" id="langChangeBtn">🔁 Change language</button>
     </div>
+    ${voiceMissing ? `<div class="card" style="margin-bottom:16px;background:var(--warn-bg);border-color:var(--warn);">
+      <p style="font-size:12.5px;color:var(--text);">⚠️ No ${esc(lang.name)} voice is installed on this device, so audio will play using a fallback voice (often English) instead of real ${esc(lang.name)} pronunciation. The text and translation are still accurate — this is a device/browser limitation, not an app error. Installing a ${esc(lang.name)} voice pack in your device's language settings (if available) will fix this.</p>
+    </div>` : ''}
     <div class="card" style="margin-bottom:16px;">
       <p style="font-size:12.5px;font-weight:700;margin-bottom:8px;">Voice</p>
       ${voiceGenderToggleHTML('lang')}
