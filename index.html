@@ -305,7 +305,7 @@ label.field-label{display:block;font-size:12.5px;font-weight:700;color:var(--mut
 ==================================================================== */
 
 /* ---------------- STORAGE HELPERS ---------------- */
-const APP_VERSION = '6.3.0';
+const APP_VERSION = '6.4.0';
 const STORE_KEY = 'spokenEnglish_v1';
 function loadState(){
   try{
@@ -323,6 +323,7 @@ function freshState(){
   return {
     onboarded:false,
     parentPin:null,
+    premiumVoiceKey:null,
     profile:{
       name:'', ageGroup:'Adult', level:'Beginner', objective:'Everyday Conversations',
       accent:'American English', explainLang:'English', dailyMinutes:15,
@@ -791,6 +792,36 @@ const LESSONS = [
     conversation:[['A: Can everyone see my screen clearly?','B: Yes, it looks good — please go ahead.']],
     grammar:'Use polite imperatives and questions for online meeting management: "Could you...", "Let\'s..."',
     practice:[{q:'Most appropriate phrase in a video call:', options:['You are on mute!','Could you please unmute yourself?','Speak louder now.'], answer:1}]
+  },
+  { id:'l36', title:'Networking at Events', level:'Advanced', category:'Business and Office', minutes:12,
+    objective:'Start and end professional conversations confidently at networking events.',
+    vocabulary:['Introduce', 'Connection', 'Follow up', 'Exchange contacts', 'Circulate'],
+    examples:['May I introduce myself? I work in marketing.','It was great meeting you — shall we exchange contacts?','I\'ll follow up with an email next week.'],
+    listening:'Listen: "Hi, I don\'t think we\'ve met — I\'m Priya, I work in finance. What brings you here today?"',
+    speaking:['Introduce yourself to someone new at an event.','Ask what someone does for a living.','Politely end a conversation to meet others.'],
+    conversation:[['A: It was lovely chatting — shall we stay in touch?','B: Definitely, let me give you my card.']],
+    grammar:'Use present simple for describing your role ("I work in...") and "shall we" for polite suggestions.',
+    practice:[{q:'Polite way to end a networking conversation:', options:['I\'m leaving now.','It was great meeting you — let\'s stay in touch.','I have to go, bye.'], answer:1}]
+  },
+  { id:'l37', title:'Handling a Job Offer', level:'Advanced', category:'Business and Office', minutes:12,
+    objective:'Discuss, negotiate, and respond to a job offer professionally.',
+    vocabulary:['Offer letter', 'Negotiate', 'Notice period', 'Accept', 'Decline'],
+    examples:['Thank you for the offer — could we discuss the salary?','I would like some time to consider this offer.','I am happy to accept the position.'],
+    listening:'Listen: "We\'re pleased to offer you the role. Would you like some time to review the offer letter?"',
+    speaking:['Ask for time to consider a job offer.','Politely negotiate a start date.','Formally accept a job offer.'],
+    conversation:[['A: We\'d like to offer you the position, starting next month.','B: Thank you very much — could I have a few days to review the offer letter?']],
+    grammar:'Use conditional and polite request forms: "Could we...", "Would it be possible to..."',
+    practice:[{q:'Most professional response to a job offer:', options:['Yes yes, I\'ll take it!','Thank you for the offer — could I have a few days to consider it?','Maybe, I\'ll think about it.'], answer:1}]
+  },
+  { id:'l38', title:'Apartment Viewing', level:'Intermediate', category:'Everyday English', minutes:10,
+    objective:'Ask relevant questions while viewing a house or apartment.',
+    vocabulary:['Viewing', 'Furnished', 'Amenities', 'Move-in date', 'Landlord'],
+    examples:['Is this apartment furnished or unfurnished?','What amenities are included?','When is the earliest move-in date?'],
+    listening:'Listen: "This apartment is semi-furnished, and the amenities include a gym and parking."',
+    speaking:['Ask if an apartment is furnished.','Ask about available amenities.','Ask about the earliest move-in date.'],
+    conversation:[['A: Is this apartment furnished?','B: It\'s semi-furnished — it has a bed and wardrobe, but no other furniture.']],
+    grammar:'Use "is/are" + adjective for describing property features: "It is furnished." "The rooms are spacious."',
+    practice:[{q:'Choose the correct question:', options:['This is furnished?','Is this furnished?','This furnished is?'], answer:1}]
   }
 ];
 
@@ -1593,7 +1624,25 @@ const MATH_LESSONS = [
     concept:'Logical reasoning problems ask you to find relationships, eliminate impossible options, and reason step by step rather than calculate directly.',
     example:'If all cats are animals, and Whiskers is a cat, then Whiskers is definitely an animal — this is a valid logical conclusion.',
     advanced:'Advanced: If today is Wednesday, what day will it be after 100 days? 100 ÷ 7 leaves a remainder of 2, so count 2 days from Wednesday → Friday (using remainders to solve day-of-week puzzles).',
-    practice:[{q:'If A is taller than B, and B is taller than C, who is shortest?', options:['A','B','C'], answer:2} ] }
+    practice:[{q:'If A is taller than B, and B is taller than C, who is shortest?', options:['A','B','C'], answer:2} ] },
+  { id:'m13', title:'Ratio and Proportion', grade:'Grade 5-7', category:'Fractions & Decimals',
+    objective:'Compare quantities using ratios and solve proportion problems.',
+    concept:'A ratio compares two quantities (e.g. 3:4). A proportion states that two ratios are equal, letting you find an unknown value.',
+    example:'If 3 pens cost ₹30, how much do 5 pens cost? 3:30 = 5:x → x = (5×30)/3 = ₹50.',
+    advanced:'Advanced: A map has a scale of 1:50000. A distance of 4 cm on the map represents 4×50000 = 200,000 cm = 2 km in real life.',
+    practice:[{q:'If 2 books cost ₹120, how much do 5 books cost?', options:['₹240','₹300','₹360'], answer:1} ] },
+  { id:'m14', title:'Speed, Distance and Time', grade:'Grade 6-8', category:'Problem Solving',
+    objective:'Use the relationship between speed, distance, and time to solve problems.',
+    concept:'Speed = Distance ÷ Time. Rearranged: Distance = Speed × Time, and Time = Distance ÷ Speed.',
+    example:'A car travels 240 km in 4 hours. Speed = 240 ÷ 4 = 60 km/h.',
+    advanced:'Advanced: A train travels at 80 km/h for 2.5 hours, then at 60 km/h for 1.5 hours. Total distance = (80×2.5) + (60×1.5) = 200+90 = 290 km.',
+    practice:[{q:'A cyclist travels 45 km in 3 hours. What is the speed?', options:['12 km/h','15 km/h','18 km/h'], answer:1} ] },
+  { id:'m15', title:'Data Handling and Averages', grade:'Grade 5-8', category:'Problem Solving',
+    objective:'Organise data and calculate the average (mean) of a set of numbers.',
+    concept:'The average (mean) of a set of numbers is the sum of all values divided by how many values there are.',
+    example:'Marks in 4 tests: 70, 80, 90, 60. Average = (70+80+90+60)÷4 = 300÷4 = 75.',
+    advanced:'Advanced: If the average of 5 numbers is 20, and 4 of them are 15, 18, 22, 25, the fifth number = (20×5) − (15+18+22+25) = 100−80 = 20.',
+    practice:[{q:'Find the average of 10, 20, 30, and 40.', options:['20','25','30'], answer:1} ] }
 ];
 const MATH_PRACTICE_SETS = [
   { id:'mp1', title:'Number Operations Quiz', category:'Number Operations', items:[
@@ -1620,6 +1669,11 @@ const MATH_PRACTICE_SETS = [
     {q:'A class has 32 students. 18 are girls. How many are boys?', options:['12','14','16'], answer:1, explain:'32−18 = 14 boys.'},
     {q:'A book costs ₹85. You pay with ₹100. What is the change?', options:['₹10','₹15','₹20'], answer:1, explain:'100−85 = 15.'},
     {q:'A train travels 60 km in 1 hour. How far in 3 hours at the same speed?', options:['120 km','180 km','240 km'], answer:1, explain:'60×3 = 180 km.'}
+  ]},
+  { id:'mp6', title:'Ratio, Speed & Data Quiz', category:'Problem Solving', items:[
+    {q:'If 5 notebooks cost ₹150, how much do 3 notebooks cost?', options:['₹80','₹90','₹100'], answer:1, explain:'1 notebook = 150÷5 = ₹30, so 3 notebooks = 30×3 = ₹90.'},
+    {q:'A car covers 90 km in 2 hours. What is its speed?', options:['40 km/h','45 km/h','50 km/h'], answer:1, explain:'Speed = distance ÷ time = 90÷2 = 45 km/h.'},
+    {q:'Find the average of 85, 92, and 78.', options:['80','85','90'], answer:1, explain:'(85+92+78)÷3 = 255÷3 = 85.'}
   ]}
 ];
 
@@ -1696,7 +1750,18 @@ const VEDIC_QUESTIONS = [
   {id:'vq13', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 8 × 9?', options:['62','72','82'], answer:1},
   {id:'vq14', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 56 × 99?', options:['5444','5544','5644'], answer:1},
   {id:'vq15', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 6 × 9?', options:['44','54','64'], answer:1},
-  {id:'vq16', techniqueId:'vt4', q:'Using Anurupyena (base 50), what is 47 × 46?', options:['2062','2162','2262'], answer:1}
+  {id:'vq16', techniqueId:'vt4', q:'Using Anurupyena (base 50), what is 47 × 46?', options:['2062','2162','2262'], answer:1},
+  {id:'vq17', techniqueId:'vt1', q:'Using Ekadhikena Purvena, what is 55²?', options:['2925','3025','3125'], answer:1},
+  {id:'vq18', techniqueId:'vt1', q:'Using Ekadhikena Purvena, what is 75²?', options:['5525','5625','5725'], answer:1},
+  {id:'vq19', techniqueId:'vt2', q:'Using Nikhilam, what is 96 × 94?', options:['8924','9024','9124'], answer:1},
+  {id:'vq20', techniqueId:'vt2', q:'Using Nikhilam, what is 7 × 6?', options:['32','42','52'], answer:1},
+  {id:'vq21', techniqueId:'vt3', q:'Using Urdhva-Tiryagbhyam, what is 42 × 13?', options:['446','546','646'], answer:1},
+  {id:'vq22', techniqueId:'vt3', q:'Using Urdhva-Tiryagbhyam, what is 31 × 24?', options:['644','744','844'], answer:1},
+  {id:'vq23', techniqueId:'vt4', q:'Using Anurupyena (base 50), what is 54 × 52?', options:['2708','2808','2908'], answer:1},
+  {id:'vq24', techniqueId:'vt5', q:'Using Yavadunam, what is 95²?', options:['8925','9025','9125'], answer:1},
+  {id:'vq25', techniqueId:'vt5', q:'Using Yavadunam, what is 93²?', options:['8549','8649','8749'], answer:1},
+  {id:'vq26', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 7 × 99?', options:['593','693','793'], answer:1},
+  {id:'vq27', techniqueId:'vt6', q:'Using Ekanyunena Purvena, what is 123 × 999?', options:['121877','122877','123877'], answer:1}
 ];
 
 /* ====================================================================
@@ -2524,6 +2589,17 @@ if('speechSynthesis' in window){
 const FEMALE_VOICE_HINTS = ['female','woman','zira','samantha','karen','susan','victoria','moira','tessa','fiona','veena','lekha','heera','kalpana','amelie','anna','helena','katja','paulina','ava','allison','ioana'];
 const MALE_VOICE_HINTS = ['male','man','david','daniel','mark','alex','fred','aaron','ravi','hemant','rishi','thomas','yannick','stefan','diego','jorge','xander'];
 const KID_VOICE_HINTS = ['child','kid','junior','young','boy','girl'];
+/* Many devices ship several voices per language of very different quality — a robotic
+   legacy "compact" voice alongside a much better one. These hints catch the better ones
+   so free playback sounds as natural as the device allows, before any gender matching. */
+const QUALITY_VOICE_HINTS = ['natural','neural','online','premium','enhanced','wavenet','studio','plus','siri'];
+function voiceQualityScore(voiceName){
+  const n = (voiceName||'').toLowerCase();
+  if(QUALITY_VOICE_HINTS.some(h=>n.includes(h))) return 2;
+  if(n.includes('google')) return 1;
+  if(n.includes('compact') || n.includes('espeak')) return -2;
+  return 0;
+}
 function voiceGenderScore(voiceName, wantGender){
   const n = (voiceName||'').toLowerCase();
   if(wantGender==='baby' && KID_VOICE_HINTS.some(h=>n.includes(h))) return 3;
@@ -2544,8 +2620,10 @@ function pickVoice(langCode, gender){
   if(!pool.length) pool = voicesCache.filter(v=>v.lang && v.lang.toLowerCase().startsWith(base));
   if(!pool.length) pool = voicesCache.filter(v=>v.lang && v.lang.toLowerCase().startsWith('en'));
   if(!pool.length) pool = voicesCache;
-  if(gender && pool.length > 1){
-    const scored = pool.map(v=>({v, score:voiceGenderScore(v.name, gender)}));
+  if(pool.length > 1){
+    // Quality dominates (×10) so the best-sounding voice wins; gender preference
+    // breaks ties among voices of similar quality.
+    const scored = pool.map(v=>({v, score: voiceQualityScore(v.name)*10 + voiceGenderScore(v.name, gender||'female')}));
     scored.sort((a,b)=>b.score-a.score);
     if(scored[0].score > scored[scored.length-1].score) return scored[0].v;
   }
@@ -2561,14 +2639,36 @@ function pitchForVoiceGender(g){
   if(g==='baby') return 1.9;
   return 1.05; // female (default)
 }
+/* Whether any installed voice actually matches the requested language's base code
+   (e.g. 'pa' for 'pa-IN') — used to warn the user instead of silently substituting
+   a different language's voice, which the Web Speech API does with no signal of its own. */
+function hasVoiceFor(langCode){
+  if(!voicesCache || !voicesCache.length) loadVoices();
+  const base = (langCode||'').toLowerCase().split('-')[0];
+  return voicesCache.some(v=>v.lang && v.lang.toLowerCase().startsWith(base));
+}
+
+/* ---- Optional natural AI voice (OpenAI TTS) — the free path above is a real built-in
+   browser voice and will always sound somewhat synthetic; this is the only way to get
+   genuinely natural speech, and it requires the user's own API key and an internet
+   connection (unlike the rest of this offline-first app). Off by default. ---- */
+const OPENAI_VOICE_MAP = { male:'onyx', female:'nova', baby:'shimmer' };
+let premiumAudioEl = null;
 function speak(text, langCode, onend, genderOverride){
+  const gender = genderOverride || state.voiceGender || 'female';
+  if(state.premiumVoiceKey){
+    speakPremium(text, langCode, gender, onend);
+    return true;
+  }
+  return speakBrowser(text, langCode, onend, gender);
+}
+function speakBrowser(text, langCode, onend, gender){
   if(!('speechSynthesis' in window)){
     toast('Speech playback is not supported in this browser.','error');
     if(onend) onend();
     return false;
   }
   speechSynthesis.cancel();
-  const gender = genderOverride || state.voiceGender || 'female';
   const u = new SpeechSynthesisUtterance(text);
   const v = pickVoice(langCode||'en-US', gender);
   if(v) u.voice = v;
@@ -2584,15 +2684,32 @@ function speak(text, langCode, onend, genderOverride){
   speechSynthesis.speak(u);
   return true;
 }
-/* Whether any installed voice actually matches the requested language's base code
-   (e.g. 'pa' for 'pa-IN') — used to warn the user instead of silently substituting
-   a different language's voice, which the Web Speech API does with no signal of its own. */
-function hasVoiceFor(langCode){
-  if(!voicesCache || !voicesCache.length) loadVoices();
-  const base = (langCode||'').toLowerCase().split('-')[0];
-  return voicesCache.some(v=>v.lang && v.lang.toLowerCase().startsWith(base));
+function speakPremium(text, langCode, gender, onend){
+  const voiceName = OPENAI_VOICE_MAP[gender] || 'nova';
+  if(premiumAudioEl){ try{ premiumAudioEl.pause(); }catch(e){} }
+  fetch('https://api.openai.com/v1/audio/speech', {
+    method:'POST',
+    headers:{ 'Authorization':'Bearer '+state.premiumVoiceKey, 'Content-Type':'application/json' },
+    body: JSON.stringify({ model:'tts-1', voice:voiceName, input:text })
+  }).then(resp=>{
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    return resp.blob();
+  }).then(blob=>{
+    const url = URL.createObjectURL(blob);
+    premiumAudioEl = new Audio(url);
+    premiumAudioEl.onended = ()=>{ URL.revokeObjectURL(url); if(onend) onend(); };
+    premiumAudioEl.onerror = ()=>{ URL.revokeObjectURL(url); if(onend) onend(); };
+    premiumAudioEl.play().catch(()=>{ speakBrowser(text, langCode, onend, gender); });
+  }).catch(()=>{
+    toast('Natural voice unavailable right now — using the built-in voice instead.','error');
+    speakBrowser(text, langCode, onend, gender);
+  });
 }
-function stopSpeak(){ if('speechSynthesis' in window) speechSynthesis.cancel(); }
+function stopSpeak(){
+  if('speechSynthesis' in window) speechSynthesis.cancel();
+  if(premiumAudioEl){ try{ premiumAudioEl.pause(); }catch(e){} }
+}
+
 
 /* Reusable Male/Female/Baby voice toggle — reads and writes the single global
    state.voiceGender preference so it stays in sync everywhere it appears. */
@@ -5208,6 +5325,22 @@ function renderSettings(){
     </div>
 
     <div class="card" style="max-width:560px;margin-top:16px;">
+      <h4>Natural Voice (Optional)</h4>
+      <p style="font-size:12.5px;margin:6px 0 10px 0;">
+        Built-in browser voices are free but can sound robotic depending on your device. For genuinely natural speech,
+        add your own OpenAI API key below — this sends the text being read to OpenAI's text-to-speech service, requires
+        an internet connection, and uses your own OpenAI account (small per-use cost applies there). Leave this blank
+        to keep using the free built-in voice, which works fully offline.
+      </p>
+      <p style="font-size:11.5px;margin-bottom:8px;">${state.premiumVoiceKey ? '<span class="pill pill-success">✓ Natural voice active</span>' : '<span class="pill">Using built-in voice</span>'}</p>
+      <input type="password" id="premiumVoiceKeyInput" placeholder="sk-... (your OpenAI API key)" value="${state.premiumVoiceKey ? '••••••••••••••••' : ''}">
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <button class="btn btn-primary btn-sm" id="savePremiumVoiceBtn">Save Key</button>
+        ${state.premiumVoiceKey ? '<button class="btn btn-soft btn-sm" id="removePremiumVoiceBtn">Remove & Use Built-in</button>' : ''}
+      </div>
+    </div>
+
+    <div class="card" style="max-width:560px;margin-top:16px;">
       <h4>Data</h4>
       <p style="font-size:12.5px;margin-bottom:10px;">Your progress is stored only on this device, in your browser.</p>
       <button class="btn btn-danger-soft btn-sm" id="resetProgressBtn">Reset all progress</button>
@@ -5218,6 +5351,22 @@ function renderSettings(){
     <p style="text-align:center;font-size:10.5px;margin-top:4px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
   `;
   wireVoiceGenderToggle('settings');
+  document.getElementById('savePremiumVoiceBtn').addEventListener('click', ()=>{
+    const input = document.getElementById('premiumVoiceKeyInput');
+    const val = input.value.trim();
+    if(!val || val === '••••••••••••••••'){ toast('Enter an API key first.','error'); return; }
+    state.premiumVoiceKey = val;
+    saveState();
+    toast('Natural voice enabled','success');
+    renderSettings();
+  });
+  const removeBtn = document.getElementById('removePremiumVoiceBtn');
+  if(removeBtn) removeBtn.addEventListener('click', ()=>{
+    state.premiumVoiceKey = null;
+    saveState();
+    toast('Back to built-in voice','success');
+    renderSettings();
+  });
   document.getElementById('resetProgressBtn').addEventListener('click', ()=>{
     if(confirm('This will reset your streak, points, completed lessons and favourites. Continue?')){
       const fresh = freshState();
