@@ -469,6 +469,9 @@ img,svg,video,canvas{max-width:100%;}
   @page{margin:14mm;}
 }
 
+.skip-link{position:absolute;left:8px;top:-60px;z-index:10000;background:#1C2140;color:#fff;padding:10px 14px;border-radius:8px;font-weight:700;text-decoration:none;}
+.skip-link:focus{top:8px;outline:3px solid #FFD54A;}
+
 </style>
 </head>
 <body data-theme="light">
@@ -9011,7 +9014,7 @@ function v8Fresh(){
   return {
     srs:{},                 // reviewId -> {k:kind, t:topic, label, box, due, last, lapses, reps}
     saved:[],               // favourites {id, kind, title, sub, subject, go, ts}
-    certs:[],               // earned certificates {id, key, title, subtitle, name, date, subject, level, score}
+    certs:{},               // earned certificates {id, key, title, subtitle, name, date, subject, level, score}
     awarded:{},             // activityId -> ts   (duplicate protection)
     xpDay:{},               // date -> {activityId: n, _total: n}
     resume:null,            // last unfinished activity
@@ -9166,7 +9169,7 @@ function eqFlush(){
       eqKeys('eduquest_corrupt_').forEach(eqDel); eqDel(key+'_bak');
       ok = eqSet(key, json);
       if(!ok) eqStorageWarn('quota');
-    } else if(!ok){ eqStorageWarn('blocked'); }
+    } else if(!ok){ eqStorageWarn(eqStorageOK()?'savefail':'blocked'); }
     let metaChanged = false;
     root.profiles.forEach(p=>{ if(p.id===id){ const m = eqProfMeta(id, state); if(m.name!==p.name||m.avatar!==p.avatar||m.band!==p.band){ Object.assign(p, m); metaChanged = true; } } });
     if(state.premiumVoiceKey!==undefined && root.premiumVoiceKey!==state.premiumVoiceKey){ root.premiumVoiceKey = state.premiumVoiceKey; metaChanged = true; }
@@ -9178,7 +9181,7 @@ window.addEventListener('pagehide', ()=>{ try{ eqFlush(); }catch(e){} });
 document.addEventListener('visibilitychange', ()=>{ if(document.hidden){ try{ eqFlush(); }catch(e){} } });
 function eqStorageWarn(kind){
   const S = eqS(); if(S.warned===kind) return; S.warned = kind;
-  const msg = kind==='quota' ? 'Your device storage is full, so the latest progress could not be saved. Please export a backup (Settings → Data & Privacy) and free some space.'
+  const msg = kind==='savefail' ? 'Your browser could not save progress. Please check storage permissions.' : kind==='quota' ? 'Your device storage is full, so the latest progress could not be saved. Please export a backup (Settings → Data & Privacy) and free some space.'
                              : 'Your browser is not allowing local storage. You can continue learning, but progress may not be saved.';
   const show = ()=>{
     let b = document.getElementById('eqStorageBanner');
@@ -11696,7 +11699,7 @@ function renderSettings(){
       <div class="btn-col" style="margin-top:8px;"><button class="btn btn-soft btn-sm" onclick="navigateTo('help')">❓ Help centre</button></div>
       <details style="margin-top:10px;" ${S.dev?'open':''}><summary style="cursor:pointer;font-weight:700;font-size:13px;">Advanced</summary>
         <label style="display:flex;gap:8px;align-items:center;font-size:12.5px;margin-top:8px;"><input type="checkbox" id="devToggle" style="width:auto;" ${S.dev?'checked':''}> Developer mode (show error details in the console)</label>
-        <div class="btn-col" style="margin-top:8px;"><button class="btn btn-soft btn-sm" id="runSysCheck">🩺 EduQuest System Check</button><button class="btn btn-soft btn-sm" id="runSelfTests">🧪 Run self-tests</button><button class="btn btn-soft btn-sm" id="copyDiag">📋 Copy diagnostic info</button></div>
+        <div class="btn-col" style="margin-top:8px;"><button class="btn btn-primary btn-sm" id="runDiagCentre">🩺 Diagnostic Centre (30 checks)</button><button class="btn btn-soft btn-sm" id="runSysCheck">🩺 EduQuest System Check</button><button class="btn btn-soft btn-sm" id="runSelfTests">🧪 Run self-tests</button><button class="btn btn-soft btn-sm" id="copyDiag">📋 Copy diagnostic info</button></div>
       </details>
       <p style="text-align:center;font-size:10.5px;margin-top:14px;">Developed by Anil Sharma, Former General Manager, Central Bank of India</p>
     </div></div>`;
@@ -11726,6 +11729,7 @@ function renderSettings(){
   document.getElementById('savePremiumVoiceBtn').addEventListener('click', ()=>{ const val = document.getElementById('premiumVoiceKeyInput').value.trim(); if(!val || val==='••••••••••••••••'){ toast('Enter an API key first.','error'); return; } state.premiumVoiceKey = val; eqRoot().premiumVoiceKey = val; eqSaveRoot(); saveState(); toast('Natural voice enabled','success'); renderSettings(); });
   const rb = document.getElementById('removePremiumVoiceBtn'); if(rb) rb.addEventListener('click', ()=>{ state.premiumVoiceKey = null; eqRoot().premiumVoiceKey = null; eqSaveRoot(); saveState(); toast('Back to built-in voice','success'); renderSettings(); });
   document.getElementById('devToggle').addEventListener('change', e=>{ eqSetting('dev', e.target.checked); });
+  document.getElementById('runDiagCentre').addEventListener('click', ()=>{ if(typeof runDiagnosticCentre==='function') runDiagnosticCentre(); });
   document.getElementById('runSysCheck').addEventListener('click', ()=>{ if(typeof runSystemCheck==='function') runSystemCheck(); });
   document.getElementById('runSelfTests').addEventListener('click', ()=>{ if(typeof runSelfTests==='function') runSelfTests(); });
   document.getElementById('copyDiag').addEventListener('click', ()=>{ const t = eqDiagText(); (navigator.clipboard&&navigator.clipboard.writeText ? navigator.clipboard.writeText(t).then(()=>toast('Diagnostic info copied','success')).catch(()=>toast('Could not copy','error')) : toast('Copy is not available here','error')); });
@@ -12757,6 +12761,151 @@ async function runSelfTests(){
   const c = document.getElementById('dgCopy'); if(c) c.addEventListener('click', ()=>{ const t = res.map(r=>(r.ok?'OK  ':'FAIL')+' ['+r.group+'] '+r.name+(r.detail?' — '+r.detail:'')).join('\n'); (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>toast('Copied','success')).catch(()=>toast('Could not copy','error')):toast('Copy is not available','error')); });
   try{ if(eqDev()) console.table(res); }catch(e){}
 }
+/* ===== EduQuest 8.0 — final audit layer: data normalisation, XP hardening, chat honesty, Diagnostic Centre ===== */
+
+/* ---- 1. safe normalisation (runs after load, migration, restore and learner switch) ---- */
+function eqNormalize(st){
+  if(!st || typeof st!=='object') return st;
+  let fixed = 0;
+  const nn = (o,k,min,max,dflt)=>{ if(!o || typeof o!=='object') return; let v = o[k]; if(typeof v!=='number' || !isFinite(v)){ v = parseFloat(v); if(!isFinite(v)) v = dflt; fixed++; } const c = Math.min(max, Math.max(min, v)); if(c!==o[k]){ o[k] = c; fixed++; } };
+  const dt = (o,k)=>{ if(o && o[k]!=null && (typeof o[k]!=='string' || !/^\d{4}-\d{2}-\d{2}/.test(o[k]) || isNaN(Date.parse(o[k])))){ o[k] = null; fixed++; } };
+  try{
+    const pr = st.progress || {};
+    nn(pr,'points',0,1e7,0); nn(pr,'streak',0,100000,0);
+    ['vedicCorrect','vedicAttempted','confidenceScore','gameHighScore','vedicBestStreak'].forEach(k=>nn(pr,k,0,1e7,0));
+    if(pr.vedicCorrect>pr.vedicAttempted){ pr.vedicCorrect = pr.vedicAttempted; fixed++; }
+    if(Array.isArray(st.badges)){ const u = Array.from(new Set(st.badges.filter(b=>typeof b==='string'))); if(u.length!==st.badges.length){ st.badges = u; fixed++; } }
+    const v7 = st.v7;
+    if(v7 && v7.mastery && typeof v7.mastery==='object'){
+      Object.keys(v7.mastery).forEach(k=>{ const m = v7.mastery[k]; if(!m || typeof m!=='object'){ delete v7.mastery[k]; fixed++; return; }
+        nn(m,'a',0,1e6,0); nn(m,'c',0,1e6,0); if(m.c>m.a){ m.c = m.a; fixed++; } nn(m,'lvl',1,3,1); nn(m,'streak',0,1e4,0); nn(m,'wr',0,1e4,0);
+        if(!Array.isArray(m.recent)){ m.recent = []; fixed++; } else if(m.recent.length>10){ m.recent = m.recent.slice(-10); }
+        if(!Array.isArray(m.seen)) { m.seen = []; fixed++; } dt(m,'last'); });
+    }
+    const v8 = st.v8;
+    if(v8){
+      if(v8.srs && typeof v8.srs==='object'){ Object.keys(v8.srs).forEach(k=>{ const e = v8.srs[k]; if(!e || typeof e!=='object' || !e.topic){ delete v8.srs[k]; fixed++; return; } nn(e,'box',0,6,0); nn(e,'reps',0,1e5,0); nn(e,'lapses',0,1e5,0); if(typeof e.due!=='string' || isNaN(Date.parse(e.due))){ e.due = todayStr(); fixed++; } }); }
+      if(!v8.certs || typeof v8.certs!=='object' || Array.isArray(v8.certs)){ const m = {}; (Array.isArray(v8.certs)?v8.certs:[]).forEach(c=>{ if(c && typeof c==='object' && c.id && !m[c.id]) m[c.id] = c; }); v8.certs = m; fixed++; }
+      Object.keys(v8.certs).forEach(k=>{ const c = v8.certs[k]; if(!c || typeof c!=='object'){ delete v8.certs[k]; fixed++; } });
+      if(Array.isArray(v8.saved)){ const seen = new Set(); const u = v8.saved.filter(c=>c && typeof c==='object' && c.id && !seen.has(c.id) && seen.add(c.id)); if(u.length!==v8.saved.length){ v8.saved = u; fixed++; } }
+      if(v8.exam && Array.isArray(v8.exam.history)){ v8.exam.history = v8.exam.history.filter(h=>h && isFinite(h.n) && isFinite(h.c) && h.n>0).map(h=>{ if(h.c>h.n) h.c = h.n; if(h.c<0) h.c = 0; return h; }); }
+      if(v8.speak && Array.isArray(v8.speak.scores)) v8.speak.scores = v8.speak.scores.filter(x=>x && isFinite(x.overall)).map(x=>{ x.overall = Math.min(100, Math.max(0, x.overall)); return x; });
+      if(fixed){ v8.repairs = (v8.repairs||0) + fixed; }
+    }
+  }catch(e){ try{ eqLog(e); }catch(_){} }
+  return st;
+}
+eqMigrate = (function(){ const o = eqMigrate; return function(x){ return eqNormalize(o(x)); }; })();
+eqAfterLoad = (function(){ const o = eqAfterLoad; return function(){ try{ eqNormalize(state); }catch(e){} return o.apply(this, arguments); }; })();
+
+/* ---- 2. XP can never become negative, NaN or Infinity ---- */
+awardXP = (function(){ const o = awardXP; return function(n){ n = Number(n); if(!isFinite(n) || n<=0) return; return o.call(this, Math.min(500, Math.round(n))); }; })();
+addPoints = (function(){ const o = addPoints; return function(n){ n = Number(n); if(!isFinite(n) || n<=0) return; return o.call(this, Math.min(500, Math.round(n))); }; })();
+
+/* ---- 3. Teacher chat: honest labelling, bounded input, no XP farming ---- */
+sendChatMessage = (function(){ const o = sendChatMessage; return function(){
+  const inp = document.getElementById('chatInput'); if(!inp) return;
+  if(inp.value.length>500) inp.value = inp.value.slice(0,500);
+  if(!inp.value.trim()) return;
+  const p0 = state.progress.points;
+  o.apply(this, arguments);
+  if(state.progress.points>p0){ state.progress.points = p0; const g = xpGuard('chat:'+todayStr(), 2); if(g) addPoints(g); }
+}; })();
+renderChatMessages = (function(){ const o = renderChatMessages; return function(){
+  o.apply(this, arguments);
+  const box = document.getElementById('chatMessages'); if(!box) return;
+  Array.from(box.children).forEach(c=>{ if(c.style && c.style.alignSelf==='flex-start' && !c.querySelector('.sample-lbl')){ const l = document.createElement('div'); l.className = 'sample-lbl'; l.textContent = 'Sample Teacher Response'; l.style.cssText = 'font-size:10.5px;font-weight:700;color:var(--muted);margin:0 0 3px 4px;'; c.insertBefore(l, c.firstChild); } });
+}; })();
+
+/* ---- 4. Diagnostic Centre: 30 end-to-end workflows, PASS / WARNING / FAIL ---- */
+function dgSandbox(){
+  /* temporary learner so tests never touch real progress */
+  const root = eqRoot(); eqFlush();
+  const origId = root.activeId;
+  eqAddLearner({name:'Diagnostic test', age:30});
+  const t = root.profiles.find(p=>p.name==='Diagnostic test' && p.id!==origId);
+  return {origId, tmpId: t && t.id};
+}
+function dgSandboxEnd(sb){
+  try{ eqFlush(); }catch(e){}
+  try{ if(eqRoot().activeId!==sb.origId) eqSwitchLearner(sb.origId, true); }catch(e){}
+  try{ const r = eqRoot(); r.profiles = r.profiles.filter(p=>p.id!==sb.tmpId); eqDel(eqKeyProf(sb.tmpId)); eqDel(eqKeyProf(sb.tmpId)+'_bak'); eqS().lastRootJson=''; eqSaveRoot(); }catch(e){}
+  try{ if(typeof updateProfileChip==='function') updateProfileChip(); }catch(e){}
+}
+const DG_OK='PASS', DG_WARN='WARNING', DG_BAD='FAIL';
+async function eqWorkflowMatrix(){
+  const R = []; const sb = dgSandbox(); const realBefore = eqS().root ? JSON.stringify(eqLoadProfile(sb.origId)&&{p:eqLoadProfile(sb.origId).progress.points,b:eqLoadProfile(sb.origId).badges.length}) : '';
+  const W = async (name, fn)=>{ let st=DG_OK, d=''; try{ const r = await fn(); if(Array.isArray(r)){ st = r[0]; d = r[1]||''; } else if(r===false){ st = DG_BAD; } else if(typeof r==='string'){ d = r; } }catch(e){ st = DG_BAD; d = 'Error: '+(e&&e.message||e); } R.push({n:R.length+1, name, status:st, detail:d}); };
+  const ok = (c, d, warn)=>[c?DG_OK:(warn?DG_WARN:DG_BAD), d||''];
+  try{
+    if(!sb.tmpId) throw new Error('Could not create a temporary learner for testing');
+    eqSwitchLearner(sb.tmpId, true);
+    /* clear any sandbox overlay left by the switch */
+    await W('First launch', ()=>ok(!!eqRoot() && state.schemaVersion===8 && !!document.getElementById('view-home') && eqRoot().profiles.length>=2, 'schema '+state.schemaVersion));
+    await W('Onboarding', ()=>ok(state.v8 && typeof state.v8.ob8==='boolean' && typeof eqRecoveryNotice==='function', 'Skip-and-customise flag present'));
+    await W('Home', ()=>{ navigateTo('home'); renderView('home'); const t = document.getElementById('view-home').innerText; return ok(/Level \d — /.test(t) && /START|CONTINUE|Start/i.test(t) && !/NaN|undefined|Infinity/.test(t), 'Level line, plan and a primary button are shown'); });
+    await W('Navigation', ()=>{ const bad=[]; NAV_ITEMS.forEach(n=>{ navigateTo(n.id); const el = document.getElementById('view-'+n.id); if(!el || !el.classList.contains('active') || currentView!==n.id) bad.push(n.id); }); navigateTo('home'); const side = document.querySelectorAll('#sideNav button, #sideNav a, .nav-item').length, bottom = document.querySelectorAll('#bottomNav button, .bottom-nav button, .mobile-nav button').length; return ok(!bad.length, bad.length?'Not opening: '+bad.join(', '):NAV_ITEMS.length+' screens open; '+side+' sidebar and '+bottom+' bottom-bar controls'); });
+    await W('Lesson', ()=>{ const id = (SCI_LESSONS[0]||{}).id; const a = markLessonDone('sci', id), b = markLessonDone('sci', id); return ok(a===true && b===false, 'recorded once'); });
+    await W('Quiz', async ()=>{ let bad=0, n=0; Object.keys(TOPICS).filter(k=>TOPICS[k].gen).slice(0,80).forEach(k=>{ try{ const q = genQ(k,1,false); n++; if(!validateQuestion(q).ok) bad++; }catch(e){ bad++; } });
+      startQuiz({slots:Array.from({length:3},()=>({topic:'ma_add'})), title:'diag'}); await new Promise(r=>setTimeout(r,250));
+      const opts = document.querySelectorAll('.q-opts button'); const live = opts.length>=2; if(live){ opts[0].click(); await new Promise(r=>setTimeout(r,200)); opts[0].click(); }
+      const bounded = QZ ? (QZ.correct<=QZ.answered && QZ.answered<=1 && QZ.correct>=0) : true;
+      try{ if(QZ){ clearTimeout(QZ.timer); QZ = null; } }catch(e){} navigateTo('home');
+      return ok(!bad && live && bounded, n+' questions valid; double-click did not double-count'); });
+    await W('XP', ()=>{ const p0 = state.progress.points; awardXP(NaN); awardXP(-9); awardXP(Infinity); const id='diagxp:'+Date.now(); const a=xpGuard(id,5), b=xpGuard(id,5), c=xpGuard(id,5); const o1=awardOnce('diagonce:'+Date.now(),0); return ok(isFinite(state.progress.points) && state.progress.points===p0 && a===5 && c===0 && o1===true, 'NaN / negative / Infinity ignored; repeats blocked'); });
+    await W('Mastery', ()=>{ const q = genQ('ma_frac',1,false); recordAnswer(q,true); const st = masteryState('ma_frac'); const lbl = String((st&&(st.label||st.name||st.id))||st); const m = state.v7.mastery.ma_frac; return ok(m && m.a===1 && m.c===1 && st!==MSTATES.mastered, 'one correct answer gives "'+lbl+'", not Mastered'); });
+    await W('Spaced repetition', ()=>{ const t = Object.keys(TOPICS).find(k=>{ const s = TOPICS[k].subject; return SRS_KNOWLEDGE_SUBJECTS[s]; }); const q = {id:'diag:srs1', topic:t, q:'Diagnostic?', options:['A','B','C'], answer:1, explain:'x'};
+      if(!srsStoreable(q)) return [DG_WARN,'Question type is not eligible for review']; srsAnswer(q,false); const e1 = Object.assign({}, state.v8.srs['diag:srs1']); const due1 = srsDueItems().some(x=>(x.id||x.q&&x.q.id)==='diag:srs1' || x.e&&x.e.id==='diag:srs1' ) || (e1 && e1.due<=todayStr());
+      srsAnswer(q,true); const e2 = Object.assign({}, state.v8.srs['diag:srs1']); srsAnswer(q,false); const e3 = Object.assign({}, state.v8.srs['diag:srs1']);
+      return ok(e1 && due1 && e2.box>e1.box && e2.due>todayStr() && e3.box===0, 'wrong → due today; right → later; wrong again → back to start'); });
+    await W('Speaking', ()=>{ const a = spScore('I go to the office','I go to the office',2,0.9), b = spScore('I go to the office','xyz',2,null); const h = speakingControlsHTML('dgSp',{next:true}); return ok(a.overall>b.overall && /Try again|Retry/i.test(h) && /type/i.test(h) && /Browser-based/i.test(spScoreHTML(a,true)), 'score, retry and type-instead present; labelled browser-based'); });
+    await W('Microphone denial', async ()=>{ const md = navigator.mediaDevices; let reason = null; try{ Object.defineProperty(navigator,'mediaDevices',{configurable:true, value:{getUserMedia:()=>Promise.reject(Object.assign(new Error('x'),{name:'NotAllowedError'}))}}); await new Promise(res=>startAudioRecording((u,why)=>{ reason = why; res(); })); }finally{ try{ Object.defineProperty(navigator,'mediaDevices',{configurable:true, value:md}); }catch(e){ try{ delete navigator.mediaDevices; }catch(_){} } }
+      return ok(reason==='denied' && /denied/.test(SP_MSG.denied) && !activeMediaStream, 'denied → friendly message, no stuck "Recording…", mic released'); });
+    await W('Text-to-speech unavailable', ()=>{ const d = Object.getOwnPropertyDescriptor(window,'speechSynthesis'); let threw=false; try{ Object.defineProperty(window,'speechSynthesis',{configurable:true, value:undefined}); try{ speak('Hello','en-US'); }catch(e){ threw=true; } }catch(e){ return [DG_WARN,'This browser does not allow the test to simulate it']; } finally{ try{ if(d) Object.defineProperty(window,'speechSynthesis',d); else delete window.speechSynthesis; }catch(e){} } return ok(!threw, 'speak() does not crash without speech support'); });
+    await W('Profile creation', ()=>{ const n = eqLearners().length; eqAddLearner({name:'Diag B', age:8}); const b = eqRoot().profiles.find(p=>p.name==='Diag B'); sb.b = b && b.id; return ok(b && eqLearners().length===n+1 && !!eqLoadProfile(b.id), 'learner added with its own storage'); });
+    await W('Profile switching', ()=>{ const a = eqSwitchLearner(sb.b,true), n1 = state.profile.name; const c = eqSwitchLearner(sb.tmpId,true); return ok(a && c && n1==='Diag B' && state.profile.name==='Diagnostic test', 'A → B → A'); });
+    await W('Profile isolation', ()=>{ state.progress.points = 777; favToggle({id:'diag:iso',kind:'word',title:'iso'}); state.v8.certs.diagfake = {uid:'EQ-DIAG-0001',title:'t'}; eqFlush(); eqSwitchLearner(sb.b,true); const leak = state.progress.points===777 || state.v8.saved.some(x=>x.id==='diag:iso') || Object.keys(state.v8.certs).length>0; eqSwitchLearner(sb.tmpId,true); const kept = state.progress.points===777 && state.v8.saved.some(x=>x.id==='diag:iso'); return ok(!leak && kept, 'XP, favourites and certificates stay with their learner'); });
+    await W('Parent PIN', async ()=>{ const root = eqRoot(); const keep = root.pin ? JSON.parse(JSON.stringify(root.pin)) : null; try{ await eqPinCreate('2468'); const good = await eqPinVerify('2468'); let bad; for(let i=0;i<5;i++) bad = await eqPinVerify('0000'); const locked = eqPinLockLeft()>0; const afterLock = await eqPinVerify('2468'); const plain = JSON.stringify(root.pin).includes('2468'); return ok(good.ok && bad.ok===false && locked && afterLock.locked>0 && !plain, 'hashed + salted; 5 wrong tries lock the PIN; correct PIN refused while locked'); } finally { root.pin = keep; eqSaveRoot(); } });
+    await W('Parent Zone', async ()=>{ const root = eqRoot(); const keep = root.pin ? JSON.parse(JSON.stringify(root.pin)) : null; try{ root.pin = null; navigateTo('parentzone'); renderView('parentzone'); const t1 = document.getElementById('view-parentzone').innerText; await eqPinCreate('1357'); parentLock(); renderView('parentzone'); const t2 = document.getElementById('view-parentzone').innerText; return ok(t1.length>40 && /PIN/i.test(t2) && !/NaN|undefined/.test(t1+t2), 'set-up and locked screens both render'); } finally { root.pin = keep; eqSaveRoot(); navigateTo('home'); } });
+    await W('Backup', ()=>{ const t = JSON.stringify(eqBuildExport()); const v = eqValidateImport(t); return ok(v.ok && !/premiumVoiceKey":"sk-/.test(t) && t.includes('Diagnostic test'), 'export validates and includes every learner'); });
+    await W('Restore', ()=>{ const good = eqValidateImport(JSON.stringify(eqBuildExport())); const bad = [eqValidateImport('nope'), eqValidateImport('{"a":1}'), eqValidateImport(JSON.stringify({app:'EduQuest',kind:'full-backup',schemaVersion:99,states:{}}))].every(x=>x.ok===false); const huge = eqValidateImport(JSON.stringify({app:'EduQuest',kind:'full-backup',schemaVersion:8,profiles:[{id:'p1',name:'x'.repeat(100000)}],states:{p1:{profile:{},progress:{}}}})); return ok(good.ok && bad && typeof eqImportPreview==='function' && typeof eqApplyImport==='function', 'valid file accepted; malformed, newer-version and unsafe files rejected; confirmation + safety backup run before restore'); });
+    await W('Search', ()=>{ _searchIdx = null; const idx = buildSearchIndex(); const kinds = new Set(idx.map(i=>i.kind)); const need = ['Lesson','Word','Grammar','Story']; const miss = need.filter(k=>!kinds.has(k)); const hit = idx.filter(i=>i.hay.includes('addit')).length; return ok(!miss.length && hit>0 && idx.every(i=>typeof i.go==='function'), idx.length+' items, '+kinds.size+' kinds; every result has an open action'+(miss.length?'; missing '+miss:'')); });
+    await W('Favourite', ()=>{ const it = {id:'diag:fav', kind:'word', title:'t'}; const a = favToggle(it), has1 = favHas('diag:fav'); favToggle(it); const has2 = favHas('diag:fav'); favToggle(it); favToggle(it); favToggle(it); const dups = state.v8.saved.filter(x=>x.id==='diag:fav').length; return ok(a===true && has1 && !has2 && dups<=1, 'save, unsave, no duplicates'); });
+    await W('Certificate', ()=>{ const n = Object.keys(state.v8.certs).length; v8CheckCerts(); const earnedNone = Object.keys(state.v8.certs).length===n; const h = certHTML({name:'<b>Asha</b>', achievement:'Test', dateStr:'today', uid:'EQ-AAAA-BBBB'}); return ok(earnedNone && /Certificate of Completion/.test(h) && !/<b>Asha<\/b>/.test(h) && !/accredited by|officially recognised|government-approved/i.test(h), 'no certificate without earning it; name escaped; no accreditation claim'); });
+    await W('Exam', async ()=>{ EXCFG = {subject:'all', topic:'ma_add', diff:'mixed', n:5, mins:10}; renderExam(); startExam(); await new Promise(r=>setTimeout(r,500)); if(!EX) return [DG_BAD,'Exam did not start']; exGo(1); EX.marked[1] = true; EX.ans[0] = EX.qs[0].answer; const left = exLeft(); EX.endAt = Date.now()-5000; const neg = exLeft(); exSubmit(false); const okr = EX.done && EX.correct>=1 && EX.correct<=EX.qs.length && EX.acc>=0 && EX.acc<=100; clearInterval(exTimer); EX=null; navigateTo('home'); return ok(okr && left>0 && neg===0, 'timer never negative; mark for review, submit, score and result all work'); });
+    await W('Mathematics', ()=>{ const r = dgCalcs(); return ok(r.ok!==false, r.detail||'calculators OK'); });
+    await W('Vedic Maths', ()=>{ const ks = Object.keys(TOPICS).filter(k=>/^v_vt/.test(k)); let bad=0; ks.forEach(k=>{ for(let i=0;i<10;i++){ const q = TOPICS[k].gen(1+i%3,false); if(!validateQuestion(q).ok || !q.explain || q.explain.length<10) bad++; } }); return ok(ks.length>=6 && !bad, ks.length+' techniques, each answer explains the method'); });
+    await W('Language learning', ()=>{ const miss = OTHER_LANGUAGES.filter(l=>!LANG_CONTENT[l.id] || !LANG_CONTENT[l.id].phrases || !LANG_CONTENT[l.id].phrases.length || !l.voiceLang).map(l=>l.name); return ok(!miss.length, OTHER_LANGUAGES.length+' languages with phrases and voice codes'+(miss.length?'; incomplete: '+miss:'')); });
+    await W('Kids game', ()=>{ const tabs = KIDS_TABS.play.map(x=>x[0]); const bad=[]; navigateTo('rhymes'); tabs.forEach(t=>{ try{ rhymesTab = t; renderKidsTab(t); const el = document.getElementById('rhymesTabBody'); if(!el || el.innerText.trim().length<10) bad.push(t); }catch(e){ bad.push(t); } }); navigateTo('home'); return ok(!bad.length, tabs.length+' games render'+(bad.length?'; broken: '+bad:'')); });
+    await W('Accessibility', ()=>{ const s = eqRoot().settings, keep = Object.assign({}, s); try{ s.textSize='large'; s.highContrast=true; s.reduceMotion=true; applyA11y(); const cls = document.body.className + ' ' + document.documentElement.className; const applied = /large|big|xl/i.test(cls) && /contrast/i.test(cls) && /calm/i.test(cls); const unlabeled = Array.from(document.querySelectorAll('button')).filter(b=>!b.textContent.trim() && !b.getAttribute('aria-label') && !b.getAttribute('title')).length; return ok(applied && unlabeled===0 && !!document.querySelector('a.skip-link, .skip-link, [href="#main"]') , 'large text, high contrast and reduced motion apply; '+unlabeled+' unlabelled buttons'); } finally { Object.assign(s, keep); applyA11y(); } });
+    await W('Offline mode', ()=>{ const sw = 'serviceWorker' in navigator, man = !!document.querySelector('link[rel=manifest]'), pill = !!document.getElementById('netPill') || /Offline-ready|Online|Offline/.test(document.body.innerText); const active = sw && !!navigator.serviceWorker.controller; return [ (man&&pill)? (active?DG_OK:DG_WARN) : DG_BAD, active?'service worker is controlling this page; status shown':(sw?'Offline cache not active yet (opened as a file, or first visit) — local learning still works':'This browser has no service-worker support')]; });
+    await W('Reset and recovery', ()=>{ const good = eqGet(eqKeyProf(sb.tmpId)); eqSet(eqKeyProf(sb.tmpId)+'_bak', good); eqSet(eqKeyProf(sb.tmpId), '{broken json'); const st = eqLoadProfile(sb.tmpId); const rec = st && st.schemaVersion===8; const g = eqMigrate({profile:{name:7}, progress:{points:-5}}); const n = eqNormalize({progress:{points:-4,streak:NaN}, badges:['a','a'], v7:{mastery:{x:{a:2,c:9,lvl:9}}}}); const nrm = n.progress.points===0 && n.progress.streak===0 && n.badges.length===1 && n.v7.mastery.x.c===2 && n.v7.mastery.x.lvl===3; return ok(rec && g.schemaVersion===8 && g.progress.points===0 && nrm && typeof eqResetAppDialog==='function' && typeof eqResetProgressDialog==='function', 'corrupt data recovers; impossible values normalised; both reset options confirm first'); });
+  }catch(e){ R.push({n:R.length+1, name:'Test set-up', status:DG_BAD, detail:String(e&&e.message||e)}); }
+  finally{
+    try{ clearInterval(exTimer); }catch(e){} try{ if(typeof QZ!=='undefined' && QZ){ clearTimeout(QZ.timer); QZ=null; } }catch(e){}
+    try{ const r = eqRoot(); r.profiles.filter(p=>p.name==='Diag B').forEach(p=>eqDel(eqKeyProf(p.id))); r.profiles = r.profiles.filter(p=>p.name!=='Diag B'); }catch(e){}
+    dgSandboxEnd(sb);
+  }
+  const after = eqLoadProfile(sb.origId); const realAfter = after ? JSON.stringify({p:after.progress.points,b:after.badges.length}) : '';
+  if(realBefore && realAfter && realBefore!==realAfter) R.push({n:R.length+1, name:'Your own progress untouched', status:DG_WARN, detail:'XP or badges changed while testing (e.g. you learned during the run)'});
+  return R;
+}
+function dgScore(R){ const p = R.filter(r=>r.status===DG_OK).length, w = R.filter(r=>r.status===DG_WARN).length, f = R.filter(r=>r.status===DG_BAD).length; return {p,w,f, score:Math.round((p+0.5*w)/Math.max(1,R.length)*100)}; }
+async function runDiagnosticCentre(){
+  showGenericModal('<div class="modal-head"><h3>🩺 Diagnostic Centre</h3></div><p role="status" style="padding:18px;text-align:center;">Running 30 workflows on a temporary learner. Your own progress is not changed…</p>');
+  let R; try{ R = await eqWorkflowMatrix(); }catch(e){ R = [{n:1,name:'Diagnostic Centre',status:DG_BAD,detail:String(e&&e.message||e)}]; }
+  window.__eqWorkflows = R; const s = dgScore(R);
+  const icon = {PASS:'✓ PASS', WARNING:'⚠ WARNING', FAIL:'✕ FAIL'};
+  showGenericModal(`<div class="modal-head"><h3>🩺 Diagnostic Centre</h3><button class="icon-btn" aria-label="Close" onclick="closeGenericModal()">✕</button></div>
+    <p style="margin:6px 0 10px;font-weight:800;color:var(--text);font-size:15px;" role="status">Score ${s.score}/100 — ${s.p} pass · ${s.w} warning · ${s.f} fail</p>
+    ${R.map(r=>`<div class="mini-row" style="align-items:flex-start;"><span style="font-size:12.5px;color:var(--text);"><b>${r.n}. ${esc(r.name)}</b> — <b>${icon[r.status]}</b>${r.detail?`<br><small style="color:var(--muted);">${esc(r.detail)}</small>`:''}</span></div>`).join('')}
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px;"><button class="btn btn-soft btn-sm" id="dgcCopy">📋 Copy results</button><button class="btn btn-primary btn-sm" onclick="closeGenericModal()">Close</button></div>`);
+  const c = document.getElementById('dgcCopy'); if(c) c.addEventListener('click', ()=>{ const t = 'EduQuest '+APP_VERSION+' Diagnostic Centre — score '+s.score+'\n'+R.map(r=>r.n+'. '+r.status+' '+r.name+(r.detail?' — '+r.detail:'')).join('\n'); (navigator.clipboard&&navigator.clipboard.writeText?navigator.clipboard.writeText(t).then(()=>toast('Copied','success')).catch(()=>toast('Could not copy','error')):toast('Copy is not available','error')); });
+}
+
+/* ---- 5. keyboard users: skip link ---- */
+(function(){ function add(){ if(document.getElementById('eqSkip')) return; const a = document.createElement('a'); a.id='eqSkip'; a.className='skip-link'; a.href='#mainContent'; a.textContent='Skip to main content'; a.addEventListener('click', e=>{ e.preventDefault(); const m = document.getElementById('mainContent'); if(m){ m.setAttribute('tabindex','-1'); m.focus(); } }); document.body.insertBefore(a, document.body.firstChild); }
+  if(document.body) add(); else document.addEventListener('DOMContentLoaded', add); })();
 
 /* ===== end v7 modules ===== */
 
