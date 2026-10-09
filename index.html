@@ -531,6 +531,7 @@ img,svg,video,canvas{max-width:100%;}
       <section class="section-view" id="view-lifemaths"></section>
       <section class="section-view" id="view-reasoning"></section>
       <section class="section-view" id="view-science"></section>
+      <section class="section-view" id="view-tech"></section>
       <section class="section-view" id="view-gk"></section>
       <section class="section-view" id="view-finance"></section>
       <section class="section-view" id="view-challenge"></section>
@@ -2747,6 +2748,7 @@ const NAV_ITEMS = [
   {id:'lifemaths', label:'Maths in Daily Life', icon:'🛒'},
   {id:'reasoning', label:'Reasoning', icon:'🧩'},
   {id:'science', label:'Science', icon:'🔬'},
+  {id:'tech', label:'Technology', icon:'💻'},
   {id:'gk', label:'General Knowledge', icon:'🧭'},
   {id:'finance', label:'Money Skills', icon:'💰'},
   {id:'languages', label:'Languages', icon:'🌍'},
@@ -2832,6 +2834,7 @@ function renderView(id){
   else if(id==='lifemaths') renderLifeMaths();
   else if(id==='reasoning') renderReasoning();
   else if(id==='science') renderScience();
+  else if(id==='tech') renderTech();
   else if(id==='gk') renderGK();
   else if(id==='finance') renderFinance();
   else if(id==='challenge') renderChallenge();
@@ -8885,7 +8888,7 @@ function v7DecorateExtra(id){
   try{
     ensureV7();
     if(id==='practice'){
-      const subs = ['eng','math','reason','gk','sci','life','fin'].filter(s=>topicsOf(s,false).length);
+      const subs = ['eng','math','reason','gk','sci','tech','life','fin'].filter(s=>topicsOf(s,false).length);
       const weak = weakAreas(3).filter(x=>TOPICS[x.key] && !TOPICS[x.key].ext);
       insertAfterHead('practice', `<div class="card" style="margin-bottom:16px;border-color:var(--purple);"><div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;"><h4 style="margin:0;">⚡ Adaptive practice hub</h4><div style="display:flex;gap:8px;flex-wrap:wrap;"><button class="btn btn-primary btn-sm" onclick="openToday()">▶ Today's Learning</button>${weak.length?'<button class="btn btn-soft btn-sm" onclick="startWeakPractice()">🎯 Weak areas</button>':''}</div></div>
         <p style="font-size:12px;margin:6px 0 10px 0;">Correct answers raise the difficulty, wrong answers explain the idea, and mastered topics appear less often.</p>
@@ -10511,7 +10514,7 @@ const AREA_WEIGHTS = {
 const GOAL_BOOST = {'Interviews':{speak:.12}, 'Office Communication':{speak:.1,eng:.04}, 'Everyday Conversations':{speak:.1}, 'Professional Development':{money:.06,reason:.04},
   'School Education':{math:.05,eng:.05,world:.04}, 'College':{reason:.05,eng:.04}, 'Maths & Reasoning':{math:.1,reason:.08}, 'Money Skills':{money:.15}, 'Exam Preparation':{math:.08,reason:.06}};
 function areaSubjects(area){
-  return {eng:['eng'], math:['math'], reason:['reason'], world:['sci','gk'], money:['fin','life'], play:['math','eng','sci','gk','reason'], words:['eng'], numbers:['math'], think:['reason']}[area] || [];
+  return {eng:['eng'], math:['math'], reason:['reason'], world:['sci','gk','tech'], money:['fin','life'], play:['math','eng','sci','gk','reason'], words:['eng'], numbers:['math'], think:['reason']}[area] || [];
 }
 function pickTopicFor(area, taken){
   const subs = areaSubjects(area), goal = state.profile.objective;
@@ -11324,7 +11327,7 @@ function reviewCardHTML(){
 }
 function masteryCardHTML(){
   const rows = [];
-  [['eng','English'],['math','Maths'],['reason','Reasoning'],['sci','Science'],['gk','General Knowledge'],['fin','Money Skills'],['life','Maths in Daily Life']].forEach(([s,l])=>{
+  [['eng','English'],['math','Maths'],['reason','Reasoning'],['sci','Science'],['tech','Technology'],['gk','General Knowledge'],['fin','Money Skills'],['life','Maths in Daily Life']].forEach(([s,l])=>{
     const m = subjectMastery(s); if(m.pct!==null) rows.push(masteryBar(m.pct, l));
   });
   const sp = speakingMastery(); if(sp!==null && sp!==undefined) rows.push(masteryBar(typeof sp==='object'?sp.pct:sp, 'Speaking'));
@@ -12906,6 +12909,479 @@ async function runDiagnosticCentre(){
 /* ---- 5. keyboard users: skip link ---- */
 (function(){ function add(){ if(document.getElementById('eqSkip')) return; const a = document.createElement('a'); a.id='eqSkip'; a.className='skip-link'; a.href='#mainContent'; a.textContent='Skip to main content'; a.addEventListener('click', e=>{ e.preventDefault(); const m = document.getElementById('mainContent'); if(m){ m.setAttribute('tabindex','-1'); m.focus(); } }); document.body.insertBefore(a, document.body.firstChild); }
   if(document.body) add(); else document.addEventListener('DOMContentLoaded', add); })();
+/* ===== EduQuest 8.0 — Technology subject + extra questions for every existing subject ===== */
+SUBJECTS.tech = {label:'Technology', icon:'💻', color:'#0EA5E9'};
+NAV_GROUPS.tech = 'Learn';
+try{ NAV_SHOW['6-10'].push('tech'); }catch(e){}
+SUBJ_VIEW.tech = 'tech';
+MOD_BLURB.tech = 'Computers, internet, phones, AI, coding & staying safe online';
+try{ LEARN_GROUPS.find(g=>g[0]==='Think & explore')[1].push('tech'); }catch(e){}
+FLOW_SUBJECTS.tech = 1;
+SRS_KNOWLEDGE_SUBJECTS.tech = 1;
+
+/* add more questions to an existing pool-based topic: half the time a question comes from the new pool */
+function extendPool(key, entries){
+  const t = TOPICS[key]; if(!t || !t.gen){ try{ console.warn('extendPool: unknown topic', key); }catch(e){} return; }
+  const orig = t.gen, extra = poolGen(entries);
+  t.gen = function(lvl, simple){ return Math.random()<0.5 ? extra(lvl, simple) : orig(lvl, simple); };
+}
+
+/* ---------------- TECHNOLOGY ---------------- */
+regTopic('tech_computer','tech','Computer Basics','💻',[1,5],poolGen([
+ [1,'Which part of a computer shows pictures and words?','Monitor',['Keyboard','Mouse','Speaker'],'The monitor (screen) shows what the computer is doing.','🖥️'],
+ [1,'Which device do we use to type letters and numbers?','Keyboard',['Monitor','Printer','Speaker'],'A keyboard has keys for letters, numbers and symbols.','⌨️'],
+ [1,'Which device do we move to point and click on the screen?','Mouse',['Printer','Scanner','Webcam'],'The mouse moves the pointer on the screen.','🖱️'],
+ [1,'Which device prints words and pictures on paper?','Printer',['Monitor','Keyboard','Mouse'],'A printer puts what is on the screen onto paper.','🖨️'],
+ [1,'Which device lets us hear sound from a computer?','Speaker',['Scanner','Mouse','Printer'],'Speakers (or headphones) play sound.','🔊'],
+ [1,'Which of these is a laptop?','A portable computer you can carry',['A kind of printer','A TV remote','A music box'],'A laptop is a computer that folds shut and can be carried around.','💻'],
+ [2,'What does CPU stand for?','Central Processing Unit',['Computer Personal Unit','Central Program Utility','Control Power Unit'],'The CPU is the “brain” of the computer that does the calculations.'],
+ [2,'Which is an INPUT device?','Keyboard',['Monitor','Printer','Speaker'],'Input devices send information into the computer.'],
+ [2,'Which is an OUTPUT device?','Monitor',['Keyboard','Mouse','Microphone'],'Output devices show or play results from the computer.'],
+ [2,'What does RAM do?','Holds data the computer is using right now',['Prints documents','Connects to the internet','Cleans the screen'],'RAM is short-term working memory. It is cleared when the computer is switched off.'],
+ [2,'Where are your files stored permanently on a computer?','Hard disk or SSD',['RAM','Monitor','Keyboard'],'A hard disk or SSD keeps files even when the power is off.'],
+ [2,'What is software?','Programs that tell a computer what to do',['The screen and keys','The wires inside a computer','The electricity supply'],'Hardware is the parts you can touch; software is the programs.'],
+ [2,'What is hardware?','The physical parts of a computer',['Programs and apps','Websites','Passwords'],'Hardware means the parts you can touch, such as the screen and keyboard.'],
+ [3,'Which is an operating system?','Windows',['Chrome','Excel','YouTube'],'An operating system (like Windows, Android, macOS or Linux) runs the computer and its programs.'],
+ [3,'What does USB stand for?','Universal Serial Bus',['United System Board','Universal Software Base','Unit Storage Block'],'USB is a standard way to connect devices to a computer.'],
+ [3,'Which unit is bigger: a gigabyte (GB) or a megabyte (MB)?','Gigabyte',['Megabyte','They are equal','Kilobyte'],'1 GB is about 1,000 MB (or 1,024 MB in some systems).'],
+ [3,'What does a “bug” mean in software?','A mistake in a program',['A kind of virus-free file','A fast processor','A cable'],'Programmers fix bugs to make programs work properly.'],
+ [3,'What is the job of a GPU?','Draw graphics and video quickly',['Store passwords','Cool the computer','Connect to Wi-Fi'],'A GPU (graphics processing unit) is specialised for images, games and video.'],
+ [3,'Which key combination is commonly used to copy on Windows?','Ctrl + C',['Ctrl + V','Ctrl + X','Ctrl + Z'],'Ctrl+C copies, Ctrl+V pastes, Ctrl+X cuts and Ctrl+Z undoes.']
+]));
+
+regTopic('tech_internet','tech','Internet & the Web','🌐',[2,5],poolGen([
+ [1,'What do we use to look at websites?','A browser',['A printer','A speaker','A charger'],'A browser such as Chrome, Edge, Firefox or Safari opens websites.','🌐'],
+ [1,'Which of these is a web browser?','Chrome',['Word','Paint','Calculator'],'Chrome is a browser. Word, Paint and Calculator are other programs.'],
+ [2,'What does WWW stand for?','World Wide Web',['World Web Wire','Wide World Wire','Web World Window'],'The World Wide Web is the collection of web pages you open with a browser.'],
+ [2,'What is a URL?','The address of a web page',['A type of virus','A computer part','A video format'],'For example https://www.example.com is a URL.'],
+ [2,'What does Wi-Fi do?','Connects devices to the internet without wires',['Charges your phone','Makes a screen brighter','Prints documents'],'Wi-Fi uses radio signals to connect devices to a router.'],
+ [2,'What is an email?','A message sent over the internet',['A paper letter','A type of phone call only','A computer game'],'Email is electronic mail. It needs an address like name@example.com.'],
+ [2,'What is a search engine?','A website that helps you find information',['A car engine','A type of keyboard','A video game'],'Google, Bing and DuckDuckGo are search engines.'],
+ [2,'What does the “@” symbol separate in an email address?','The user name and the domain',['The country and the city','The subject and the message','The password and the user'],'In name@example.com, “name” is the user and “example.com” is the domain.'],
+ [3,'What does HTTPS in a web address show?','The connection is encrypted (more secure)',['The site is free','The site is government-owned','The site is fast'],'HTTPS encrypts data between your browser and the site. It does not by itself prove a site is honest.'],
+ [3,'What is a router for?','Sending data between your devices and the internet',['Storing photos','Printing pages','Playing music'],'A router connects your home network to the internet.'],
+ [3,'What does “downloading” mean?','Copying a file from the internet to your device',['Sending a file to someone','Deleting a file','Printing a file'],'Uploading is the opposite: sending a file from your device to the internet.'],
+ [3,'What is a “cookie” on a website?','A small file a site saves in your browser',['A virus that deletes files','A paid advert','A type of password'],'Cookies remember things like your login or items in a shopping cart.'],
+ [3,'What does ISP stand for?','Internet Service Provider',['Internal System Program','Internet Safety Plan','Individual Secure Page'],'An ISP is the company that gives you internet access.'],
+ [3,'Which is a domain name?','wikipedia.org',['192.168.0.1','Ctrl + C','JPEG'],'A domain name is the easy-to-read name of a website.'],
+ [4,'What does an IP address identify?','A device on a network',['A person’s age','A website’s colour','A file’s size'],'An IP address (such as 192.168.1.5) lets data find the right device.'],
+ [4,'What does DNS do?','Turns website names into IP addresses',['Blocks adverts','Stores your emails','Makes videos play faster'],'DNS works like the internet’s phone book.']
+]));
+
+regTopic('tech_safety','tech','Cyber Safety','🛡️',[1,5],poolGen([
+ [1,'Should you share your password with friends?','No, keep it secret',['Yes, with everyone','Yes, if they ask nicely','Only on the internet'],'A password is private, like the key to your house.','🔑'],
+ [1,'A stranger online asks where you live. What should you do?','Do not answer and tell a trusted adult',['Tell them quickly','Send a photo of your house','Give them your school name'],'Never share personal details with people you do not know.','🚫'],
+ [1,'If something online makes you feel scared or upset, you should…','Tell a parent, teacher or trusted adult',['Keep it secret','Reply angrily','Share it with everyone'],'A trusted adult can help you.','🗣️'],
+ [2,'Which is the strongest password?','T7#mQ2!vRw9z',['password','12345678','myname2010'],'Long passwords mixing letters, numbers and symbols are hardest to guess.'],
+ [2,'What is phishing?','A trick message that tries to steal your details',['A fishing game','A fast internet speed','A kind of antivirus'],'Phishing messages pretend to be a bank, shop or friend to make you click or share secrets.'],
+ [2,'You get a message: “You won a prize! Click here and enter your bank details.” What should you do?','Ignore and delete it',['Click and enter details','Forward it to all friends','Reply with your OTP'],'Real prizes never need your bank PIN or OTP.'],
+ [2,'What is a virus on a computer?','A harmful program that can damage files or spread',['A cold for computers only','A type of keyboard','A fast app'],'Antivirus software and careful downloading help protect devices.'],
+ [2,'Is it safe to download apps from any random website?','No, use trusted app stores or official sites',['Yes, always','Yes, if it is free','Yes, if it has many ads'],'Unknown downloads can hide malware.'],
+ [3,'What is two-factor authentication (2FA)?','A second proof of identity in addition to your password',['Using two passwords the same','Having two phones','Sharing a password with two people'],'For example a password plus a code sent to your phone.'],
+ [3,'Why should you keep software and apps updated?','Updates fix security problems',['They make the screen bigger','They delete your files','They slow down the internet'],'Updates patch weaknesses that attackers could use.'],
+ [3,'What should you do before clicking a link in an unexpected message?','Check who sent it and where the link really goes',['Click quickly','Forward it first','Turn off your phone'],'Hover over (or long-press) a link to see its real address.'],
+ [3,'Public Wi-Fi in a café is…','Less safe for banking and passwords',['Always the safest','Safer than home Wi-Fi','Only dangerous at night'],'Anyone can be on a public network. Avoid sensitive logins, or use mobile data.'],
+ [3,'What is “digital footprint”?','The trail of information you leave online',['The size of your screen','A kind of shoe sensor','Your internet speed'],'Posts, photos and searches can stay online for a long time, so think before sharing.'],
+ [3,'You should never share your OTP with…','Anyone, even someone claiming to be from the bank',['Your mother only','The bank branch only','Nobody except your friends'],'Banks never ask for your OTP, PIN or CVV.'],
+ [4,'What does a firewall do?','Controls what network traffic is allowed in or out',['Makes a device faster','Deletes old files','Charges the battery'],'A firewall is a security guard for network connections.'],
+ [4,'What is ransomware?','Malware that locks your files and demands payment',['A free antivirus','A gaming app','A kind of cable'],'Regular offline backups are the best protection.']
+]));
+
+regTopic('tech_mobile','tech','Phones & Apps','📱',[1,5],poolGen([
+ [1,'What do we use to make a phone call on a smartphone?','The phone app',['The camera app','The clock app','The calculator'],'Tap the phone icon to call.','📞'],
+ [1,'What do we use to take a photo?','Camera',['Torch','Calendar','Settings'],'The camera app takes photos and videos.','📷'],
+ [1,'What does a battery do in a phone?','Stores power so it works without a plug',['Makes calls cheaper','Stores photos','Gives Wi-Fi'],'Charge the battery when it runs low.','🔋'],
+ [2,'What is an “app”?','A program that runs on a phone or tablet',['A part of the battery','A type of SIM card','A cable'],'App is short for application.'],
+ [2,'Which of these is an operating system for phones?','Android',['Photoshop','Excel','Zoom'],'Android and iOS run on most smartphones.'],
+ [2,'What does a SIM card do?','Identifies you to the mobile network',['Takes photos','Cools the phone','Adds more screen'],'SIM stands for Subscriber Identity Module.'],
+ [2,'What does “airplane mode” do?','Turns off calls and wireless connections',['Makes the phone fly','Boosts the signal','Closes all apps'],'It switches off mobile, Wi-Fi and Bluetooth (you can turn Wi-Fi back on).'],
+ [2,'What is Bluetooth used for?','Connecting nearby devices wirelessly',['Making toast','Printing money','Charging by magic'],'For example earphones, speakers and watches.'],
+ [2,'What is a notification?','A short alert from an app',['A phone virus','A kind of battery','A new SIM'],'You can turn notifications off for apps that distract you.'],
+ [3,'What is the safest way to get a new app?','Official app store (Play Store / App Store)',['A link from an unknown message','A forwarded file','A pop-up advert'],'Official stores scan apps for known threats.'],
+ [3,'What does “GPS” help a phone do?','Find its location',['Clean the screen','Increase volume','Read emails'],'GPS uses satellites to work out where you are.'],
+ [3,'Why should you check app permissions?','Some apps ask for more access than they need',['They make the phone cooler','They save battery','They give free data'],'A torch app does not need your contacts.'],
+ [3,'What does “5G” mean?','Fifth generation of mobile networks',['Five gigabytes of storage','Five games','A five-star battery'],'5G networks are designed for higher speeds and lower delay than 4G.'],
+ [3,'What is a QR code?','A square pattern a camera can scan',['A kind of password','A phone case','A battery saver'],'Scanning a QR code can open a link or start a payment. Only scan codes you trust.'],
+ [3,'Backing up your phone means…','Saving a copy of your data somewhere else',['Playing music backwards','Deleting old apps','Turning off the screen'],'Backups let you recover photos and contacts if the phone is lost.']
+]));
+
+regTopic('tech_ai','tech','AI & Robots','🤖',[2,5],poolGen([
+ [1,'What can a robot do?','Follow instructions to do jobs',['Grow like a plant','Feel hungry','Dream at night'],'Robots are machines programmed to do tasks.','🤖'],
+ [2,'What does AI stand for?','Artificial Intelligence',['Automatic Internet','Advanced Input','Applied Island'],'AI means computer systems that can do tasks that normally need human thinking.'],
+ [2,'Which is an example of AI you may use?','A voice assistant that answers questions',['A paper calendar','A pencil','A light switch'],'Voice assistants and photo apps use AI.'],
+ [2,'Can AI be wrong?','Yes, it can make mistakes',['Never','Only on Mondays','Only when switched off'],'Always check important answers with a reliable source.'],
+ [2,'What is a chatbot?','A program that talks with people in text or voice',['A robot that cooks','A type of battery','A phone cover'],'Some chatbots use AI; others only follow fixed scripts.'],
+ [2,'What does an AI learn from?','Large amounts of example data',['Magic spells','Only the weather','Television only'],'Machine learning finds patterns in data.'],
+ [3,'What is machine learning?','Computers improving at a task by learning from data',['Machines that repair themselves with tools','Typing faster','Using a calculator'],'Instead of fixed rules, the program learns patterns from examples.'],
+ [3,'Why should you not share private details with an AI chatbot?','Your information may be stored or seen by others',['It makes the chat slower','Chatbots are always unsafe','It breaks the screen'],'Treat chats like public postcards: avoid passwords, OTPs and ID numbers.'],
+ [3,'What is a “deepfake”?','A fake video or audio made to look real',['A deep-sea camera','A strong password','A type of filter for water'],'Be careful with shocking videos. Check the source before sharing.'],
+ [3,'Which job is a robot BEST suited to?','Repeating the same task precisely on a factory line',['Comforting a sad friend','Writing a heartfelt poem alone','Judging right and wrong for society'],'Robots are strong at precise, repetitive work; people are better at care and judgement.'],
+ [3,'What is a sensor?','A part that detects something like light, heat or movement',['A keyboard key','A type of memory','A speaker'],'Robots and phones use sensors to understand the world.'],
+ [4,'What is “bias” in AI?','Unfair results because of unbalanced training data',['A fast processor','A type of battery','A faulty cable'],'If the data leaves out some groups, the AI can treat them unfairly.'],
+ [4,'What is an algorithm?','Step-by-step instructions to solve a problem',['A type of virus','A computer screen','A type of file'],'Recipes and map directions are everyday algorithms.']
+]));
+
+regTopic('tech_coding','tech','Coding & Logic','👩‍💻',[2,5],poolGen([
+ [1,'A computer follows…','Instructions',['Guesses','Wishes','Jokes'],'Code is a set of instructions for a computer.','📋'],
+ [2,'What is a program?','A set of instructions for a computer',['A TV show only','A paper timetable only','A battery'],'Programmers write programs in languages such as Python or JavaScript.'],
+ [2,'What is an algorithm for making tea? Which step comes FIRST?','Boil water',['Drink the tea','Wash the cup after','Add sugar after drinking'],'Order matters: an algorithm must be in the right sequence.'],
+ [2,'What is a loop in coding?','Repeating steps',['Stopping the program','A broken wire','A password'],'A loop repeats until a condition says to stop.'],
+ [2,'What does “debugging” mean?','Finding and fixing mistakes in code',['Cleaning insects off a screen','Deleting a program','Speeding up the internet'],'Bugs are mistakes; debugging fixes them.'],
+ [2,'Which of these is a programming language?','Python',['Hindi','Printer','Mouse'],'Python, JavaScript, Java and C are programming languages.'],
+ [2,'What does an “if” statement do?','Runs steps only when a condition is true',['Repeats forever','Turns off the computer','Prints a page'],'Example: if it is raining, take an umbrella.'],
+ [3,'What is a variable?','A named place that stores a value',['A kind of loop','A computer cable','An error message'],'For example score = 10 stores the number 10 in a variable called score.'],
+ [3,'What will this print? x = 3; y = 4; print(x + y)','7',['34','12','x + y'],'x + y adds the numbers 3 and 4, giving 7.'],
+ [3,'What will this print? print(2 * 5)','10',['25','7','2*5'],'The * symbol means multiply in most programming languages.'],
+ [3,'What does HTML do?','Describes the structure of a web page',['Stores a database','Controls a printer','Makes an antivirus'],'HTML is the markup that tells the browser what is on the page; CSS styles it.'],
+ [3,'What is CSS used for?','Styling a web page (colours, layout, fonts)',['Sending emails','Creating passwords','Cooling the computer'],'CSS makes pages look good.'],
+ [3,'Which symbol often starts a comment in Python?','#',['@','%','&'],'Comments are notes for humans and are ignored by the computer.'],
+ [3,'A list of steps repeated 5 times that adds 2 each time to 0 gives…','10',['5','7','12'],'0 + 2 + 2 + 2 + 2 + 2 = 10.'],
+ [4,'What is a function?','A reusable block of code that does one job',['A type of virus','A hardware part','A password rule'],'Functions let you write code once and use it many times.'],
+ [4,'In many languages, what does “==” check?','If two values are equal',['If a value is saved','If a file exists','If two files are copied'],'A single “=” usually assigns a value; “==” compares values.']
+]));
+
+regTopic('tech_office','tech','Office Tools & Shortcuts','📊',[3,5],poolGen([
+ [2,'Which program is mainly used for writing letters and reports?','Word processor (e.g. Word)',['Spreadsheet','Web browser','Calculator'],'Word processors handle text documents.'],
+ [2,'Which program is mainly used for tables and calculations?','Spreadsheet (e.g. Excel)',['Paint','Media player','Mail'],'Spreadsheets organise numbers in rows and columns.'],
+ [2,'Which shortcut pastes copied text on Windows?','Ctrl + V',['Ctrl + C','Ctrl + P','Ctrl + S'],'Ctrl+V pastes.'],
+ [2,'Which shortcut saves your work?','Ctrl + S',['Ctrl + P','Ctrl + A','Ctrl + N'],'Save often so you do not lose work.'],
+ [2,'Which shortcut undoes your last action?','Ctrl + Z',['Ctrl + Y','Ctrl + C','Ctrl + B'],'Ctrl+Y redoes the action.'],
+ [3,'Which shortcut selects everything in a document?','Ctrl + A',['Ctrl + S','Ctrl + Q','Ctrl + E'],'A for “All”.'],
+ [3,'In a spreadsheet, what is the intersection of a row and a column called?','Cell',['Sheet','Chart','Menu'],'A cell is named by its column and row, such as B3.'],
+ [3,'Which formula adds the numbers in cells A1 to A5?','=SUM(A1:A5)',['=ADD(A1,A5)','=A1-A5','=TOTAL(A1+A5)'],'SUM adds a range of cells.'],
+ [3,'In Excel, which formula gives the average of B2 to B6?','=AVERAGE(B2:B6)',['=MEAN(B2+B6)','=AVG(B2,B6)','=MID(B2:B6)'],'AVERAGE adds the values and divides by how many there are.'],
+ [3,'What does a formula in a spreadsheet always begin with?','=',['#','@','$'],'Starting with = tells the sheet it is a calculation.'],
+ [3,'What is the file extension of a typical PDF file?','.pdf',['.doc','.xls','.mp3'],'PDF keeps layout the same on any device.'],
+ [4,'Which is a good use of a spreadsheet chart?','Showing how numbers change or compare at a glance',['Writing a long letter','Recording a video','Sending an SMS'],'Charts make patterns easier to see.'],
+ [4,'What does “Ctrl + Shift + T” usually do in a browser?','Reopens the last closed tab',['Opens a new window','Prints the page','Closes all tabs'],'Handy if you close a tab by mistake.'],
+ [4,'In email, what does “Bcc” do?','Sends a copy without showing that address to others',['Blocks the sender','Adds a signature','Encrypts the email'],'Bcc stands for blind carbon copy.']
+]));
+
+regTopic('tech_digital','tech','Digital India','🇮🇳',[2,5],poolGen([
+ [2,'What does UPI stand for?','Unified Payments Interface',['Universal Pay Internet','United Payment Index','User Pin Identity'],'UPI lets you send money instantly between bank accounts using a phone.'],
+ [2,'What is DigiLocker used for?','Keeping digital copies of important documents',['Playing games','Locking your phone','Booking tickets'],'DigiLocker is a government service for storing and sharing authentic digital documents.'],
+ [2,'What is a UPI PIN used for?','To approve a payment',['To receive money','To open the camera','To change the wallpaper'],'You enter your UPI PIN only to PAY, never to receive money.'],
+ [2,'To RECEIVE money through UPI, do you need to enter your PIN?','No',['Yes, always','Yes, if it is a large amount','Yes, and the OTP too'],'If someone asks you to enter your PIN to “receive” money, it is a scam.'],
+ [3,'What is Aadhaar?','A 12-digit unique identity number',['A bank account type','A phone company','A type of credit card'],'Aadhaar is issued by UIDAI. Share it only where needed.'],
+ [3,'What is e-KYC?','Verifying identity digitally for services like a bank account',['A video game','A tax form','A mobile plan'],'KYC means Know Your Customer.'],
+ [3,'Which helpline number is used in India to report cyber financial fraud?','1930',['100','108','1098'],'1930 is the national cyber crime helpline for financial fraud; report also on cybercrime.gov.in.'],
+ [3,'What is a “digital signature”?','An electronic way to confirm who signed a document',['A scanned handwriting font','A selfie','A phone ringtone'],'Digital signatures help prove who signed and that the document was not changed.'],
+ [3,'What is BHIM?','A UPI-based payment app from NPCI',['A video app','A school board','A social network'],'BHIM was launched by NPCI to make UPI payments easy.'],
+ [3,'Which body runs the UPI system?','NPCI',['SEBI','IRDAI','UGC'],'The National Payments Corporation of India (NPCI) operates UPI.'],
+ [3,'What is an online “Common Service Centre (CSC)” for?','Helping people use digital government services',['Selling phones','Repairing roads','Printing newspapers'],'CSCs bring online services to villages and towns.'],
+ [4,'What does “IFSC” identify?','A bank branch',['A person','A mobile network','A state'],'The IFSC code is used for online transfers like NEFT, RTGS and IMPS.'],
+ [4,'What is the main advantage of digital payments?','Fast, trackable payments without carrying cash',['They never need internet','They never fail','They are always free of charges'],'Always check the payee name before you pay.']
+]));
+
+regTopic('tech_history','tech','Tech History & Inventions','🕰️',[2,5],poolGen([
+ [2,'Who is credited with the first practical telephone patent (1876)?','Alexander Graham Bell',['Thomas Edison','Isaac Newton','Albert Einstein'],'Bell received the first US telephone patent in 1876.'],
+ [2,'Who invented the light bulb (a practical version)?','Thomas Edison',['Alexander Bell','Nikola Tesla','James Watt'],'Edison and his team developed a practical bulb in 1879.'],
+ [2,'Who is known as the “Missile Man of India”?','A. P. J. Abdul Kalam',['Vikram Sarabhai','Homi Bhabha','C. V. Raman'],'Dr. Kalam worked on India’s missile and space programmes.'],
+ [2,'Which Indian space agency launched Chandrayaan?','ISRO',['NASA','DRDO','BARC'],'ISRO is the Indian Space Research Organisation.'],
+ [3,'Who is known for creating the World Wide Web?','Tim Berners-Lee',['Bill Gates','Steve Jobs','Elon Musk'],'He proposed the web in 1989 while working at CERN.'],
+ [3,'Which company released the first version of Windows in 1985?','Microsoft',['Apple','Google','Intel'],'Microsoft released Windows in 1985.'],
+ [3,'Who is called the first computer programmer?','Ada Lovelace',['Grace Hopper','Alan Turing','Charles Babbage'],'Ada Lovelace wrote an algorithm for Babbage’s Analytical Engine in the 1840s.'],
+ [3,'What was the first widely used mobile network generation that carried mobile data fast enough for video calls?','3G',['1G','2G','0G'],'3G brought faster mobile internet; 4G and 5G followed.'],
+ [3,'Which Indian mathematician is credited with introducing zero as a number in a formal system?','Brahmagupta',['Aryabhata II only','Ramanujan','Bhaskara II'],'Brahmagupta described rules for zero in 628 CE (zero as a placeholder was used earlier).'],
+ [4,'What was the name of India’s first satellite, launched in 1975?','Aryabhata',['INSAT-1A','Rohini','Bhaskara'],'Aryabhata was launched on 19 April 1975.'],
+ [4,'Who proposed the idea of a “Turing machine”?','Alan Turing',['John von Neumann','Claude Shannon','Tim Berners-Lee'],'Turing’s 1936 idea is a foundation of computer science.'],
+ [4,'Which company introduced the first iPhone in 2007?','Apple',['Samsung','Nokia','Google'],'Steve Jobs announced the first iPhone on 9 January 2007.']
+]));
+
+/* generated: bits, bytes and binary */
+regTopic('tech_binary','tech','Bits, Bytes & Binary','🔢',[3,5],(lvl,simple)=>{
+  const L = simple?1:lvl;
+  if(L===1){ const n = rInt(1,7); const b = n.toString(2); return mk('Binary uses only which two digits?','0 and 1',['1 and 2','0 and 9','1 and 10'],'Computers use binary: 0 means off and 1 means on.'); }
+  if(L===2){ const n = rInt(1,15); const b = n.toString(2); return numQ('What is the binary number '+b+' in everyday (decimal) numbers?', n, 'Add the place values of each 1: '+b.split('').map((d,i)=>d==='1'?Math.pow(2,b.length-1-i):null).filter(x=>x!==null).join(' + ')+' = '+n+'.'); }
+  const kind = rInt(0,2);
+  if(kind===0){ const n = rInt(16,63); const b = n.toString(2); return numQ('What is the binary number '+b+' in decimal?', n, 'Place values from the right are 1, 2, 4, 8, 16, 32. Add the ones that have a 1: total '+n+'.'); }
+  if(kind===1){ const k = rPick([2,3,4,5]); return numQ('How many bits are there in '+k+' bytes?', 8*k, '1 byte = 8 bits, so '+k+' bytes = '+k+' × 8 = '+(8*k)+' bits.'); }
+  const k = rPick([2,3,5,8]); return numQ('How many megabytes (MB) are in '+k+' GB? (use 1 GB = 1,000 MB)', 1000*k, '1 GB = 1,000 MB (in the decimal system used on most labels), so '+k+' GB = '+(1000*k)+' MB.');
+});
+
+/* ---------------- more questions for existing topics ---------------- */
+extendPool('sci_body',[
+ [1,'How many eyes do most people have?','Two',['One','Three','Four'],'Most people have two eyes.','👀'],
+ [1,'Which part of the body do we use to smell?','Nose',['Ear','Elbow','Knee'],'The nose senses smells.','👃'],
+ [2,'Which organ cleans our blood and makes urine?','Kidneys',['Lungs','Heart','Stomach'],'The two kidneys filter waste from the blood.'],
+ [2,'Where does most digestion of food take place?','Small intestine',['Lungs','Brain','Skull'],'Nutrients are absorbed into the blood through the small intestine.'],
+ [2,'Which part of the eye controls how much light enters?','Pupil',['Retina','Cornea','Eyelid'],'The pupil gets smaller in bright light and larger in dim light.'],
+ [3,'Which blood cells help fight germs?','White blood cells',['Red blood cells','Platelets','Plasma only'],'White blood cells are part of the immune system.'],
+ [3,'What is the largest organ of the human body?','Skin',['Liver','Brain','Heart'],'The skin covers and protects the whole body.'],
+ [3,'Which gas do we breathe out more of than we breathe in?','Carbon dioxide',['Oxygen','Nitrogen','Hydrogen'],'The body makes carbon dioxide as a waste gas.']
+]);
+extendPool('sci_plants',[
+ [1,'What do plants need to grow?','Water, sunlight and air',['Only sweets','Only darkness','Only plastic'],'Plants make food using light, water and air.','🌱'],
+ [2,'Which part of a plant takes in water from the soil?','Roots',['Leaves','Flowers','Fruit'],'Roots also hold the plant firmly.'],
+ [2,'What is the green substance in leaves called?','Chlorophyll',['Haemoglobin','Keratin','Insulin'],'Chlorophyll captures sunlight for photosynthesis.'],
+ [3,'During photosynthesis plants take in…','Carbon dioxide and release oxygen',['Oxygen and release carbon dioxide','Nitrogen and release hydrogen','Water and release salt'],'Photosynthesis makes sugar and releases oxygen.'],
+ [3,'What carries water from the roots to the leaves?','Xylem',['Phloem','Petals','Stomata'],'Phloem carries food made in the leaves to other parts.']
+]);
+extendPool('sci_animals',[
+ [1,'Which animal gives us milk?','Cow',['Snake','Frog','Crow'],'Cows, buffaloes and goats give milk.','🐄'],
+ [2,'An animal that eats only plants is called a…','Herbivore',['Carnivore','Omnivore','Insectivore'],'Cows and deer are herbivores.'],
+ [2,'Which of these is a mammal?','Whale',['Shark','Frog','Crocodile'],'Whales breathe air and feed milk to their young.'],
+ [3,'Which animal is cold-blooded?','Lizard',['Dog','Horse','Bat'],'Reptiles rely on outside heat to warm their bodies.'],
+ [3,'The young one of a frog is called a…','Tadpole',['Cub','Calf','Larva only'],'A tadpole grows into a frog.']
+]);
+extendPool('sci_space',[
+ [1,'Which star gives us light and heat in the day?','The Sun',['The Moon','Mars','A comet'],'The Sun is a star.','☀️'],
+ [2,'Which planet is known as the Red Planet?','Mars',['Venus','Jupiter','Mercury'],'Iron oxide (rust) gives Mars its red colour.'],
+ [2,'How many planets are in our Solar System?','8',['7','9','10'],'Pluto is now classed as a dwarf planet.'],
+ [3,'Which is the largest planet?','Jupiter',['Saturn','Earth','Neptune'],'Jupiter is a gas giant bigger than all other planets combined.'],
+ [3,'The Moon takes about how long to orbit the Earth?','About 27 days',['About 7 days','About 365 days','About 1 day'],'The Moon’s phases cycle takes about 29.5 days.']
+]);
+extendPool('sci_water',[
+ [1,'Water turns to ice when it becomes very…','Cold',['Hot','Sweet','Loud'],'Water freezes at 0 °C.','🧊'],
+ [2,'When water heats up and becomes vapour this is called…','Evaporation',['Freezing','Melting','Condensation'],'Evaporation turns liquid into gas.'],
+ [3,'Clouds form when water vapour…','Cools and condenses into tiny drops',['Freezes into rocks','Turns into oxygen','Disappears'],'This is condensation.']
+]);
+extendPool('sci_env',[
+ [1,'Which bin should a banana peel go into?','Wet/organic waste bin',['Plastic recycling','Glass recycling','Electronic waste'],'Food waste can become compost.','🗑️'],
+ [2,'What does “recycle” mean?','Use materials again to make new things',['Throw everything away','Burn it','Bury it'],'Recycling saves resources and energy.'],
+ [3,'Which gas is mainly responsible for global warming?','Carbon dioxide',['Oxygen','Helium','Argon'],'Burning fuels adds carbon dioxide to the air.'],
+ [3,'Which source of energy is renewable?','Solar energy',['Coal','Petrol','Natural gas'],'Renewable sources are replaced naturally, like sunlight and wind.']
+]);
+extendPool('sci_matter',[
+ [1,'Ice is a…','Solid',['Liquid','Gas','Plasma'],'Ice is the solid form of water.','🧊'],
+ [2,'Which of these is a gas at room temperature?','Oxygen',['Iron','Water','Wood'],'Oxygen is a gas in the air we breathe.'],
+ [3,'At what temperature does pure water boil at sea level?','100 °C',['50 °C','80 °C','120 °C'],'Water boils at 100 °C (212 °F) at normal pressure.'],
+ [3,'Which is a good conductor of heat?','Copper',['Wood','Plastic','Rubber'],'Metals such as copper conduct heat well.']
+]);
+extendPool('sci_force',[
+ [1,'What pulls things down to the ground?','Gravity',['Wind','Sound','Light'],'Gravity pulls objects towards the Earth.','🍎'],
+ [2,'What do we call a push or a pull?','Force',['Energy','Heat','Colour'],'Forces can change how fast something moves or its shape.'],
+ [3,'Friction is a force that…','Slows moving things when surfaces rub',['Makes things float','Makes things glow','Makes things heavier'],'Friction makes brakes work; oil reduces friction.'],
+ [3,'What is the unit of force?','Newton',['Joule','Watt','Volt'],'The newton (N) is named after Isaac Newton.']
+]);
+extendPool('sci_elec',[
+ [1,'What do we call the path that electricity follows?','A circuit',['A road','A mountain','A rope'],'A complete circuit lets current flow.','⚡'],
+ [2,'Which material is a good insulator (does not let electricity pass)?','Rubber',['Copper','Iron','Silver'],'Insulators protect us from electric shocks.'],
+ [3,'What is the unit of electric current?','Ampere',['Volt','Ohm','Watt'],'Current is measured in amperes (A).'],
+ [3,'What does a fuse do?','Breaks the circuit if too much current flows',['Increases the voltage','Stores electricity','Makes bulbs brighter'],'It protects appliances from overheating.']
+]);
+extendPool('sci_everyday',[
+ [1,'Which sense do we use to taste?','Tongue',['Ear','Eye','Hand'],'The tongue has taste buds.','👅'],
+ [2,'Why do we see a rainbow after rain?','Sunlight splits into colours in water drops',['Clouds paint the sky','Rain has colours','The Moon shines'],'This splitting of light is called dispersion.'],
+ [3,'Why does a spoon in a glass of water look bent?','Light bends (refraction)',['The spoon melts','Water is magnetic','The glass is curved only'],'Light changes direction when it passes from water to air.']
+]);
+
+extendPool('gk_india',[
+ [1,'What is the national animal of India?','Tiger',['Lion','Elephant','Leopard'],'The Bengal tiger is India’s national animal.','🐅'],
+ [1,'What is the national bird of India?','Peacock',['Parrot','Sparrow','Crow'],'The Indian peafowl is the national bird.','🦚'],
+ [2,'Which river is considered the longest in India (flowing through India)?','Ganga',['Yamuna','Godavari','Narmada'],'The Ganga is India’s longest river system in the country; the Indus and Brahmaputra are longer overall but flow partly elsewhere.'],
+ [2,'What is the national flower of India?','Lotus',['Rose','Marigold','Jasmine'],'The lotus is the national flower.'],
+ [3,'Which city is the capital of India?','New Delhi',['Mumbai','Kolkata','Chennai'],'New Delhi is the capital.'],
+ [3,'On which date is India’s Republic Day celebrated?','26 January',['15 August','2 October','14 November'],'The Constitution came into effect on 26 January 1950.'],
+ [3,'How many colours are in the Indian flag (not counting the wheel)?','Three',['Two','Four','Five'],'Saffron, white and green, with the Ashoka Chakra in the middle.']
+]);
+extendPool('gk_geo',[
+ [2,'Which is the largest continent?','Asia',['Africa','Europe','Australia'],'Asia is the biggest and most populated continent.'],
+ [2,'Which is the largest ocean?','Pacific Ocean',['Atlantic Ocean','Indian Ocean','Arctic Ocean'],'The Pacific covers about one-third of the Earth’s surface.'],
+ [3,'Which is the longest river in the world (commonly cited)?','Nile',['Amazon','Yangtze','Ganga'],'Nile and Amazon are both cited as longest depending on how they are measured.'],
+ [3,'Which desert is the largest hot desert in the world?','Sahara',['Thar','Gobi','Kalahari'],'The Sahara is in northern Africa.'],
+ [3,'Mount Everest lies on the border of Nepal and…','China (Tibet)',['India','Bhutan','Pakistan'],'Everest is 8,849 m (as measured in 2020).']
+]);
+extendPool('gk_history',[
+ [2,'Who is known as the Father of the Nation in India?','Mahatma Gandhi',['Jawaharlal Nehru','Subhas Chandra Bose','Sardar Patel'],'Mahatma Gandhi led India’s non-violent freedom movement.'],
+ [2,'In which year did India become independent?','1947',['1942','1950','1930'],'India became independent on 15 August 1947.'],
+ [3,'Who was the first Prime Minister of India?','Jawaharlal Nehru',['Sardar Patel','Lal Bahadur Shastri','Dr. Rajendra Prasad'],'He served from 1947 to 1964.'],
+ [3,'Who was the first President of India?','Dr. Rajendra Prasad',['Dr. S. Radhakrishnan','Dr. Zakir Husain','V. V. Giri'],'He was President from 1950 to 1962.'],
+ [3,'The Taj Mahal was built by Mughal emperor…','Shah Jahan',['Akbar','Babur','Aurangzeb'],'It was built in memory of Mumtaz Mahal.']
+]);
+extendPool('gk_people',[
+ [2,'Who wrote India’s national anthem “Jana Gana Mana”?','Rabindranath Tagore',['Bankim Chandra Chatterjee','Sarojini Naidu','Premchand'],'Tagore also won the Nobel Prize in Literature in 1913.'],
+ [3,'Which Indian scientist won the Nobel Prize in Physics in 1930?','C. V. Raman',['Homi Bhabha','Jagadish Bose','S. Chandrasekhar'],'Raman discovered the Raman effect (scattering of light).'],
+ [3,'Who was the first woman Prime Minister of India?','Indira Gandhi',['Sarojini Naidu','Pratibha Patil','Sonia Gandhi'],'She became PM in 1966.'],
+ [3,'Who was the first Indian woman in space?','Kalpana Chawla',['Sunita Williams','Rakesh Sharma','Sally Ride'],'Kalpana Chawla flew on the Space Shuttle in 1997.']
+]);
+extendPool('gk_invent',[
+ [2,'Who discovered gravity after seeing an apple fall (as the story goes)?','Isaac Newton',['Galileo','Albert Einstein','Charles Darwin'],'Newton described the law of gravity in the 1600s.'],
+ [3,'Who invented the printing press with movable metal type in Europe?','Johannes Gutenberg',['Thomas Edison','Galileo','Leonardo da Vinci'],'Gutenberg’s press (c. 1440) spread books widely.'],
+ [3,'Who invented the aeroplane (first powered flight, 1903)?','Wright brothers',['Montgolfier brothers','Lumière brothers','Marconi brothers'],'Orville and Wilbur Wright flew at Kitty Hawk.']
+]);
+extendPool('gk_space',[
+ [2,'Who was the first human in space?','Yuri Gagarin',['Neil Armstrong','Rakesh Sharma','Buzz Aldrin'],'Gagarin orbited the Earth on 12 April 1961.'],
+ [3,'Who was the first Indian astronaut to travel to space?','Rakesh Sharma',['Kalpana Chawla','Sunita Williams','Vikram Sarabhai'],'He flew on Soyuz T-11 in 1984.'],
+ [3,'Who was the first person to walk on the Moon?','Neil Armstrong',['Buzz Aldrin','Yuri Gagarin','Michael Collins'],'Armstrong stepped onto the Moon on 20 July 1969 (Apollo 11).']
+]);
+extendPool('gk_facts',[
+ [2,'How many days are there in a leap year?','366',['365','364','367'],'February has 29 days in a leap year.'],
+ [2,'How many continents are there?','7',['5','6','8'],'Asia, Africa, North America, South America, Antarctica, Europe and Australia/Oceania.'],
+ [3,'Which is the smallest country in the world by area?','Vatican City',['Monaco','Nauru','Malta'],'Vatican City is about 0.44 square kilometres.'],
+ [3,'Which animal is the tallest in the world?','Giraffe',['Elephant','Camel','Ostrich'],'Giraffes can be about 5 metres tall.']
+]);
+
+extendPool('fin_money',[
+ [1,'Where is the safest place to keep a lot of money?','A bank account',['Under a pillow','In a pocket','In a school bag'],'Banks keep money safe and some pay interest.','🏦'],
+ [2,'What does “saving” mean?','Keeping some money for later',['Spending everything today','Giving all money away','Hiding money from the family'],'Saving helps you meet future needs and goals.'],
+ [3,'What is an “emergency fund” for?','Unexpected costs like medical bills',['Buying gifts','Holiday shopping','Buying new gadgets'],'Many people aim to keep 3–6 months of expenses.']
+]);
+extendPool('fin_budget',[
+ [2,'What is a budget?','A plan for how to spend and save money',['A type of bank','A shop discount','A credit card'],'A budget compares income and spending.'],
+ [3,'In a budget, “income” means…','Money you receive',['Money you spend','Money you owe','Money you lose'],'Salary, pocket money and business earnings are income.'],
+ [3,'Which is a “need”?','Food',['Latest game console','Designer shoes','Movie tickets'],'Needs are essentials; wants are extras.']
+]);
+extendPool('fin_bank',[
+ [2,'Which account gives interest on money you save?','Savings account',['Loan account','Credit card','Wallet'],'Interest is paid by the bank on savings.'],
+ [3,'What is a cheque?','A written order to a bank to pay money',['A plastic card','A coin','A phone app'],'The drawer signs a cheque to pay the payee.'],
+ [3,'What does “NEFT” stand for?','National Electronic Funds Transfer',['New Electronic Fast Transfer','National Easy Fund Token','Net Electronic Finance Tool'],'NEFT transfers money between bank accounts in India.']
+]);
+extendPool('fin_atm',[
+ [2,'What do you enter at an ATM to get cash?','Your ATM PIN',['Your Aadhaar','Your phone number','Your school name'],'Cover the keypad and never share your PIN.'],
+ [3,'The 3-digit number on the back of a debit/credit card is called…','CVV',['IFSC','MICR','PAN'],'Never share your CVV with anyone.']
+]);
+extendPool('fin_upi',[
+ [2,'What is a UPI ID (VPA) like?','name@bank',['12-digit number only','A passport number','A PIN'],'It is a virtual payment address linked to your bank account.'],
+ [3,'Before paying by UPI you should check…','The payee name shown',['The colour of the app','The phone brand','The time of day'],'A wrong payee means your money may go to the wrong person.']
+]);
+extendPool('fin_loan',[
+ [3,'What does EMI stand for?','Equated Monthly Instalment',['Easy Money Interest','Estimated Monthly Income','Equal Money Investment'],'EMI is the fixed amount you pay each month for a loan.'],
+ [3,'If you take a loan, what extra do you pay to the lender?','Interest',['Tax only','Nothing','A gift'],'Interest is the cost of borrowing.']
+]);
+extendPool('fin_insure',[
+ [3,'What does insurance do?','Covers a financial loss in return for a premium',['Doubles your money','Removes all risks','Pays your taxes'],'You pay a premium; the insurer pays for covered losses.'],
+ [3,'The amount you pay regularly for an insurance policy is called…','Premium',['Dividend','Principal','Claim'],'A claim is what you ask the insurer to pay.']
+]);
+extendPool('fin_invest',[
+ [3,'What does diversification mean in investing?','Spreading money across different investments',['Putting all money in one stock','Keeping all cash at home','Borrowing to invest'],'It reduces the risk of losing everything at once.'],
+ [3,'What does SIP stand for?','Systematic Investment Plan',['Simple Interest Payment','Safe Income Policy','Single Instalment Plan'],'A SIP invests a fixed amount regularly in a mutual fund.']
+]);
+extendPool('fin_safety',[
+ [2,'Which is safe when using an ATM?','Cover the keypad when typing your PIN',['Tell a stranger your PIN','Write the PIN on the card','Let a stranger help you'],'Never let anyone watch your PIN.'],
+ [3,'Who may ask for your UPI PIN?','Nobody',['Your bank manager','A delivery person','A customer care caller'],'Your PIN is only for you.']
+]);
+extendPool('fin_fraud',[
+ [2,'A caller says “I am from your bank, tell me your OTP.” This is…','A fraud attempt',['A normal check','A bank rule','A prize'],'Banks never ask for OTP, PIN or CVV.'],
+ [3,'If you lose money in an online fraud in India you should first…','Call 1930 and report at cybercrime.gov.in',['Wait a week','Post about it only on social media','Pay more to recover it'],'Reporting quickly gives the best chance of stopping the transfer.']
+]);
+
+extendPool('r_logic',[
+ [1,'Which is the odd one out: apple, banana, carrot, mango?','Carrot',['Apple','Banana','Mango'],'Carrot is a vegetable; the others are fruits.'],
+ [2,'If today is Monday, what day will it be after 3 days?','Thursday',['Wednesday','Friday','Tuesday'],'Monday + 3 = Thursday.'],
+ [2,'Ravi is taller than Sam. Sam is taller than Tom. Who is the shortest?','Tom',['Ravi','Sam','Cannot tell'],'Ravi > Sam > Tom.'],
+ [3,'A clock shows 3:15. What is the angle between the hands?','7.5°',['0°','15°','90°'],'The hour hand has moved 7.5° past the 3, the minute hand is on the 3.'],
+ [3,'If all roses are flowers and some flowers fade, which is certainly true?','Roses are flowers',['All roses fade','Some roses fade','No flower fades'],'Only “roses are flowers” is certain from the statements.']
+]);
+extendPool('r_analogy',[
+ [2,'Bird : Fly :: Fish : ?','Swim',['Walk','Run','Climb'],'Birds fly, fish swim.'],
+ [2,'Doctor : Hospital :: Teacher : ?','School',['Court','Farm','Market'],'A doctor works in a hospital; a teacher in a school.'],
+ [3,'Pen : Write :: Knife : ?','Cut',['Read','Drink','Draw'],'A pen is used to write; a knife to cut.']
+]);
+
+extendPool('e_grammar',[
+ [1,'Choose the correct word: She ___ a book.','has',['have','are','were'],'“She” takes “has”.'],
+ [1,'Which sentence is correct?','I am happy.',['I is happy.','I are happy.','I be happy.'],'Use “am” with “I”.'],
+ [2,'Choose the correct word: They ___ playing football.','are',['is','am','was'],'“They” takes “are”.'],
+ [2,'The plural of “child” is…','Children',['Childs','Childes','Childrens'],'“Child” has an irregular plural.'],
+ [2,'Choose the correct article: ___ apple a day keeps the doctor away.','An',['A','The','No article'],'Use “an” before a vowel sound.'],
+ [3,'Choose the correct form: He ___ to school every day.','goes',['go','going','gone'],'Third person singular present adds -es.'],
+ [3,'Choose the correct sentence.','She didn’t go to the market.',['She didn’t went to the market.','She don’t go to the market.','She not go to the market.'],'After “didn’t” use the base verb.'],
+ [3,'Which word is a conjunction?','because',['quickly','table','under'],'Conjunctions join parts of a sentence.']
+]);
+extendPool('e_spelling',[
+ [2,'Which spelling is correct?','Receive',['Recieve','Receeve','Receve'],'“i before e, except after c.”'],
+ [2,'Which spelling is correct?','Beautiful',['Beutiful','Beautifull','Beatiful'],'Beau-ti-ful.'],
+ [3,'Which spelling is correct?','Necessary',['Neccessary','Necesary','Necessery'],'One c, two s’s.'],
+ [3,'Which spelling is correct?','Separate',['Seperate','Seprate','Separete'],'There is “a rat” in separate.']
+]);
+extendPool('e_words',[
+ [1,'The opposite of “hot” is…','Cold',['Warm','Big','Soft'],'Hot ↔ cold.'],
+ [2,'A synonym (same meaning) of “happy” is…','Glad',['Sad','Angry','Tired'],'Glad means happy.'],
+ [2,'The opposite of “ancient” is…','Modern',['Old','Broken','Huge'],'Ancient ↔ modern.'],
+ [3,'A synonym of “enormous” is…','Huge',['Tiny','Quiet','Slow'],'Enormous means very large.'],
+ [3,'The opposite of “generous” is…','Selfish',['Kind','Brave','Happy'],'A generous person gives freely; a selfish one does not.']
+]);
+
+/* ---------------- new topics for existing subjects ---------------- */
+regTopic('e_idioms','eng','Idioms & Phrases','💬',[2,5],poolGen([
+ [2,'“It’s raining cats and dogs” means…','It is raining very heavily',['Animals are falling','It is a light drizzle','It is windy'],'An idiom does not mean the words literally.'],
+ [2,'“Piece of cake” means…','Very easy',['Very sweet','Very expensive','Very small'],'A piece of cake is an easy task.'],
+ [2,'“Break the ice” means…','Start a conversation in an awkward situation',['Make cold drinks','Break something','Get angry'],'It makes people feel more comfortable.'],
+ [3,'“Once in a blue moon” means…','Very rarely',['Every night','Every month','Very often'],'A blue moon is rare.'],
+ [3,'“Under the weather” means…','Feeling slightly ill',['Standing in the rain','Very happy','Very rich'],'It describes feeling unwell.'],
+ [3,'“Hit the nail on the head” means…','Say or do exactly the right thing',['Hurt yourself','Fix a roof','Make a loud noise'],'It means being exactly right.'],
+ [3,'“Let the cat out of the bag” means…','Reveal a secret by mistake',['Free a pet','Buy a bag','Tell a lie'],'It means to give away a secret.'],
+ [3,'“Spill the beans” means…','Reveal secret information',['Drop food','Cook dinner','Argue loudly'],'Same idea as letting the cat out of the bag.'],
+ [3,'“Burn the midnight oil” means…','Work or study late into the night',['Waste fuel','Cook at night','Sleep early'],'It comes from using oil lamps late at night.'],
+ [4,'“A blessing in disguise” means…','Something bad that turns out good',['A secret gift','A holy person','A fancy costume'],'It looked like bad luck but helped in the end.']
+]));
+regTopic('e_punct','eng','Punctuation','❗',[2,5],poolGen([
+ [1,'Which mark ends a question?','?',['.','!',','],'A question mark ends a question.'],
+ [1,'Which mark shows strong feeling like surprise?','!',['.','?',','],'An exclamation mark shows excitement or surprise.'],
+ [2,'Which sentence is punctuated correctly?','What is your name?',['What is your name.','What is your name,','What is your name!?.'],'A question ends with “?”.'],
+ [2,'We use a capital letter for…','The first word of a sentence and names',['Every word','Only verbs','Only numbers'],'Names of people and places also start with a capital.'],
+ [2,'Which sentence uses a comma correctly?','I bought apples, bananas and grapes.',['I bought, apples bananas and grapes.','I bought apples bananas, and grapes,','I, bought apples bananas and grapes.'],'Commas separate items in a list.'],
+ [3,'Which sentence uses the apostrophe correctly?','The dog’s bone is under the table.',['The dogs’s bone is under the table.','The dogs bone’s is under the table.','The dog’s’ bone is under the table.'],'The apostrophe + s shows that the bone belongs to the dog.'],
+ [3,'“It’s” is short for…','It is',['Its','It has not','It was not'],'“Its” (no apostrophe) shows belonging: The cat licked its paw.'],
+ [3,'Which sentence is correct?','She said, “I am ready.”',['She said “I am ready”,','She said I am “ready.”','She said, I am ready.”'],'Quotation marks surround the spoken words.'],
+ [3,'Which punctuation mark can introduce a list?','Colon (:)',['Full stop','Question mark','Apostrophe'],'Example: You need three things: a pen, a book and a bag.']
+]));
+regTopic('sci_energy','sci','Energy, Light & Sound','🔆',[2,5],poolGen([
+ [1,'What do we get from the Sun?','Light and heat',['Only rain','Only wind','Only sound'],'The Sun is our main source of energy.','☀️'],
+ [2,'Sound travels through…','Air, water and solids',['Only empty space','Only vacuum','Only metal'],'Sound needs a material to travel; it cannot travel in a vacuum.'],
+ [2,'Which travels faster?','Light',['Sound','Both the same','A car'],'Light is far faster than sound, which is why we see lightning before we hear thunder.'],
+ [2,'Which is a source of light?','The Sun',['The Moon','A mirror','A book'],'The Moon and mirrors only reflect light.'],
+ [3,'What is the unit of loudness of sound?','Decibel (dB)',['Newton','Hertz','Ampere'],'Hertz (Hz) is the unit of frequency (pitch).'],
+ [3,'Energy cannot be created or destroyed, only…','Changed from one form to another',['Made from nothing','Thrown away','Weighed'],'This is the law of conservation of energy.'],
+ [3,'A bulb changes electrical energy mainly into…','Light and heat',['Sound only','Chemical energy','Mechanical energy'],'Some energy is lost as heat.'],
+ [3,'What colours make up white light (a rainbow)?','VIBGYOR colours',['Only red and blue','Only black and white','Only green'],'Violet, Indigo, Blue, Green, Yellow, Orange, Red.']
+]));
+regTopic('sci_health','sci','Health & Nutrition','🥗',[1,5],poolGen([
+ [1,'Which food helps build strong bones?','Milk',['Chips','Candy','Fizzy drinks'],'Milk has calcium for bones and teeth.','🥛'],
+ [1,'How often should we brush our teeth?','At least twice a day',['Once a month','Never','Only on Sundays'],'Brush in the morning and before bed.','🪥'],
+ [1,'Why should we wash our hands before eating?','To remove germs',['To make them cold','To make them wet','To hide them'],'Soap and water remove germs.','🧼'],
+ [2,'Which nutrient helps our muscles grow?','Protein',['Sugar only','Salt only','Water only'],'Dal, eggs, milk and paneer have protein.'],
+ [2,'Vitamin C is found in…','Oranges and lemons',['Sugar','Salt','Plastic'],'Vitamin C helps the body fight infections.'],
+ [3,'A balanced diet contains…','Carbohydrates, proteins, fats, vitamins, minerals and water',['Only sweets','Only fruits','Only fried food'],'A variety of foods supplies everything the body needs.'],
+ [3,'Lack of vitamin D can cause weak bones. Which source gives vitamin D?','Sunlight',['Salt','Sugar','Plastic'],'The skin makes vitamin D in sunlight.'],
+ [3,'Roughly how many hours of sleep does a school-age child need?','9–11 hours',['3–4 hours','5–6 hours','14–16 hours'],'Good sleep helps learning and growth.']
+]));
+regTopic('gk_sports','gk','Sports & Games','🏏',[1,5],poolGen([
+ [1,'How many players are in a cricket team on the field?','11',['9','10','12'],'Each team has 11 players.','🏏'],
+ [1,'Which sport uses a shuttlecock?','Badminton',['Tennis','Hockey','Football'],'A shuttlecock is also called a birdie.','🏸'],
+ [2,'Which game is India’s national sport (commonly mentioned)?','Hockey',['Football','Tennis','Chess'],'India has no official national sport but hockey is commonly mentioned; India won 8 Olympic gold medals in men’s hockey.'],
+ [2,'How many players are in a football team on the field?','11',['7','9','12'],'Eleven including the goalkeeper.'],
+ [2,'Where were the first modern Olympic Games held (1896)?','Athens, Greece',['Paris','London','Rome'],'The ancient Olympics were also in Greece.'],
+ [3,'Who won India’s first individual Olympic gold medal in 2008?','Abhinav Bindra',['Neeraj Chopra','Sushil Kumar','Mary Kom'],'Bindra won in men’s 10 m air rifle at Beijing 2008.'],
+ [3,'Who won gold in javelin throw for India at the Tokyo Olympics (held in 2021)?','Neeraj Chopra',['Abhinav Bindra','Bajrang Punia','P. V. Sindhu'],'It was India’s first Olympic gold in athletics.'],
+ [3,'How many rings are on the Olympic flag?','5',['4','6','7'],'The five rings stand for the five inhabited continents.']
+]));
+regTopic('gk_civics','gk','Civics & Constitution','🏛️',[2,5],poolGen([
+ [2,'Who is the head of the Indian state?','The President',['The Prime Minister','The Chief Justice','The Speaker'],'The Prime Minister is the head of government.'],
+ [2,'At what age can an Indian citizen vote?','18',['16','21','25'],'The voting age was lowered from 21 to 18 in 1989.'],
+ [3,'Who is known as the Father of the Indian Constitution?','Dr. B. R. Ambedkar',['Mahatma Gandhi','Jawaharlal Nehru','Sardar Patel'],'He chaired the Drafting Committee.'],
+ [3,'How many houses does the Indian Parliament have?','Two (Lok Sabha and Rajya Sabha)',['One','Three','Four'],'Along with the President, they form Parliament.'],
+ [3,'Where is the Indian Parliament located?','New Delhi',['Mumbai','Kolkata','Jaipur'],'The new Parliament building is in New Delhi.'],
+ [3,'The Constitution of India came into effect on…','26 January 1950',['15 August 1947','2 October 1950','26 November 1949'],'26 November 1949 is the day it was adopted (Constitution Day).'],
+ [3,'The Preamble begins with the words…','We, the People of India',['Jai Hind','Satyameva Jayate','Vande Mataram'],'It states the goals of the Republic.'],
+ [4,'How many fundamental rights were originally listed in the Constitution?','7',['5','6','9'],'The right to property was later removed from this list, leaving 6.']
+]));
+regTopic('fin_credit','fin','Credit, Cards & Scores','💳',[3,5],poolGen([
+ [3,'What is a credit score?','A number showing how reliably you repay borrowed money',['Your exam score','Your bank balance','The size of your loan'],'In India scores are commonly from 300 to 900 (e.g., CIBIL).'],
+ [3,'Which credit score range is usually considered good in India?','750 and above',['300–400','400–500','500–600'],'A higher score helps you get loans on better terms.'],
+ [3,'A credit card is different from a debit card because it…','Lets you borrow money to pay later',['Uses only your savings','Never needs repayment','Does not have a limit'],'Unpaid dues attract interest and charges.'],
+ [3,'What happens if you pay only the minimum due on a credit card?','Interest is charged on the remaining amount',['The balance is cleared','The card is cancelled','You get a refund'],'Pay the full bill to avoid interest.'],
+ [3,'What is the “due date” on a credit card statement?','The last date to pay without a late fee',['The date the card expires','The day you receive the card','The day the limit changes'],'Paying late hurts your credit score.'],
+ [4,'What does PAN stand for?','Permanent Account Number',['Personal Account Name','Public Account Note','Primary Address Number'],'PAN is used for tax purposes in India.'],
+ [4,'Which is a good habit for a healthy credit score?','Pay dues on time and keep usage low',['Miss payments','Max out the limit','Apply for many loans at once'],'Timely payments matter most.']
+]));
+extendPool('m_formulas',[
+ [2,'Area of a rectangle =','length × breadth',['length + breadth','2 × (length + breadth)','length ÷ breadth'],'Perimeter is 2 × (length + breadth).'],
+ [2,'Perimeter of a square with side a =','4a',['a²','2a','a³'],'All four sides are equal.'],
+ [3,'Area of a circle =','πr²',['2πr','πd','2πr²'],'2πr is the circumference.'],
+ [3,'Simple interest =','(P × R × T) ÷ 100',['P × R × T','P + R + T','(P × R) ÷ T'],'P is principal, R is rate per year, T is time in years.'],
+ [3,'Volume of a cuboid =','length × breadth × height',['length + breadth + height','2(lb + bh + hl)','l × b'],'2(lb + bh + hl) is its surface area.'],
+ [3,'Sum of the angles of a triangle =','180°',['90°','270°','360°'],'The angles of any triangle add up to 180°.']
+]);
+/* technology tile view */
+function renderTech(){
+  ensureV7();
+  const el = document.getElementById('view-tech'); if(!el) return;
+  el.innerHTML = `<div class="page-head"><h2>💻 Technology</h2><p>Computers, the internet, phones, AI, coding and staying safe online. Choose Easy, Medium or Hard — or Auto.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;">${mixButton('tech','Mixed technology quiz')}</div>
+    ${topicTilesHTML('tech',{levels:true})}`;
+}
 
 /* ===== end v7 modules ===== */
 
