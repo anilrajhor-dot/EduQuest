@@ -2,8 +2,8 @@
    Strategy: pre-cache on install; cache-first for local files (updating in the background);
    network-first for page navigations so a new version is picked up when online.
    External requests (e.g. optional natural voice, web fonts) are never cached or intercepted. */
-const VERSION = 'eduquest-8.0.0-r2';
-const CORE = ['./','./index.html','./manifest.json','./icons/icon-192.png','./icons/icon-512.png','./icons/icon-maskable-512.png','./icons/apple-touch-icon.png'];
+const VERSION = 'eduquest-8.0.0-r3';
+const CORE = ['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./icon-maskable-512.png','./apple-touch-icon.png'];
 self.addEventListener('install', e=>{ e.waitUntil(caches.open(VERSION).then(c=>c.addAll(CORE)).then(()=>self.skipWaiting())); });
 self.addEventListener('activate', e=>{ e.waitUntil(caches.keys().then(keys=>Promise.all(keys.filter(k=>k!==VERSION && k.indexOf('eduquest-')===0).map(k=>caches.delete(k)))).then(()=>self.clients.claim())); });
 self.addEventListener('fetch', e=>{
